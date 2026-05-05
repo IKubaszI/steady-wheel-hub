@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { RecentActivity } from "@/components/dashboard/RecentActivity";
 import { UpcomingServices } from "@/components/dashboard/UpcomingServices";
+import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { DollarSign, CalendarClock, Plus, Receipt as ReceiptIcon, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -13,6 +14,11 @@ import { isSameMonth, parseISO, subMonths } from "date-fns";
 
 export default function Dashboard() {
   const [open, setOpen] = useState<null | "service" | "receipt">(null);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    const t = setTimeout(() => setLoading(false), 600);
+    return () => clearTimeout(t);
+  }, []);
   const { receipts, maintenance } = useGarageData();
   const totalExpenses = receipts.reduce((sum, receipt) => sum + receipt.amount, 0);
   const upcoming = maintenance.filter((entry) => entry.status !== "completed").length;
@@ -53,6 +59,7 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {loading ? <DashboardSkeleton /> : (<>
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-5">
         <StatCard label="Total expenses" value={`$${totalExpenses.toFixed(0)}`} delta={{ value: "all time", positive: true }} deltaLabel="across all saved receipts" icon={DollarSign} tone="primary" hint="All recorded spending" />
         <StatCard
@@ -80,6 +87,7 @@ export default function Dashboard() {
         <div className="lg:col-span-2"><RecentActivity /></div>
         <UpcomingServices />
       </div>
+      </>)}
 
       <Dialog open={open !== null} onOpenChange={(o) => !o && setOpen(null)}>
         <DialogContent className="sm:max-w-lg">
