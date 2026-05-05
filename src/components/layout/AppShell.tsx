@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { useMemo, useState } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard, Car, Wrench, Receipt, BarChart3, Bell, Search, Menu, X, Plus, Settings, Sparkles
+  LayoutDashboard, Car, Wrench, Receipt, BarChart3, Bell, Search, Menu, X, Plus, Settings, Sparkles, Camera
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,17 +10,66 @@ import { cn } from "@/lib/utils";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import { useGarageData } from "@/context/garage-data";
 
 const navItems = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/vehicles", label: "Vehicles", icon: Car },
   { to: "/maintenance", label: "Maintenance", icon: Wrench },
   { to: "/receipts", label: "Receipts", icon: Receipt },
+  { to: "/receipt-photos", label: "Receipt photos", icon: Camera },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
 ];
 
 export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; onQuickAdd?: () => void }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
+  const { vehicles, receipts, maintenance } = useGarageData();
+
+  const searchResults = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+
+    if (!query) {
+      return [];
+    }
+
+    const vehicleMatches = vehicles
+      .filter((vehicle) => [vehicle.brand, vehicle.model, vehicle.plate, vehicle.color].join(" ").toLowerCase().includes(query))
+      .map((vehicle) => ({
+        kind: "vehicle" as const,
+        title: `${vehicle.brand} ${vehicle.model}`,
+        subtitle: vehicle.plate,
+        to: "/vehicles",
+      }));
+
+    const receiptMatches = receipts
+      .filter((receipt) => [receipt.vendor, receipt.category, receipt.date].join(" ").toLowerCase().includes(query))
+      .map((receipt) => ({
+        kind: "receipt" as const,
+        title: receipt.vendor,
+        subtitle: `${receipt.category} · $${receipt.amount.toFixed(2)}`,
+        to: "/receipts",
+      }));
+
+    const serviceMatches = maintenance
+      .filter((entry) => [entry.type, entry.notes, entry.status].join(" ").toLowerCase().includes(query))
+      .map((entry) => ({
+        kind: "service" as const,
+        title: entry.type,
+        subtitle: `${entry.status} · $${entry.cost.toFixed(2)}`,
+        to: "/maintenance",
+      }));
+
+    return [...vehicleMatches, ...receiptMatches, ...serviceMatches].slice(0, 6);
+  }, [maintenance, receipts, searchQuery, vehicles]);
+
+  const handleSearchSubmit = () => {
+    if (searchResults[0]) {
+      navigate(searchResults[0].to);
+      setSearchQuery("");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -67,10 +116,48 @@ export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; 
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 type="search"
-                placeholder="Search vehicles, services, receipts…"
+                placeholder="Search vehicles, services, receipts, photos…"
                 className="pl-9 h-10 bg-secondary/60 border-transparent focus-visible:bg-card focus-visible:border-border"
                 aria-label="Search"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    handleSearchSubmit();
+                  }
+                }}
               />
+              {searchQuery.trim() && (
+                <div className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-50 rounded-2xl border border-border bg-card shadow-elev-lg overflow-hidden">
+                  <div className="px-3 py-2 border-b border-border text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    {searchResults.length} result{searchResults.length === 1 ? "" : "s"}
+                  </div>
+                  <div className="max-h-80 overflow-auto">
+                    {searchResults.map((result, index) => (
+                      <button
+                        key={`${result.kind}-${index}`}
+                        onClick={() => {
+                          navigate(result.to);
+                          setSearchQuery("");
+                        }}
+                        className="w-full text-left px-4 py-3 hover:bg-secondary/70 flex items-start gap-3"
+                      >
+                        <div className="mt-0.5 h-8 w-8 rounded-lg bg-primary/10 text-primary grid place-items-center text-xs font-bold uppercase">
+                          {result.kind.slice(0, 1)}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-medium truncate">{result.title}</p>
+                          <p className="text-xs text-muted-foreground truncate">{result.subtitle}</p>
+                        </div>
+                      </button>
+                    ))}
+                    {searchResults.length === 0 && (
+                      <div className="px-4 py-6 text-sm text-muted-foreground">No matches. Try a vehicle brand, receipt vendor, or service type.</div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
             <Button variant="ghost" size="icon" className="relative" aria-label="Notifications">
               <Bell className="h-5 w-5" />
@@ -155,7 +242,7 @@ function UpsellCard() {
         <span className="text-xs font-semibold uppercase tracking-wider">Pro tip</span>
       </div>
       <p className="text-xs text-sidebar-foreground/80 leading-relaxed">
-        Snap a photo of any receipt and we'll auto-categorize it for you.
+        Store receipts, photos, fuel logs, and vehicle records in one place.
       </p>
     </div>
   );

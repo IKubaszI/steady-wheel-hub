@@ -1,35 +1,189 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { AppShell } from "@/components/layout/AppShell";
-import { vehicles } from "@/data/mockData";
 import { VehicleCard } from "@/components/vehicles/VehicleCard";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Fuel, ReceiptText, Wrench, Pencil, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AddVehicleForm } from "@/components/forms/AddVehicleForm";
+import { AddReceiptForm } from "@/components/forms/AddReceiptForm";
+import { useGarageData } from "@/context/garage-data";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { format, isSameMonth, parseISO } from "date-fns";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 export default function Vehicles() {
   const [open, setOpen] = useState(false);
+  const [receiptVehicleId, setReceiptVehicleId] = useState<string | null>(null);
+  const [editingVehicle, setEditingVehicle] = useState<string | null>(null);
+  const [deletingVehicle, setDeletingVehicle] = useState<string | null>(null);
+  const { vehicles, receipts, maintenance, deleteVehicle } = useGarageData();
+
+  const vehicleToEdit = editingVehicle ? vehicles.find((vehicle) => vehicle.id === editingVehicle) ?? null : null;
+  const vehicleToDelete = deletingVehicle ? vehicles.find((vehicle) => vehicle.id === deletingVehicle) ?? null : null;
+  const deleteSummary = vehicleToDelete
+    ? {
+        receipts: receipts.filter((receipt) => receipt.vehicleId === vehicleToDelete.id).length,
+        services: maintenance.filter((entry) => entry.vehicleId === vehicleToDelete.id).length,
+      }
+    : null;
+
   return (
     <AppShell onQuickAdd={() => setOpen(true)}>
       <PageHeader
         title="Vehicles"
-        subtitle={`${vehicles.length} cars in your garage`}
+        subtitle="Switch between tabs to see one car, its receipts, and linked tags"
         action={<Button onClick={() => setOpen(true)} className="gap-2 bg-gradient-primary text-primary-foreground hover:opacity-90 shadow-glow"><Plus className="h-4 w-4" /> Add vehicle</Button>}
       />
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-        {vehicles.map((v) => <VehicleCard key={v.id} v={v} />)}
-      </div>
+
+      <Tabs defaultValue="all" className="space-y-5">
+        <TabsList className="flex w-full flex-wrap h-auto justify-start gap-2 bg-transparent p-0">
+          <TabsTrigger value="all">All vehicles</TabsTrigger>
+          {vehicles.map((vehicle) => (
+            <TabsTrigger key={vehicle.id} value={vehicle.id}>{vehicle.brand} {vehicle.model}</TabsTrigger>
+          ))}
+        </TabsList>
+
+        <TabsContent value="all">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+            {vehicles.map((vehicle) => <VehicleCard key={vehicle.id} v={vehicle} />)}
+          </div>
+        </TabsContent>
+
+        {vehicles.map((vehicle) => {
+          const vehicleReceipts = receipts.filter((receipt) => receipt.vehicleId === vehicle.id).sort((a, b) => +parseISO(b.date) - +parseISO(a.date));
+          const vehicleServices = maintenance.filter((entry) => entry.vehicleId === vehicle.id).sort((a, b) => +parseISO(b.date) - +parseISO(a.date));
+          const fuelLiters = vehicleReceipts.filter((receipt) => receipt.category === "fuel").reduce((sum, receipt) => sum + (receipt.fuelLiters ?? 0), 0);
+          const totalSpent = vehicleReceipts.reduce((sum, receipt) => sum + receipt.amount, 0) + vehicleServices.reduce((sum, entry) => sum + entry.cost, 0);
+          const spendThisMonth =
+            vehicleReceipts
+              .filter((receipt) => isSameMonth(parseISO(receipt.date), new Date()))
+              .reduce((sum, receipt) => sum + receipt.amount, 0) +
+            vehicleServices
+              .filter((entry) => isSameMonth(parseISO(entry.date), new Date()))
+              .reduce((sum, entry) => sum + entry.cost, 0);
+
+          return (
+            <TabsContent key={vehicle.id} value={vehicle.id}>
+              <div className="grid grid-cols-1 xl:grid-cols-[1.1fr_0.9fr] gap-5">
+                <VehicleCard v={vehicle} />
+                <div className="surface-card p-6 space-y-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Vehicle tag</p>
+                      <h3 className="font-display text-lg font-semibold mt-1">{vehicle.brand} {vehicle.model}</h3>
+                    </div>
+                    <Badge variant="secondary" className="rounded-full px-3 py-1">{vehicle.plate}</Badge>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <Button variant="outline" className="gap-2" onClick={() => setEditingVehicle(vehicle.id)}>
+                      <Pencil className="h-4 w-4" /> Edit vehicle
+                    </Button>
+                    <Button variant="destructive" className="gap-2" onClick={() => setDeletingVehicle(vehicle.id)}>
+                      <Trash2 className="h-4 w-4" /> Delete vehicle
+                    </Button>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <InfoCard label="Total spend" value={`$${totalSpent.toFixed(0)}`} subtext={`(spend this month: $${spendThisMonth.toFixed(0)})`} icon={ReceiptText} />
+                    <InfoCard label="Fuel logged" value={`${fuelLiters.toFixed(1)} L`} icon={Fuel} />
+                    <InfoCard label="Receipts" value={String(vehicleReceipts.length)} icon={ReceiptText} />
+                    <InfoCard label="Services" value={String(vehicleServices.length)} icon={Wrench} />
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-sm font-semibold">Recent receipts</p>
+                      <Button size="sm" variant="outline" onClick={() => setReceiptVehicleId(vehicle.id)} className="gap-2">
+                        <Plus className="h-4 w-4" /> Add receipt
+                      </Button>
+                    </div>
+
+                    <div className="space-y-2">
+                      {vehicleReceipts.slice(0, 3).map((receipt) => (
+                        <div key={receipt.id} className="flex items-center justify-between gap-3 rounded-xl border border-border/70 bg-secondary/30 px-3 py-2">
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium truncate">{receipt.vendor}</p>
+                            <p className="text-xs text-muted-foreground">{receipt.category} · {format(parseISO(receipt.date), "MMM d, yyyy")}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm font-semibold tabular-nums">${receipt.amount.toFixed(2)}</p>
+                            {receipt.fuelLiters != null && <p className="text-xs text-muted-foreground">{receipt.fuelLiters.toFixed(1)} L</p>}
+                          </div>
+                        </div>
+                      ))}
+                      {vehicleReceipts.length === 0 && <p className="text-sm text-muted-foreground">No receipts are linked to this vehicle yet.</p>}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+          );
+        })}
+      </Tabs>
+
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-lg">
-          <DialogHeader><DialogTitle className="font-display text-xl">Add a new vehicle</DialogTitle><DialogDescription>Store basic details to start tracking maintenance and receipts.</DialogDescription></DialogHeader>
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl">Add a new vehicle</DialogTitle>
+            <DialogDescription>Store basic details to start tracking maintenance and receipts.</DialogDescription>
+          </DialogHeader>
           <AddVehicleForm onClose={() => setOpen(false)} />
         </DialogContent>
       </Dialog>
+
+      <Dialog open={vehicleToEdit !== null} onOpenChange={(isOpen) => !isOpen && setEditingVehicle(null)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl">Edit vehicle</DialogTitle>
+            <DialogDescription>Update the details for this car.</DialogDescription>
+          </DialogHeader>
+          {vehicleToEdit && <AddVehicleForm onClose={() => setEditingVehicle(null)} initialVehicle={vehicleToEdit} />}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={receiptVehicleId !== null} onOpenChange={(isOpen) => !isOpen && setReceiptVehicleId(null)}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl">Add a vehicle receipt</DialogTitle>
+            <DialogDescription>Save a fuel, parts, or service receipt for the selected vehicle.</DialogDescription>
+          </DialogHeader>
+          <AddReceiptForm onClose={() => setReceiptVehicleId(null)} defaultVehicleId={receiptVehicleId ?? undefined} />
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={deletingVehicle !== null} onOpenChange={(isOpen) => !isOpen && setDeletingVehicle(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete vehicle?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {vehicleToDelete
+                ? `This will remove ${deleteSummary?.receipts ?? 0} receipts and ${deleteSummary?.services ?? 0} services linked to ${vehicleToDelete.brand} ${vehicleToDelete.model}.`
+                : "This action cannot be undone."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deletingVehicle) {
+                  deleteVehicle(deletingVehicle);
+                }
+                setDeletingVehicle(null);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppShell>
   );
 }
 
-export function PageHeader({ title, subtitle, action }: { title: string; subtitle: string; action?: React.ReactNode }) {
+export function PageHeader({ title, subtitle, action }: { title: string; subtitle: string; action?: ReactNode }) {
   return (
     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
       <div>
@@ -37,6 +191,19 @@ export function PageHeader({ title, subtitle, action }: { title: string; subtitl
         <p className="text-muted-foreground text-sm mt-1">{subtitle}</p>
       </div>
       {action}
+    </div>
+  );
+}
+
+function InfoCard({ label, value, icon: Icon, subtext }: { label: string; value: string; icon: any; subtext?: string }) {
+  return (
+    <div className="rounded-xl border border-border/70 bg-secondary/30 p-3">
+      <div className="flex items-center gap-2 text-muted-foreground text-xs uppercase tracking-wider">
+        <Icon className="h-3.5 w-3.5" />
+        <span>{label}</span>
+      </div>
+      <p className="mt-1 font-display text-lg font-bold">{value}</p>
+      {subtext && <p className="text-[11px] text-muted-foreground mt-0.5">{subtext}</p>}
     </div>
   );
 }

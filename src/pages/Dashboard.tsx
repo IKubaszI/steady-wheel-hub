@@ -3,17 +3,39 @@ import { AppShell } from "@/components/layout/AppShell";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { RecentActivity } from "@/components/dashboard/RecentActivity";
 import { UpcomingServices } from "@/components/dashboard/UpcomingServices";
-import { Car, Wrench, DollarSign, CalendarClock, Plus, Receipt as ReceiptIcon } from "lucide-react";
+import { DollarSign, CalendarClock, Plus, Receipt as ReceiptIcon, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AddMaintenanceForm } from "@/components/forms/AddMaintenanceForm";
 import { AddReceiptForm } from "@/components/forms/AddReceiptForm";
-import { receipts, maintenance, vehicles } from "@/data/mockData";
+import { useGarageData } from "@/context/garage-data";
+import { isSameMonth, parseISO, subMonths } from "date-fns";
 
 export default function Dashboard() {
   const [open, setOpen] = useState<null | "service" | "receipt">(null);
-  const totalExpenses = receipts.reduce((s, r) => s + r.amount, 0);
-  const upcoming = maintenance.filter((m) => m.status !== "completed").length;
+  const { receipts, maintenance } = useGarageData();
+  const totalExpenses = receipts.reduce((sum, receipt) => sum + receipt.amount, 0);
+  const upcoming = maintenance.filter((entry) => entry.status !== "completed").length;
+  const thisMonthEntries = [
+    ...receipts.map((receipt) => ({ date: receipt.date, amount: receipt.amount })),
+    ...maintenance.map((entry) => ({ date: entry.date, amount: entry.cost })),
+  ];
+  const thisMonthSpend = thisMonthEntries
+    .filter((entry) => isSameMonth(parseISO(entry.date), new Date()))
+    .reduce((sum, entry) => sum + entry.amount, 0);
+  const upcomingThisMonthSpend = maintenance
+    .filter((entry) => entry.status !== "completed" && isSameMonth(parseISO(entry.date), new Date()))
+    .reduce((sum, entry) => sum + entry.cost, 0);
+  const previousMonthDate = subMonths(new Date(), 1);
+  const upcomingThisMonthCount = maintenance
+    .filter((entry) => entry.status !== "completed" && isSameMonth(parseISO(entry.date), new Date()))
+    .length;
+  const previousMonthUpcomingCount = maintenance
+    .filter((entry) => entry.status !== "completed" && isSameMonth(parseISO(entry.date), previousMonthDate))
+    .length;
+  const previousMonthSpend = maintenance
+    .filter((entry) => isSameMonth(parseISO(entry.date), previousMonthDate))
+    .reduce((sum, entry) => sum + entry.cost, 0);
 
   return (
     <AppShell onQuickAdd={() => setOpen("receipt")}>
@@ -32,10 +54,26 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-5">
-        <StatCard label="Total expenses" value={`$${totalExpenses.toFixed(0)}`} delta={{ value: "8.2%", positive: false }} icon={DollarSign} tone="primary" hint="All vehicles, last 30 days" />
-        <StatCard label="Upcoming services" value={String(upcoming)} delta={{ value: "2", positive: true }} icon={CalendarClock} tone="warning" hint="Next within 14 days" />
-        <StatCard label="Vehicles tracked" value={String(vehicles.length)} icon={Car} tone="accent" hint="2 EV · 2 ICE" />
-        <StatCard label="Services logged" value={String(maintenance.length)} delta={{ value: "12.5%", positive: true }} icon={Wrench} tone="success" hint="This year" />
+        <StatCard label="Total expenses" value={`$${totalExpenses.toFixed(0)}`} delta={{ value: "all time", positive: true }} deltaLabel="across all saved receipts" icon={DollarSign} tone="primary" hint="All recorded spending" />
+        <StatCard
+          label="Upcoming services"
+          value={String(upcoming)}
+          delta={{ value: String(previousMonthUpcomingCount), positive: upcomingThisMonthCount <= previousMonthUpcomingCount }}
+          deltaLabel="vs. previous month due services"
+          icon={CalendarClock}
+          tone="warning"
+          hint={`${upcomingThisMonthCount} due this month (upcoming + overdue)`}
+        />
+        <StatCard label="Spend this month" value={`$${thisMonthSpend.toFixed(0)}`} delta={{ value: "live", positive: true }} deltaLabel="calendar month only" icon={ReceiptIcon} tone="success" hint="Fuel, parts, and services" />
+        <StatCard
+          label="Upcoming spend this month"
+          value={`$${upcomingThisMonthSpend.toFixed(0)}`}
+          delta={{ value: `$${previousMonthSpend.toFixed(0)}`, positive: upcomingThisMonthSpend <= previousMonthSpend }}
+          deltaLabel="vs. previous month spend"
+          icon={Wallet}
+          tone="accent"
+          hint="Planned maintenance only"
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mt-6">

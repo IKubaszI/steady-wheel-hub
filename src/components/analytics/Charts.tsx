@@ -1,8 +1,10 @@
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { receipts, monthlyExpenses, categoryMeta, type Category } from "@/data/mockData";
+import { monthlyExpenses, categoryMeta, type Category } from "@/data/mockData";
+import { useGarageData } from "@/context/garage-data";
 import { useMemo } from "react";
 
 export function CategoryPie() {
+  const { receipts } = useGarageData();
   const data = useMemo(() => {
     const totals: Record<Category, number> = { fuel: 0, parts: 0, service: 0, insurance: 0, other: 0 };
     receipts.forEach((r) => { totals[r.category] += r.amount; });

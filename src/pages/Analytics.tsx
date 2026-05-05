@@ -1,18 +1,20 @@
 import { AppShell } from "@/components/layout/AppShell";
 import { PageHeader } from "./Vehicles";
 import { CategoryPie, MonthlyBars } from "@/components/analytics/Charts";
-import { receipts, categoryMeta, type Category } from "@/data/mockData";
+import { categoryMeta, type Category } from "@/data/mockData";
 import { TrendingUp, Wallet, Award } from "lucide-react";
 import { useMemo } from "react";
+import { useGarageData } from "@/context/garage-data";
 
 export default function Analytics() {
+  const { receipts } = useGarageData();
   const { total, top, avg } = useMemo(() => {
     const totals: Record<Category, number> = { fuel: 0, parts: 0, service: 0, insurance: 0, other: 0 };
     receipts.forEach((r) => { totals[r.category] += r.amount; });
     const total = receipts.reduce((s, r) => s + r.amount, 0);
     const top = (Object.entries(totals) as [Category, number][]).sort((a, b) => b[1] - a[1])[0];
-    return { total, top, avg: total / receipts.length };
-  }, []);
+    return { total, top, avg: receipts.length ? total / receipts.length : 0 };
+  }, [receipts]);
 
   const TopIcon = categoryMeta[top[0]].icon;
 

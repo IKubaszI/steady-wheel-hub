@@ -1,4 +1,5 @@
-import { maintenance, vehicles, type ServiceStatus } from "@/data/mockData";
+import { type ServiceStatus } from "@/data/mockData";
+import { useGarageData } from "@/context/garage-data";
 import { format, parseISO } from "date-fns";
 import { CheckCircle2, Clock, AlertTriangle, Wrench } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -9,8 +10,15 @@ const statusMap: Record<ServiceStatus, { label: string; cls: string; icon: any }
   overdue:   { label: "Overdue",   cls: "bg-destructive/10 text-destructive border-destructive/30", icon: AlertTriangle },
 };
 
-export function MaintenanceTimeline() {
-  const sorted = [...maintenance].sort((a, b) => +parseISO(b.date) - +parseISO(a.date));
+type Props = {
+  status?: ServiceStatus | "all";
+};
+
+export function MaintenanceTimeline({ status = "all" }: Props) {
+  const { maintenance, vehicles } = useGarageData();
+  const sorted = [...maintenance]
+    .filter((entry) => status === "all" || entry.status === status)
+    .sort((a, b) => +parseISO(b.date) - +parseISO(a.date));
   return (
     <ol className="relative border-l-2 border-dashed border-border ml-4 space-y-6">
       {sorted.map((m) => {

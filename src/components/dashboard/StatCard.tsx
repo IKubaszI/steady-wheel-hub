@@ -5,6 +5,7 @@ type Props = {
   label: string;
   value: string;
   delta?: { value: string; positive?: boolean };
+  deltaLabel?: string;
   icon: LucideIcon;
   tone?: "primary" | "accent" | "success" | "warning";
   hint?: string;
@@ -17,7 +18,7 @@ const toneStyles: Record<NonNullable<Props["tone"]>, string> = {
   warning: "from-warning/20 to-warning/0 text-warning",
 };
 
-export function StatCard({ label, value, delta, icon: Icon, tone = "primary", hint }: Props) {
+export function StatCard({ label, value, delta, deltaLabel = "vs. last month", icon: Icon, tone = "primary", hint }: Props) {
   return (
     <div className="surface-card p-5 relative overflow-hidden group">
       <div className={cn("absolute -top-12 -right-12 h-40 w-40 rounded-full bg-gradient-to-br opacity-80 blur-2xl pointer-events-none", toneStyles[tone])} />
@@ -38,7 +39,7 @@ export function StatCard({ label, value, delta, icon: Icon, tone = "primary", hi
             {delta.positive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
             {delta.value}
           </span>
-          <span className="text-muted-foreground">vs. last month</span>
+          <span className="text-muted-foreground">{deltaLabel}</span>
         </div>
       )}
     </div>
