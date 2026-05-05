@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { format, parseISO } from "date-fns";
-import { Filter, Search, Camera, Pencil } from "lucide-react";
+import { Filter, Search, Camera, Pencil, ChevronDown, Image as ImageIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +20,7 @@ export function ReceiptList({ onAddReceipt, onEditReceipt }: Props) {
   const { receipts, vehicles } = useGarageData();
   const [cat, setCat] = useState<Category | "all">("all");
   const [q, setQ] = useState("");
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   const filtered = useMemo(
     () => receipts
@@ -106,14 +107,29 @@ export function ReceiptList({ onAddReceipt, onEditReceipt }: Props) {
             const vehicle = vehicles.find((entry) => entry.id === receipt.vehicleId)!;
             const meta = categoryMeta[receipt.category];
             const Icon = meta.icon;
+            const isOpen = expanded === receipt.id;
             return (
-              <li key={receipt.id} className="grid grid-cols-1 md:grid-cols-[1fr_140px_140px_120px_100px] gap-x-4 gap-y-2 px-5 py-4 hover:bg-secondary/40 transition-colors">
+              <li key={receipt.id} className={cn("transition-colors", isOpen ? "bg-secondary/50" : "hover:bg-secondary/40") }>
+                <button
+                  type="button"
+                  onClick={() => setExpanded(isOpen ? null : receipt.id)}
+                  aria-expanded={isOpen}
+                  className="w-full text-left grid grid-cols-1 md:grid-cols-[1fr_140px_140px_120px_100px] gap-x-4 gap-y-2 px-5 py-4 focus-visible:outline-none focus-visible:bg-secondary/60"
+                >
                 <div className="flex items-center gap-3 min-w-0">
+                  <ChevronDown className={cn("h-4 w-4 text-muted-foreground shrink-0 transition-transform duration-200", isOpen && "rotate-180")} />
                   <div className={cn("h-9 w-9 rounded-lg grid place-items-center shrink-0", meta.bg)}>
                     <Icon className="h-4 w-4" />
                   </div>
                   <div className="min-w-0">
-                    <p className="font-medium truncate">{receipt.vendor}</p>
+                    <p className="font-medium truncate flex items-center gap-2">
+                      {receipt.vendor}
+                      {receipt.photos.length > 0 && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
+                          <ImageIcon className="h-3 w-3" />{receipt.photos.length}
+                        </span>
+                      )}
+                    </p>
                     <div className="md:hidden flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
                       <span>{vehicle.brand} {vehicle.model}</span>
                       <span>·</span>
@@ -134,18 +150,40 @@ export function ReceiptList({ onAddReceipt, onEditReceipt }: Props) {
                 <div className="md:text-right self-center">
                   <p className="font-display font-bold tabular-nums">${receipt.amount.toFixed(2)}</p>
                   {receipt.fuelLiters != null && <p className="text-xs text-muted-foreground">{receipt.fuelLiters.toFixed(1)} L</p>}
-                  {onEditReceipt && (
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      className="mt-1 h-7 px-2 text-xs"
-                      onClick={() => onEditReceipt(receipt.id)}
-                    >
-                      <Pencil className="h-3 w-3 mr-1" /> Edit
-                    </Button>
-                  )}
                 </div>
+                </button>
+                {isOpen && (
+                  <div className="px-5 pb-5 -mt-1 animate-fade-in">
+                    <div className="rounded-xl border border-border/70 bg-card p-4 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-5">
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-3 text-sm">
+                          <Detail label="Vendor" value={receipt.vendor} />
+                          <Detail label="Category" value={meta.label} />
+                          <Detail label="Vehicle" value={`${vehicle.brand} ${vehicle.model} · ${vehicle.plate}`} />
+                          <Detail label="Date" value={format(parseISO(receipt.date), "MMMM d, yyyy")} />
+                          <Detail label="Amount" value={`$${receipt.amount.toFixed(2)}`} />
+                          {receipt.fuelLiters != null && <Detail label="Fuel" value={`${receipt.fuelLiters.toFixed(1)} L`} />}
+                        </div>
+                        {onEditReceipt && (
+                          <Button type="button" size="sm" variant="outline" className="gap-2" onClick={() => onEditReceipt(receipt.id)}>
+                            <Pencil className="h-3.5 w-3.5" /> Edit receipt
+                          </Button>
+                        )}
+                      </div>
+                      {receipt.photos.length > 0 ? (
+                        <div className="flex gap-2 flex-wrap md:flex-nowrap md:max-w-xs">
+                          {receipt.photos.map((src, i) => (
+                            <a key={i} href={src} target="_blank" rel="noreferrer" className="block h-24 w-24 rounded-lg overflow-hidden border border-border hover:scale-105 transition-transform">
+                              <img src={src} alt={`${receipt.vendor} receipt ${i + 1}`} className="h-full w-full object-cover" loading="lazy" />
+                            </a>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="self-start text-xs text-muted-foreground italic">No photos attached</div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </li>
             );
           })}
@@ -154,6 +192,15 @@ export function ReceiptList({ onAddReceipt, onEditReceipt }: Props) {
           )}
         </ul>
       </div>
+    </div>
+  );
+}
+
+function Detail({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{label}</p>
+      <p className="font-medium mt-0.5">{value}</p>
     </div>
   );
 }

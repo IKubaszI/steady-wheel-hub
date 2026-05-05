@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard, Car, Wrench, Receipt, BarChart3, Bell, Search, Menu, X, Plus, Settings, Sparkles, Camera
+  LayoutDashboard, Car, Wrench, Receipt, BarChart3, Search, Menu, X, Plus, Settings, Sparkles, Camera, LogOut, User
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useGarageData } from "@/context/garage-data";
 import { ThemeToggle } from "./ThemeToggle";
+import { NotificationsPopover } from "./NotificationsPopover";
+import { AccountSettingsDialog } from "./AccountSettingsDialog";
 
 const navItems = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
@@ -25,7 +27,9 @@ const navItems = [
 export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; onQuickAdd?: () => void }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { vehicles, receipts, maintenance } = useGarageData();
 
   const searchResults = useMemo(() => {
@@ -160,10 +164,7 @@ export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; 
                 </div>
               )}
             </div>
-            <Button variant="ghost" size="icon" className="relative" aria-label="Notifications">
-              <Bell className="h-5 w-5" />
-              <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-accent" />
-            </Button>
+            <NotificationsPopover />
             <ThemeToggle />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -174,16 +175,21 @@ export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; 
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>Alex Morgan</DropdownMenuLabel>
+                <DropdownMenuLabel>
+                  <div className="font-semibold">Alex Morgan</div>
+                  <div className="text-xs font-normal text-muted-foreground">alex@garageos.app</div>
+                </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem><Settings className="mr-2 h-4 w-4" /> Settings</DropdownMenuItem>
-                <DropdownMenuItem>Sign out</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setSettingsOpen(true)}><User className="mr-2 h-4 w-4" /> Profile</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setSettingsOpen(true)}><Settings className="mr-2 h-4 w-4" /> Account settings</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="text-destructive focus:text-destructive"><LogOut className="mr-2 h-4 w-4" /> Sign out</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </header>
 
-        <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 lg:py-8 animate-fade-in">
+        <main key={location.pathname} className="flex-1 px-4 sm:px-6 lg:px-8 py-6 lg:py-8 animate-fade-in">
           {children}
         </main>
       </div>
@@ -196,6 +202,8 @@ export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; 
       >
         <Plus className="h-6 w-6 mx-auto" />
       </button>
+
+      <AccountSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     </div>
   );
 }

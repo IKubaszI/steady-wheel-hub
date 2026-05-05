@@ -1,10 +1,20 @@
 import { Car, Gauge, Calendar, ChevronRight, Palette } from "lucide-react";
+import { useState } from "react";
 import { format, parseISO } from "date-fns";
 import type { Vehicle } from "@/data/mockData";
+import { VehicleDetailsDialog } from "./VehicleDetailsDialog";
 
 export function VehicleCard({ v }: { v: Vehicle }) {
+  const [open, setOpen] = useState(false);
   return (
-    <article className="surface-card p-6 group cursor-pointer relative overflow-hidden">
+    <>
+    <article
+      className="surface-card p-6 group cursor-pointer relative overflow-hidden hover:-translate-y-1 hover:shadow-elev-lg transition-all duration-300"
+      onClick={() => setOpen(true)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpen(true); } }}
+    >
       <div className="absolute -top-20 -right-20 h-56 w-56 rounded-full bg-gradient-primary opacity-[0.08] blur-3xl group-hover:opacity-20 transition-opacity" />
       <div className="relative flex items-start justify-between">
         <div className="flex items-center gap-3">
@@ -27,10 +37,16 @@ export function VehicleCard({ v }: { v: Vehicle }) {
         <Stat icon={Palette} label="Color" value={v.color.split(" ")[0]} />
       </dl>
 
-      <button className="relative mt-5 w-full inline-flex items-center justify-center gap-1 text-sm font-medium text-primary group-hover:gap-2 transition-all">
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); setOpen(true); }}
+        className="relative mt-5 w-full inline-flex items-center justify-center gap-1 text-sm font-medium text-primary group-hover:gap-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md py-1"
+      >
         View details <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
       </button>
     </article>
+    <VehicleDetailsDialog vehicle={v} open={open} onOpenChange={setOpen} />
+    </>
   );
 }
 
