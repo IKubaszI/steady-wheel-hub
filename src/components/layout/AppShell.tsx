@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Car, Wrench, Receipt, BarChart3, Search, Menu, X, Plus, Settings, Sparkles, Camera, LogOut, User
 } from "lucide-react";
@@ -29,6 +29,7 @@ export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; 
   const [searchQuery, setSearchQuery] = useState("");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { vehicles, receipts, maintenance } = useGarageData();
 
   const searchResults = useMemo(() => {
@@ -188,7 +189,7 @@ export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; 
           </div>
         </header>
 
-        <main key={navigate.length} className="flex-1 px-4 sm:px-6 lg:px-8 py-6 lg:py-8 animate-fade-in">
+        <main key={location.pathname} className="flex-1 px-4 sm:px-6 lg:px-8 py-6 lg:py-8 animate-fade-in">
           {children}
         </main>
       </div>
