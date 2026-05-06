@@ -1,13 +1,16 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { format, parseISO } from "date-fns";
-import { Filter, Search, Camera, Pencil, ChevronDown, Image as ImageIcon } from "lucide-react";
+import { Filter, Search, Camera, Pencil, ChevronDown, Image as ImageIcon, Download, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { categoryMeta, type Category } from "@/data/mockData";
 import { useGarageData } from "@/context/garage-data";
+import { useSettings } from "@/context/settings";
 
 const categories: (Category | "all")[] = ["all", "fuel", "parts", "service", "insurance", "other"];
 
@@ -18,9 +21,11 @@ type Props = {
 
 export function ReceiptList({ onAddReceipt, onEditReceipt }: Props) {
   const { receipts, vehicles } = useGarageData();
+  const { format: fmtMoney } = useSettings();
   const [cat, setCat] = useState<Category | "all">("all");
   const [q, setQ] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [preview, setPreview] = useState<{ src: string; name: string } | null>(null);
 
   const filtered = useMemo(
     () => receipts
@@ -93,7 +98,7 @@ export function ReceiptList({ onAddReceipt, onEditReceipt }: Props) {
       <div className="flex flex-wrap items-center justify-between gap-3 px-1">
         <p className="text-sm text-muted-foreground"><span className="font-semibold text-foreground">{filtered.length}</span> receipts</p>
         <div className="flex flex-wrap items-center gap-2 text-sm">
-          <span>Total: <span className="font-display font-bold text-lg">${total.toFixed(2)}</span></span>
+          <span>Total: <span className="font-display font-bold text-lg">{fmtMoney(total)}</span></span>
           {cat === "fuel" && <Badge variant="secondary" className="rounded-full">{fuelLiters.toFixed(1)} L logged</Badge>}
         </div>
       </div>
@@ -148,20 +153,21 @@ export function ReceiptList({ onAddReceipt, onEditReceipt }: Props) {
                 </div>
                 <p className="hidden md:block text-sm self-center tabular-nums">{format(parseISO(receipt.date), "MMM d, yyyy")}</p>
                 <div className="md:text-right self-center">
-                  <p className="font-display font-bold tabular-nums">${receipt.amount.toFixed(2)}</p>
+                  <p className="font-display font-bold tabular-nums">{fmtMoney(receipt.amount)}</p>
                   {receipt.fuelLiters != null && <p className="text-xs text-muted-foreground">{receipt.fuelLiters.toFixed(1)} L</p>}
                 </div>
                 </button>
-                {isOpen && (
-                  <div className="px-5 pb-5 -mt-1 animate-fade-in">
-                    <div className="rounded-xl border border-border/70 bg-card p-4 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-5">
+                <Collapsible open={isOpen}>
+                  <CollapsibleContent className="overflow-hidden data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
+                    <div className="px-5 pb-5 -mt-1">
+                      <div className="rounded-xl border border-border/70 bg-card p-4 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-5">
                       <div className="space-y-3">
                         <div className="grid grid-cols-2 gap-3 text-sm">
                           <Detail label="Vendor" value={receipt.vendor} />
                           <Detail label="Category" value={meta.label} />
                           <Detail label="Vehicle" value={`${vehicle.brand} ${vehicle.model} · ${vehicle.plate}`} />
                           <Detail label="Date" value={format(parseISO(receipt.date), "MMMM d, yyyy")} />
-                          <Detail label="Amount" value={`$${receipt.amount.toFixed(2)}`} />
+                          <Detail label="Amount" value={fmtMoney(receipt.amount)} />
                           {receipt.fuelLiters != null && <Detail label="Fuel" value={`${receipt.fuelLiters.toFixed(1)} L`} />}
                         </div>
                         {onEditReceipt && (
@@ -173,17 +179,24 @@ export function ReceiptList({ onAddReceipt, onEditReceipt }: Props) {
                       {receipt.photos.length > 0 ? (
                         <div className="flex gap-2 flex-wrap md:flex-nowrap md:max-w-xs">
                           {receipt.photos.map((src, i) => (
-                            <a key={i} href={src} target="_blank" rel="noreferrer" className="block h-24 w-24 rounded-lg overflow-hidden border border-border hover:scale-105 transition-transform">
+                            <button
+                              key={i}
+                              type="button"
+                              onClick={() => setPreview({ src, name: `${receipt.vendor.replace(/\s+/g, "-").toLowerCase()}-${i + 1}.jpg` })}
+                              className="block h-24 w-24 rounded-lg overflow-hidden border border-border hover:scale-105 transition-transform cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                              aria-label={`Preview ${receipt.vendor} receipt ${i + 1}`}
+                            >
                               <img src={src} alt={`${receipt.vendor} receipt ${i + 1}`} className="h-full w-full object-cover" loading="lazy" />
-                            </a>
+                            </button>
                           ))}
                         </div>
                       ) : (
                         <div className="self-start text-xs text-muted-foreground italic">No photos attached</div>
                       )}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  </CollapsibleContent>
+                </Collapsible>
               </li>
             );
           })}
@@ -192,6 +205,33 @@ export function ReceiptList({ onAddReceipt, onEditReceipt }: Props) {
           )}
         </ul>
       </div>
+
+      <Dialog open={preview !== null} onOpenChange={(o) => !o && setPreview(null)}>
+        <DialogContent className="max-w-4xl p-0 overflow-hidden">
+          <DialogHeader className="px-5 py-3 border-b border-border flex flex-row items-center justify-between gap-2 space-y-0">
+            <div className="min-w-0">
+              <DialogTitle className="text-base truncate">Receipt preview</DialogTitle>
+              <DialogDescription className="truncate">{preview?.name}</DialogDescription>
+            </div>
+            {preview && (
+              <a
+                href={preview.src}
+                download={preview.name}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 rounded-md bg-gradient-primary text-primary-foreground px-3 py-1.5 text-sm font-medium shadow-glow hover:opacity-90"
+              >
+                <Download className="h-4 w-4" /> Download
+              </a>
+            )}
+          </DialogHeader>
+          {preview && (
+            <div className="bg-secondary/40 grid place-items-center max-h-[75vh]">
+              <img src={preview.src} alt="Receipt preview" className="max-h-[75vh] w-auto object-contain animate-fade-in" />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
