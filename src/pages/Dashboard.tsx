@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { AddMaintenanceForm } from "@/components/forms/AddMaintenanceForm";
 import { AddReceiptForm } from "@/components/forms/AddReceiptForm";
 import { useGarageData } from "@/context/garage-data";
+import { useSettings } from "@/context/settings";
 import { isSameMonth, parseISO, subMonths } from "date-fns";
 
 export default function Dashboard() {
@@ -20,6 +21,9 @@ export default function Dashboard() {
     return () => clearTimeout(t);
   }, []);
   const { receipts, maintenance } = useGarageData();
+  const { symbol, currency } = useSettings();
+  const moneyPrefix = currency === "PLN" ? "" : symbol;
+  const moneySuffix = currency === "PLN" ? ` ${symbol}` : "";
   const totalExpenses = receipts.reduce((sum, receipt) => sum + receipt.amount, 0);
   const upcoming = maintenance.filter((entry) => entry.status !== "completed").length;
   const thisMonthEntries = [
@@ -61,21 +65,23 @@ export default function Dashboard() {
 
       {loading ? <DashboardSkeleton /> : (<>
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-5">
-        <StatCard label="Total expenses" value={`$${totalExpenses.toFixed(0)}`} delta={{ value: "all time", positive: true }} deltaLabel="across all saved receipts" icon={DollarSign} tone="primary" hint="All recorded spending" />
+        <StatCard label="Total expenses" value={totalExpenses} prefix={moneyPrefix} suffix={moneySuffix} delta={{ value: "all time", positive: true }} deltaLabel="across all saved receipts" icon={DollarSign} tone="primary" hint="All recorded spending" />
         <StatCard
           label="Upcoming services"
-          value={String(upcoming)}
+          value={upcoming}
           delta={{ value: String(previousMonthUpcomingCount), positive: upcomingThisMonthCount <= previousMonthUpcomingCount }}
           deltaLabel="vs. previous month due services"
           icon={CalendarClock}
           tone="warning"
           hint={`${upcomingThisMonthCount} due this month (upcoming + overdue)`}
         />
-        <StatCard label="Spend this month" value={`$${thisMonthSpend.toFixed(0)}`} delta={{ value: "live", positive: true }} deltaLabel="calendar month only" icon={ReceiptIcon} tone="success" hint="Fuel, parts, and services" />
+        <StatCard label="Spend this month" value={thisMonthSpend} prefix={moneyPrefix} suffix={moneySuffix} delta={{ value: "live", positive: true }} deltaLabel="calendar month only" icon={ReceiptIcon} tone="success" hint="Fuel, parts, and services" />
         <StatCard
           label="Upcoming spend this month"
-          value={`$${upcomingThisMonthSpend.toFixed(0)}`}
-          delta={{ value: `$${previousMonthSpend.toFixed(0)}`, positive: upcomingThisMonthSpend <= previousMonthSpend }}
+          value={upcomingThisMonthSpend}
+          prefix={moneyPrefix}
+          suffix={moneySuffix}
+          delta={{ value: `${moneyPrefix}${previousMonthSpend.toFixed(0)}${moneySuffix}`, positive: upcomingThisMonthSpend <= previousMonthSpend }}
           deltaLabel="vs. previous month spend"
           icon={Wallet}
           tone="accent"
