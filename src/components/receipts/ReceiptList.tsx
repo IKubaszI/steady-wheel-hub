@@ -158,7 +158,7 @@ export function ReceiptList({ onAddReceipt, onEditReceipt }: Props) {
                 </div>
                 </button>
                 <Collapsible open={isOpen}>
-                  <CollapsibleContent className="overflow-hidden data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
+                  <CollapsibleContent className="overflow-hidden data-[state=open]:animate-collapsible-down data-[state=closed]:animate-collapsible-up">
                     <div className="px-5 pb-5 -mt-1">
                       <div className="rounded-xl border border-border/70 bg-card p-4 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-5">
                       <div className="space-y-3">
