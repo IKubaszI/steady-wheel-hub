@@ -5,6 +5,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { GarageDataProvider } from "@/context/garage-data";
+import { SettingsProvider } from "@/context/settings";
 import Index from "./pages/Index.tsx";
 import Vehicles from "./pages/Vehicles.tsx";
 import MaintenancePage from "./pages/Maintenance.tsx";
@@ -20,6 +21,7 @@ const App = () => (
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
     <TooltipProvider>
       <GarageDataProvider>
+        <SettingsProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
@@ -34,6 +36,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
+        </SettingsProvider>
       </GarageDataProvider>
     </TooltipProvider>
     </ThemeProvider>
