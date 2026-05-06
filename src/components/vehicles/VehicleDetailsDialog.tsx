@@ -157,9 +157,9 @@ export function VehicleDetailsDialog({ vehicle, open, onOpenChange }: { vehicle:
         )}
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-2">
-          <Stat icon={Gauge} label="Mileage" value={`${(vehicle.mileage / 1000).toFixed(1)}k mi`} />
-          <Stat icon={Calendar} label="Next service" value={format(parseISO(vehicle.nextService), "MMM d")} />
-          <Stat icon={Palette} label="Color" value={vehicle.color.split(" ")[0]} />
+          <Stat icon={Gauge} label="Mileage" value={`${(draft.mileage / 1000).toFixed(1)}k mi`} />
+          <Stat icon={Calendar} label="Next service" value={format(parseISO(draft.nextService), "MMM d")} />
+          <Stat icon={Palette} label="Color" value={draft.color.split(" ")[0]} />
           <Stat icon={Fuel} label="Fuel logged" value={`${fuelLiters.toFixed(0)} L`} />
         </div>
 
