@@ -20,6 +20,8 @@ export type Vehicle = {
   color: string;
   nextService: string;
   fuelLitersTotal?: number;
+  image?: string;       // background photo (data URL or URL)
+  logoUrl?: string;     // brand logo override
 };
 
 export const vehicles: Vehicle[] = [
