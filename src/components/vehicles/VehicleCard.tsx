@@ -3,9 +3,11 @@ import { useState } from "react";
 import { format, parseISO } from "date-fns";
 import type { Vehicle } from "@/data/mockData";
 import { VehicleDetailsDialog } from "./VehicleDetailsDialog";
+import { findBrandLogo } from "@/lib/car-brands";
 
 export function VehicleCard({ v }: { v: Vehicle }) {
   const [open, setOpen] = useState(false);
+  const logoSrc = v.logoUrl ?? findBrandLogo(v.brand);
   return (
     <>
     <article
@@ -15,11 +17,36 @@ export function VehicleCard({ v }: { v: Vehicle }) {
       tabIndex={0}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpen(true); } }}
     >
-      <div className="absolute -top-20 -right-20 h-56 w-56 rounded-full bg-gradient-primary opacity-[0.08] blur-3xl group-hover:opacity-20 transition-opacity" />
+      {v.image ? (
+        <div
+          className="absolute inset-0 bg-cover bg-center opacity-30 group-hover:opacity-40 transition-opacity"
+          style={{ backgroundImage: `url(${v.image})`, filter: "blur(10px) saturate(1.05)" }}
+          aria-hidden
+        />
+      ) : (
+        <div className="absolute -top-20 -right-20 h-56 w-56 rounded-full bg-gradient-primary opacity-[0.08] blur-3xl group-hover:opacity-20 transition-opacity" />
+      )}
+      {v.image && <div className="absolute inset-0 bg-gradient-to-br from-card/80 via-card/70 to-card/90" aria-hidden />}
       <div className="relative flex items-start justify-between">
         <div className="flex items-center gap-3">
-          <div className="h-12 w-12 rounded-xl bg-gradient-primary grid place-items-center text-primary-foreground shadow-glow">
-            <Car className="h-6 w-6" />
+          <div className="h-12 w-12 rounded-xl bg-card grid place-items-center text-primary shadow-elev-sm border border-border overflow-hidden">
+            {logoSrc ? (
+              <img
+                src={logoSrc}
+                alt={`${v.brand} logo`}
+                className="h-9 w-9 object-contain"
+                onError={(e) => {
+                  const img = e.currentTarget as HTMLImageElement;
+                  img.style.display = "none";
+                  const next = img.nextElementSibling as HTMLElement | null;
+                  if (next) next.style.display = "grid";
+                }}
+              />
+            ) : null}
+            <Car
+              className="h-6 w-6"
+              style={{ display: logoSrc ? "none" : undefined }}
+            />
           </div>
           <div>
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{v.year}</p>
