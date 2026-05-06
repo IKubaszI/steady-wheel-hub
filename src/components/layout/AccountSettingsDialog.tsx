@@ -7,9 +7,12 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useSettings, type Currency } from "@/context/settings";
 
 export function AccountSettingsDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const { toast } = useToast();
+  const { currency, setCurrency, format: fmtMoney } = useSettings();
   const [name, setName] = useState("Alex Morgan");
   const [email, setEmail] = useState("alex@garageos.app");
   const [units, setUnits] = useState<"imperial" | "metric">("imperial");
@@ -64,7 +67,17 @@ export function AccountSettingsDialog({ open, onOpenChange }: { open: boolean; o
             </div>
             <div className="space-y-2">
               <Label>Currency</Label>
-              <Input defaultValue="USD" />
+              <Select value={currency} onValueChange={(v) => setCurrency(v as Currency)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="USD">USD — US Dollar ($)</SelectItem>
+                  <SelectItem value="EUR">EUR — Euro (€)</SelectItem>
+                  <SelectItem value="GBP">GBP — British Pound (£)</SelectItem>
+                  <SelectItem value="PLN">PLN — Polish Zloty (zł)</SelectItem>
+                  <SelectItem value="JPY">JPY — Japanese Yen (¥)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Preview: {fmtMoney(1234.5)}</p>
             </div>
           </TabsContent>
 

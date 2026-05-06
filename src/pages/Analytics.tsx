@@ -2,12 +2,17 @@ import { AppShell } from "@/components/layout/AppShell";
 import { PageHeader } from "./Vehicles";
 import { CategoryPie, MonthlyBars } from "@/components/analytics/Charts";
 import { categoryMeta, type Category } from "@/data/mockData";
-import { TrendingUp, Wallet, Award } from "lucide-react";
+import { Wallet, Award } from "lucide-react";
 import { useMemo } from "react";
 import { useGarageData } from "@/context/garage-data";
+import { useSettings } from "@/context/settings";
+import { CountUp } from "@/components/ui/count-up";
 
 export default function Analytics() {
   const { receipts } = useGarageData();
+  const { symbol, currency } = useSettings();
+  const moneyPrefix = currency === "PLN" ? "" : symbol;
+  const moneySuffix = currency === "PLN" ? ` ${symbol}` : "";
   const { total, top, avg } = useMemo(() => {
     const totals: Record<Category, number> = { fuel: 0, parts: 0, service: 0, insurance: 0, other: 0 };
     receipts.forEach((r) => { totals[r.category] += r.amount; });
@@ -23,20 +28,24 @@ export default function Analytics() {
       <PageHeader title="Analytics" subtitle="Understand where your money goes" />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-5 mb-6">
-        <SummaryCard icon={Wallet} label="Total spend" value={`$${total.toFixed(2)}`} hint={`${receipts.length} receipts`} tone="primary" />
+        <SummaryCard icon={Wallet} label="Total spend" value={<CountUp value={total} prefix={moneyPrefix} suffix={moneySuffix} decimals={2} />} hint={`${receipts.length} receipts`} tone="primary" />
         <SummaryCard
           icon={TopIcon}
           label="Top category"
           value={categoryMeta[top[0]].label}
-          hint={`$${top[1].toFixed(2)} spent`}
+          hint={`${moneyPrefix}${top[1].toFixed(2)}${moneySuffix} spent`}
           tone="accent"
         />
-        <SummaryCard icon={Award} label="Avg. receipt" value={`$${avg.toFixed(2)}`} hint="Across all categories" tone="success" />
+        <SummaryCard icon={Award} label="Avg. receipt" value={<CountUp value={avg} prefix={moneyPrefix} suffix={moneySuffix} decimals={2} />} hint="Across all categories" tone="success" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <CategoryPie />
-        <MonthlyBars />
+        <div className="animate-fade-in" style={{ animationDelay: "120ms", animationFillMode: "backwards" }}>
+          <CategoryPie />
+        </div>
+        <div className="animate-fade-in" style={{ animationDelay: "240ms", animationFillMode: "backwards" }}>
+          <MonthlyBars />
+        </div>
       </div>
     </AppShell>
   );
