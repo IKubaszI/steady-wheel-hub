@@ -11,6 +11,7 @@ import { useGarageData } from "@/context/garage-data";
 import { useSettings } from "@/context/settings";
 import type { Vehicle } from "@/data/mockData";
 import { CAR_BRANDS, findBrandLogo } from "@/lib/car-brands";
+import { VEHICLE_THEMES, VEHICLE_PATTERNS } from "@/lib/vehicle-themes";
 import { cn } from "@/lib/utils";
 
 export function VehicleDetailsDialog({ vehicle, open, onOpenChange }: { vehicle: Vehicle | null; open: boolean; onOpenChange: (o: boolean) => void }) {
@@ -152,6 +153,47 @@ export function VehicleDetailsDialog({ vehicle, open, onOpenChange }: { vehicle:
               <FieldEditor label="Next service">
                 <Input type="date" value={draft.nextService} onChange={(e) => setDraft((d) => d ? { ...d, nextService: e.target.value } : d)} />
               </FieldEditor>
+            </div>
+
+            <div className="pt-2">
+              <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Card theme</Label>
+              <div className="mt-2 grid grid-cols-4 gap-2">
+                {VEHICLE_THEMES.map((t) => (
+                  <button
+                    key={t.key}
+                    type="button"
+                    onClick={() => setDraft((d) => d ? { ...d, theme: t.key } : d)}
+                    className={cn(
+                      "h-12 rounded-lg ring-1 ring-border text-[10px] font-semibold transition-all hover:scale-[1.03]",
+                      t.cardClass || "bg-card",
+                      (draft.theme ?? "default") === t.key && "ring-2 ring-primary"
+                    )}
+                    aria-label={t.label}
+                    title={t.label}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Pattern</Label>
+              <div className="mt-2 grid grid-cols-3 gap-2">
+                {VEHICLE_PATTERNS.map((p) => (
+                  <button
+                    key={p.key}
+                    type="button"
+                    onClick={() => setDraft((d) => d ? { ...d, pattern: p.key } : d)}
+                    className={cn(
+                      "h-10 rounded-lg ring-1 ring-border bg-secondary text-foreground/70 relative overflow-hidden text-[11px] font-medium transition-all hover:scale-[1.03]",
+                      (draft.pattern ?? "none") === p.key && "ring-2 ring-primary"
+                    )}
+                  >
+                    {p.style && <span className="absolute inset-0" style={p.style} aria-hidden />}
+                    <span className="relative">{p.label}</span>
+                  </button>
+                ))}
+              </div>
             </div>
           </section>
         )}
