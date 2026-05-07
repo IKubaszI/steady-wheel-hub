@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AddReceiptForm } from "@/components/forms/AddReceiptForm";
 import { Badge } from "@/components/ui/badge";
-import { Camera, Images, Upload, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Camera, Images, Upload, ChevronLeft, ChevronRight, Download } from "lucide-react";
 import { useGarageData } from "@/context/garage-data";
 import { categoryMeta, type Category, type Receipt } from "@/data/mockData";
 import { Link } from "react-router-dom";
@@ -184,12 +184,15 @@ export default function ReceiptPhotos() {
               <DialogTitle>Receipt photo preview</DialogTitle>
               <DialogDescription>Browse images attached to this receipt.</DialogDescription>
             </DialogHeader>
-            <button
-              onClick={() => setActiveReceipt(null)}
-              className="absolute right-4 top-4 rounded-lg border border-border p-1.5 hover:bg-accent"
+            <a
+              href={lightboxPhoto}
+              download={`${activeReceipt?.vendor ?? "receipt"}-${lightboxIndex + 1}.jpg`}
+              className="absolute right-14 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              title="Download photo"
             >
-              <X className="h-5 w-5" />
-            </button>
+              <Download className="h-4 w-4" />
+              <span className="sr-only">Download</span>
+            </a>
             <div className="flex items-center justify-center h-[70vh]">
               <img src={lightboxPhoto} alt="Receipt" className="max-h-full max-w-full object-contain rounded-lg" />
             </div>
