@@ -14,13 +14,13 @@ export function CategoryPie() {
   }, []);
 
   return (
-    <div className="surface-card p-6">
+    <div className="surface-card p-6 animate-scale-in">
       <h3 className="font-display text-lg font-semibold">Expense distribution</h3>
       <p className="text-sm text-muted-foreground mb-4">By category, all-time</p>
       <div className="h-[280px]">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
-            <Pie data={data} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={3} stroke="hsl(var(--card))" strokeWidth={3}>
+            <Pie data={data} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={3} stroke="hsl(var(--card))" strokeWidth={3} isAnimationActive animationBegin={150} animationDuration={1100} animationEasing="ease-out">
               {data.map((d) => <Cell key={d.key} fill={d.color} />)}
             </Pie>
             <Tooltip
@@ -37,7 +37,7 @@ export function CategoryPie() {
 
 export function MonthlyBars() {
   return (
-    <div className="surface-card p-6">
+    <div className="surface-card p-6 animate-fade-in">
       <h3 className="font-display text-lg font-semibold">Monthly expenses</h3>
       <p className="text-sm text-muted-foreground mb-4">Last 7 months</p>
       <div className="h-[280px]">
@@ -57,7 +57,7 @@ export function MonthlyBars() {
               contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12 }}
               formatter={(v: number) => [`$${v.toFixed(2)}`, "Spent"]}
             />
-            <Bar dataKey="value" fill="url(#barFill)" radius={[8, 8, 0, 0]} maxBarSize={48} />
+            <Bar dataKey="value" fill="url(#barFill)" radius={[8, 8, 0, 0]} maxBarSize={48} isAnimationActive animationBegin={200} animationDuration={1100} animationEasing="ease-out" />
           </BarChart>
         </ResponsiveContainer>
       </div>
