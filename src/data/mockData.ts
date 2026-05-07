@@ -22,6 +22,8 @@ export type Vehicle = {
   fuelLitersTotal?: number;
   image?: string;       // background photo (data URL or URL)
   logoUrl?: string;     // brand logo override
+  theme?: string;       // visual theme key for card customization
+  pattern?: string;     // background pattern key
 };
 
 export const vehicles: Vehicle[] = [

@@ -91,9 +91,9 @@ export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; 
 
       {/* Sidebar — mobile drawer */}
       {mobileOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 animate-fade-in">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
-          <aside className="absolute inset-y-0 left-0 w-72 bg-sidebar text-sidebar-foreground flex flex-col animate-slide-in-right">
+        <div className="lg:hidden fixed inset-0 z-50">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={() => setMobileOpen(false)} />
+          <aside className="absolute inset-y-0 left-0 w-72 bg-sidebar text-sidebar-foreground flex flex-col animate-slide-in-left shadow-elev-lg">
             <div className="flex items-center justify-between px-5 pt-5">
               <Brand compact />
               <Button variant="ghost" size="icon" className="text-sidebar-foreground hover:bg-sidebar-accent" onClick={() => setMobileOpen(false)}>

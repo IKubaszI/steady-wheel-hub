@@ -4,28 +4,39 @@ import { format, parseISO } from "date-fns";
 import type { Vehicle } from "@/data/mockData";
 import { VehicleDetailsDialog } from "./VehicleDetailsDialog";
 import { findBrandLogo } from "@/lib/car-brands";
+import { getPattern, getTheme } from "@/lib/vehicle-themes";
+import { cn } from "@/lib/utils";
 
 export function VehicleCard({ v }: { v: Vehicle }) {
   const [open, setOpen] = useState(false);
   const logoSrc = v.logoUrl ?? findBrandLogo(v.brand);
+  const theme = getTheme(v.theme);
+  const pattern = getPattern(v.pattern);
+  const themed = !!theme.cardClass;
   return (
     <>
     <article
-      className="surface-card p-6 group cursor-pointer relative overflow-hidden hover:-translate-y-1 hover:shadow-elev-lg transition-all duration-300"
+      className={cn(
+        "surface-card p-6 group cursor-pointer relative overflow-hidden hover:-translate-y-1 hover:shadow-elev-lg transition-all duration-300",
+        theme.cardClass
+      )}
       onClick={() => setOpen(true)}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpen(true); } }}
     >
+      {pattern.style && (
+        <div className="pointer-events-none absolute inset-0" style={pattern.style} aria-hidden />
+      )}
       {v.image ? (
         <div
           className="absolute inset-0 bg-cover bg-center opacity-30 group-hover:opacity-40 transition-opacity"
           style={{ backgroundImage: `url(${v.image})`, filter: "blur(10px) saturate(1.05)" }}
           aria-hidden
         />
-      ) : (
+      ) : !themed ? (
         <div className="absolute -top-20 -right-20 h-56 w-56 rounded-full bg-gradient-primary opacity-[0.08] blur-3xl group-hover:opacity-20 transition-opacity" />
-      )}
+      ) : null}
       {v.image && <div className="absolute inset-0 bg-gradient-to-br from-card/80 via-card/70 to-card/90" aria-hidden />}
       <div className="relative flex items-start justify-between">
         <div className="flex items-center gap-3">

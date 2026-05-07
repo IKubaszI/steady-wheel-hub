@@ -1,14 +1,19 @@
-import { Bell, AlertTriangle, Clock, CheckCircle2 } from "lucide-react";
+import { Bell, AlertTriangle, Clock, CheckCircle2, BellRing, BellOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useGarageData } from "@/context/garage-data";
 import { differenceInDays, format, parseISO } from "date-fns";
 import { useNavigate } from "react-router-dom";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { getNotificationPermission, notifyOnce, requestNotificationPermission, type Permission } from "@/lib/browser-notifications";
+import { toast } from "sonner";
 
 export function NotificationsPopover() {
   const { maintenance, vehicles } = useGarageData();
   const navigate = useNavigate();
+  const [perm, setPerm] = useState<Permission>("default");
+
+  useEffect(() => { setPerm(getNotificationPermission()); }, []);
 
   const items = useMemo(() => {
     return maintenance
@@ -23,6 +28,34 @@ export function NotificationsPopover() {
   }, [maintenance, vehicles]);
 
   const unread = items.filter((i) => i.status === "overdue").length;
+
+  // Fire browser notifications for overdue + upcoming within 3 days
+  useEffect(() => {
+    if (perm !== "granted") return;
+    items.forEach((m) => {
+      if (m.status === "overdue") {
+        notifyOnce(`overdue:${m.id}`, "Service overdue", {
+          body: `${m.type} — ${m.vehicle?.brand ?? ""} ${m.vehicle?.model ?? ""}`.trim(),
+          icon: "/favicon.ico",
+          tag: `overdue-${m.id}`,
+        });
+      } else if (m.status === "upcoming" && m.days >= 0 && m.days <= 3) {
+        notifyOnce(`upcoming:${m.id}:${m.days}`, "Upcoming service", {
+          body: `${m.type} in ${m.days}d — ${m.vehicle?.brand ?? ""} ${m.vehicle?.model ?? ""}`.trim(),
+          icon: "/favicon.ico",
+          tag: `upcoming-${m.id}`,
+        });
+      }
+    });
+  }, [items, perm]);
+
+  const enable = async () => {
+    const res = await requestNotificationPermission();
+    setPerm(res);
+    if (res === "granted") toast.success("Browser notifications enabled");
+    else if (res === "denied") toast.error("Notifications blocked in browser settings");
+    else if (res === "unsupported") toast.error("Notifications not supported in this browser");
+  };
 
   return (
     <Popover>
@@ -42,7 +75,13 @@ export function NotificationsPopover() {
             <p className="font-semibold text-sm">Notifications</p>
             <p className="text-xs text-muted-foreground">{items.length} pending services</p>
           </div>
-          <Bell className="h-4 w-4 text-muted-foreground" />
+          {perm === "granted" ? (
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-success"><BellRing className="h-3.5 w-3.5" /> On</span>
+          ) : perm === "denied" ? (
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-destructive"><BellOff className="h-3.5 w-3.5" /> Blocked</span>
+          ) : (
+            <Button size="sm" variant="outline" className="h-7 px-2 text-[11px]" onClick={enable}>Enable</Button>
+          )}
         </div>
         <ul className="max-h-80 overflow-auto divide-y divide-border">
           {items.length === 0 && (
