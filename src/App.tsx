@@ -24,7 +24,7 @@ const App = () => (
         <SettingsProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
+        <BrowserRouter basename="/steady-wheel-hub">
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/vehicles" element={<Vehicles />} />
