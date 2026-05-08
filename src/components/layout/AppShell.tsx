@@ -79,7 +79,8 @@ export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; 
   return (
     <div className="min-h-screen bg-background">
       {/* Sidebar — desktop */}
-      <aside className="hidden lg:flex fixed inset-y-0 left-0 w-64 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border z-30">
+      <aside className="hidden lg:flex fixed inset-y-0 left-0 w-64 flex-col text-sidebar-foreground border-r border-sidebar-border z-30 backdrop-blur-xl"
+        style={{ background: "linear-gradient(180deg, hsl(var(--sidebar-background) / 0.95), hsl(var(--sidebar-background) / 0.85))" }}>
         <Brand />
         <nav className="flex-1 px-3 py-4 space-y-1">
           {navItems.map((item) => (
@@ -112,7 +113,7 @@ export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; 
 
       {/* Main */}
       <div className="lg:pl-64 flex flex-col min-h-screen">
-        <header className="sticky top-0 z-20 backdrop-blur-xl bg-background/80 border-b border-border">
+        <header className="sticky top-0 z-20 backdrop-blur-xl bg-background/70 border-b border-border/60 supports-[backdrop-filter]:bg-background/55">
           <div className="flex items-center gap-3 h-16 px-4 sm:px-6 lg:px-8">
             <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setMobileOpen(true)} aria-label="Open menu">
               <Menu className="h-5 w-5" />
@@ -198,7 +199,7 @@ export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; 
       <button
         onClick={onQuickAdd}
         aria-label="Quick add"
-        className="fixed bottom-6 right-6 z-40 h-14 w-14 rounded-full bg-gradient-primary text-primary-foreground shadow-glow hover:scale-105 active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/40"
+        className="fixed bottom-6 right-6 z-40 h-14 w-14 rounded-full btn-primary-grad text-primary-foreground hover:scale-105 active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/40"
       >
         <Plus className="h-6 w-6 mx-auto" />
       </button>
