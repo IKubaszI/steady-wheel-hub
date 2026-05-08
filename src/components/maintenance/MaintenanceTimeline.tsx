@@ -9,10 +9,10 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { EditMaintenanceForm } from "@/components/forms/EditMaintenanceForm";
 
-const statusMap: Record<ServiceStatus, { label: string; cls: string; icon: any }> = {
-  completed: { label: "Completed", cls: "bg-success/10 text-success border-success/30", icon: CheckCircle2 },
-  upcoming:  { label: "Upcoming",  cls: "bg-primary/10 text-primary border-primary/30",  icon: Clock },
-  overdue:   { label: "Overdue",   cls: "bg-destructive/10 text-destructive border-destructive/30", icon: AlertTriangle },
+const statusMap: Record<ServiceStatus, { label: string; key: string; icon: any }> = {
+  completed: { label: "Completed", key: "completed", icon: CheckCircle2 },
+  upcoming:  { label: "Upcoming",  key: "upcoming",  icon: Clock },
+  overdue:   { label: "Overdue",   key: "overdue",   icon: AlertTriangle },
 };
 
 type Props = {
@@ -43,8 +43,8 @@ export function MaintenanceTimeline({ status = "all" }: Props) {
                 <div>
                   <div className="flex items-center gap-2">
                     <h4 className="font-display text-base font-semibold">{m.type}</h4>
-                    <span className={cn("inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border", s.cls)}>
-                      <SIcon className="h-3 w-3" /> {s.label}
+                    <span className={cn("status-pill", s.key)}>
+                      <span className="dot" /> {s.label}
                     </span>
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">
