@@ -2,7 +2,7 @@ import { useState, type ReactNode } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { VehicleCard } from "@/components/vehicles/VehicleCard";
 import { Button } from "@/components/ui/button";
-import { Plus, Fuel, ReceiptText, Wrench, Pencil, Trash2 } from "lucide-react";
+import { Plus, Fuel, ReceiptText, Wrench, Pencil, Trash2, Car } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AddVehicleForm } from "@/components/forms/AddVehicleForm";
 import { AddReceiptForm } from "@/components/forms/AddReceiptForm";
@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format, isSameMonth, parseISO } from "date-fns";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export default function Vehicles() {
   const [open, setOpen] = useState(false);
@@ -33,7 +34,7 @@ export default function Vehicles() {
       <PageHeader
         title="Vehicles"
         subtitle="Switch between tabs to see one car, its receipts, and linked tags"
-        action={<Button onClick={() => setOpen(true)} className="gap-2 bg-gradient-primary text-primary-foreground hover:opacity-90 shadow-glow"><Plus className="h-4 w-4" /> Add vehicle</Button>}
+        action={<Button onClick={() => setOpen(true)} className="gap-2 btn-primary-grad text-primary-foreground press"><Plus className="h-4 w-4" /> Add vehicle</Button>}
       />
 
       <Tabs defaultValue="all" className="space-y-5">
@@ -45,9 +46,18 @@ export default function Vehicles() {
         </TabsList>
 
         <TabsContent value="all">
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-            {vehicles.map((vehicle) => <VehicleCard key={vehicle.id} v={vehicle} />)}
-          </div>
+          {vehicles.length === 0 ? (
+            <EmptyState
+              icon={Car}
+              title="No vehicles yet"
+              description="Add your first vehicle to start tracking maintenance, fuel, and receipts."
+              action={<Button onClick={() => setOpen(true)} className="gap-2 btn-primary-grad text-primary-foreground press"><Plus className="h-4 w-4" /> Add vehicle</Button>}
+            />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 stagger">
+              {vehicles.map((vehicle) => <VehicleCard key={vehicle.id} v={vehicle} />)}
+            </div>
+          )}
         </TabsContent>
 
         {vehicles.map((vehicle) => {
