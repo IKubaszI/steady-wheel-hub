@@ -112,4 +112,7 @@
   .stat-gradient { background: var(--gradient-primary); }
   .hero-bg { background: var(--gradient-hero); }
   .focus-ring { @apply outline-none ring-2 ring-ring/60 ring-offset-2 ring-offset-background; }
+  .hover-lift { @apply transition-transform duration-200 will-change-transform hover:-translate-y-0.5; }
+  .hover-scale { @apply transition-transform duration-200 will-change-transform hover:scale-[1.02]; }
+  .icon-hover { @apply transition-transform duration-200 hover:scale-110 hover:rotate-3; }
 }
