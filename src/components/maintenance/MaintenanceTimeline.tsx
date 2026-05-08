@@ -32,7 +32,6 @@ export function MaintenanceTimeline({ status = "all" }: Props) {
       {sorted.map((m) => {
         const v = vehicles.find((x) => x.id === m.vehicleId)!;
         const s = statusMap[m.status];
-        const SIcon = s.icon;
         return (
           <li key={m.id} className="ml-6 relative animate-fade-in">
             <span className="absolute -left-[34px] top-1 h-7 w-7 rounded-full bg-card border-2 border-border grid place-items-center shadow-elev-sm">
