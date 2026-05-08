@@ -1,4 +1,5 @@
 import { type LucideIcon, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { memo } from "react";
 import { cn } from "@/lib/utils";
 import { CountUp } from "@/components/ui/count-up";
 
@@ -23,22 +24,22 @@ const toneStyles: Record<NonNullable<Props["tone"]>, string> = {
   warning: "from-warning/20 to-warning/0 text-warning",
 };
 
-export function StatCard({ label, value, prefix, suffix, decimals = 0, delta, deltaLabel = "vs. last month", icon: Icon, tone = "primary", hint }: Props) {
+export const StatCard = memo(function StatCard({ label, value, prefix, suffix, decimals = 0, delta, deltaLabel = "vs. last month", icon: Icon, tone = "primary", hint }: Props) {
   return (
-    <div className="glass-card p-6 relative overflow-hidden group lift">
-      <div className={cn("absolute -top-16 -right-16 h-48 w-48 rounded-full bg-gradient-to-br opacity-80 blur-3xl pointer-events-none", toneStyles[tone])} />
+    <div className="surface-card p-5 relative overflow-hidden group transition-transform duration-200 hover:-translate-y-0.5 will-change-transform">
+      <div className={cn("absolute -top-12 -right-12 h-40 w-40 rounded-full bg-gradient-to-br opacity-80 blur-2xl pointer-events-none transition-transform duration-500 group-hover:scale-110", toneStyles[tone])} />
       <div className="relative flex items-start justify-between">
         <div>
-          <p className="text-eyebrow text-muted-foreground">{label}</p>
-          <p className="mt-3 font-display text-3xl font-bold tracking-tight tabular-nums">
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
+          <p className="mt-2 font-display text-3xl font-bold tracking-tight tabular-nums">
             {typeof value === "number" ? (
               <CountUp value={value} prefix={prefix} suffix={suffix} decimals={decimals} />
             ) : value}
           </p>
-          {hint && <p className="mt-1.5 text-xs text-muted-foreground">{hint}</p>}
+          {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
         </div>
-        <div className={cn("h-12 w-12 rounded-2xl grid place-items-center bg-card/70 backdrop-blur shadow-elev-sm border border-border/60 transition-transform group-hover:-rotate-6 group-hover:scale-110", toneStyles[tone])}>
-          <Icon className="h-5 w-5" />
+        <div className={cn("h-11 w-11 rounded-xl grid place-items-center bg-card shadow-elev-sm border border-border/60 transition-all duration-300 group-hover:-rotate-6 group-hover:scale-110", toneStyles[tone])}>
+          <Icon className="h-5 w-5 transition-transform duration-300 group-hover:scale-110" />
         </div>
       </div>
       {delta && (
@@ -53,4 +54,4 @@ export function StatCard({ label, value, prefix, suffix, decimals = 0, delta, de
       )}
     </div>
   );
-}
+});

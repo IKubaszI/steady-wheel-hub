@@ -1,75 +1,124 @@
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, AreaChart, Area } from "recharts";
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Sector } from "recharts";
 import { monthlyExpenses, categoryMeta, type Category } from "@/data/mockData";
 import { useGarageData } from "@/context/garage-data";
-import { useMemo } from "react";
+import { useSettings } from "@/context/settings";
+import { memo, useMemo, useState, useCallback } from "react";
 
-function GlassTooltip({ active, payload, label, valuePrefix = "$" }: any) {
-  if (!active || !payload || !payload.length) return null;
+const renderActiveShape = (props: any) => {
+  const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props;
   return (
-    <div className="rounded-xl border border-border/60 bg-popover/80 backdrop-blur-md px-3 py-2 shadow-elev-lg text-xs">
-      {label && <p className="font-semibold text-foreground/90 mb-1">{label}</p>}
-      {payload.map((p: any, i: number) => (
-        <div key={i} className="flex items-center gap-2 text-muted-foreground">
-          <span className="h-2 w-2 rounded-full" style={{ background: p.color || p.payload?.color }} />
-          <span>{p.name}</span>
-          <span className="ml-auto font-semibold text-foreground tabular-nums">{valuePrefix}{Number(p.value).toFixed(2)}</span>
-        </div>
-      ))}
-    </div>
+    <g>
+      <Sector cx={cx} cy={cy} innerRadius={innerRadius} outerRadius={outerRadius + 8} startAngle={startAngle} endAngle={endAngle} fill={fill} stroke="hsl(var(--card))" strokeWidth={3} style={{ filter: "drop-shadow(0 6px 14px hsl(var(--foreground) / 0.18))", transition: "all 200ms cubic-bezier(0.2,0.8,0.2,1)" }} />
+      <Sector cx={cx} cy={cy} innerRadius={outerRadius + 10} outerRadius={outerRadius + 12} startAngle={startAngle} endAngle={endAngle} fill={fill} opacity={0.35} />
+    </g>
   );
-}
+};
 
-export function CategoryPie() {
+export const CategoryPie = memo(function CategoryPie() {
   const { receipts } = useGarageData();
+  const { symbol, currency } = useSettings();
+  const fmt = useCallback((v: number) => currency === "PLN" ? `${v.toFixed(2)} ${symbol}` : `${symbol}${v.toFixed(2)}`, [symbol, currency]);
+  const [activeIndex, setActiveIndex] = useState<number | undefined>(undefined);
   const data = useMemo(() => {
     const totals: Record<Category, number> = { fuel: 0, parts: 0, service: 0, insurance: 0, other: 0 };
     receipts.forEach((r) => { totals[r.category] += r.amount; });
     return (Object.keys(totals) as Category[]).map((k) => ({
       name: categoryMeta[k].label, value: +totals[k].toFixed(2), color: categoryMeta[k].color, key: k,
     }));
-  }, []);
+  }, [receipts]);
 
   return (
-    <div className="glass-card p-7 animate-scale-in">
+    <div className="surface-card p-6 animate-scale-in">
       <h3 className="font-display text-lg font-semibold">Expense distribution</h3>
       <p className="text-sm text-muted-foreground mb-4">By category, all-time</p>
       <div className="h-[280px]">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
-            <Pie data={data} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={3} stroke="hsl(var(--card))" strokeWidth={3} isAnimationActive animationBegin={150} animationDuration={1100} animationEasing="ease-out">
+            <Pie
+              data={data}
+              dataKey="value"
+              nameKey="name"
+              cx="50%"
+              cy="50%"
+              innerRadius={60}
+              outerRadius={100}
+              paddingAngle={3}
+              stroke="hsl(var(--card))"
+              strokeWidth={3}
+              isAnimationActive
+              animationBegin={120}
+              animationDuration={1200}
+              animationEasing="ease-out"
+              activeIndex={activeIndex}
+              activeShape={renderActiveShape}
+              onMouseEnter={(_, i) => setActiveIndex(i)}
+              onMouseLeave={() => setActiveIndex(undefined)}
+            >
               {data.map((d) => <Cell key={d.key} fill={d.color} />)}
             </Pie>
-            <Tooltip content={<GlassTooltip />} />
+            <Tooltip
+              contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12 }}
+              formatter={(v: number) => [fmt(v), ""]}
+            />
             <Legend iconType="circle" formatter={(v) => <span className="text-xs text-muted-foreground">{v}</span>} />
           </PieChart>
         </ResponsiveContainer>
       </div>
     </div>
   );
-}
+});
 
-export function MonthlyBars() {
+export const MonthlyBars = memo(function MonthlyBars() {
+  const { symbol, currency } = useSettings();
+  const fmt = useCallback((v: number) => currency === "PLN" ? `${v.toFixed(2)} ${symbol}` : `${symbol}${v.toFixed(2)}`, [symbol, currency]);
+  const [activeBar, setActiveBar] = useState<number | undefined>(undefined);
   return (
-    <div className="glass-card p-7 animate-fade-in">
+    <div className="surface-card p-6 animate-fade-in">
       <h3 className="font-display text-lg font-semibold">Monthly expenses</h3>
       <p className="text-sm text-muted-foreground mb-4">Last 7 months</p>
       <div className="h-[280px]">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={monthlyExpenses} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+          <BarChart data={monthlyExpenses} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
             <defs>
-              <linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.55} />
-                <stop offset="100%" stopColor="hsl(var(--primary-glow))" stopOpacity={0.05} />
+              <linearGradient id="barFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="hsl(var(--primary))" />
+                <stop offset="100%" stopColor="hsl(var(--primary-glow))" />
+              </linearGradient>
+              <linearGradient id="barFillActive" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="hsl(var(--accent))" />
+                <stop offset="100%" stopColor="hsl(var(--primary-glow))" />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
             <XAxis dataKey="month" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
             <YAxis tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-            <Tooltip content={<GlassTooltip />} cursor={{ stroke: "hsl(var(--primary))", strokeOpacity: 0.2, strokeWidth: 32 }} />
-            <Area type="monotone" dataKey="value" name="Spent" stroke="hsl(var(--primary))" strokeWidth={2.5} fill="url(#areaFill)" isAnimationActive animationBegin={150} animationDuration={1100} animationEasing="ease-out" />
-          </AreaChart>
+            <Tooltip
+              cursor={{ fill: "hsl(var(--secondary) / 0.6)" }}
+              contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12 }}
+              formatter={(v: number) => [fmt(v), "Spent"]}
+            />
+            <Bar
+              dataKey="value"
+              radius={[8, 8, 0, 0]}
+              maxBarSize={48}
+              isAnimationActive
+              animationBegin={180}
+              animationDuration={1200}
+              animationEasing="ease-out"
+              onMouseEnter={(_, i) => setActiveBar(i)}
+              onMouseLeave={() => setActiveBar(undefined)}
+            >
+              {monthlyExpenses.map((_, i) => (
+                <Cell
+                  key={i}
+                  fill={activeBar === i ? "url(#barFillActive)" : "url(#barFill)"}
+                  style={{ transition: "all 220ms cubic-bezier(0.2,0.8,0.2,1)", filter: activeBar === i ? "drop-shadow(0 8px 16px hsl(var(--primary) / 0.35))" : "none" }}
+                />
+              ))}
+            </Bar>
+          </BarChart>
         </ResponsiveContainer>
       </div>
     </div>
   );
-}
+});
