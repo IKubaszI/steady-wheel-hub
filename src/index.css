@@ -143,9 +143,9 @@
     letter-spacing: 0.06em;
   }
   .status-pill .dot { @apply h-1.5 w-1.5 rounded-full; box-shadow: 0 0 0 3px currentColor; opacity: .9; }
-  .status-pill.completed { @apply bg-success/12 text-success; }
-  .status-pill.upcoming  { @apply bg-primary/12 text-primary; }
-  .status-pill.overdue   { @apply bg-destructive/12 text-destructive; }
+  .status-pill.completed { @apply bg-success/10 text-success; }
+  .status-pill.upcoming  { @apply bg-primary/10 text-primary; }
+  .status-pill.overdue   { @apply bg-destructive/10 text-destructive; }
   .status-pill .dot { background: currentColor; box-shadow: 0 0 0 4px hsl(0 0% 100% / 0.0); }
 }
 
