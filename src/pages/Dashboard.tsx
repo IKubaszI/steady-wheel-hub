@@ -49,22 +49,23 @@ export default function Dashboard() {
 
   return (
     <AppShell onQuickAdd={() => setOpen("receipt")}>
-      <div className="hero-bg -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 pb-8 -mt-6 lg:-mt-8 pt-8 mb-6">
+      <div className="mesh-bg relative -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 pb-10 -mt-6 lg:-mt-8 pt-10 mb-7 overflow-hidden rounded-b-3xl">
+        <div className="absolute inset-0 -z-10 pointer-events-none opacity-60" style={{ background: "radial-gradient(600px 280px at 80% 0%, hsl(var(--primary-glow) / 0.20), transparent 60%)" }} />
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-primary">Welcome back</p>
-            <h1 className="font-display text-3xl md:text-4xl font-bold mt-1">Good morning, Alex 👋</h1>
-            <p className="text-muted-foreground mt-1.5 max-w-xl">Here's a quick look at your fleet, upcoming services, and spending this month.</p>
+            <p className="text-eyebrow text-primary">Welcome back</p>
+            <h1 className="font-display text-3xl md:text-4xl font-bold mt-2">Good morning, Alex 👋</h1>
+            <p className="text-muted-foreground mt-2 max-w-xl">Here's a quick look at your fleet, upcoming services, and spending this month.</p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setOpen("receipt")} className="gap-2"><ReceiptIcon className="h-4 w-4" /> Add receipt</Button>
-            <Button onClick={() => setOpen("service")} className="gap-2 bg-gradient-primary text-primary-foreground hover:opacity-90 shadow-glow"><Plus className="h-4 w-4" /> Log service</Button>
+            <Button variant="outline" onClick={() => setOpen("receipt")} className="gap-2 press backdrop-blur bg-card/60"><ReceiptIcon className="h-4 w-4" /> Add receipt</Button>
+            <Button onClick={() => setOpen("service")} className="gap-2 btn-primary-grad text-primary-foreground press"><Plus className="h-4 w-4" /> Log service</Button>
           </div>
         </div>
       </div>
 
       {loading ? <DashboardSkeleton /> : (<>
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-5 stagger">
         <StatCard label="Total expenses" value={totalExpenses} prefix={moneyPrefix} suffix={moneySuffix} delta={{ value: "all time", positive: true }} deltaLabel="across all saved receipts" icon={DollarSign} tone="primary" hint="All recorded spending" />
         <StatCard
           label="Upcoming services"

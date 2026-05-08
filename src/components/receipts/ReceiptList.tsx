@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { format, parseISO } from "date-fns";
-import { Filter, Search, Camera, Pencil, ChevronDown, Image as ImageIcon, Download, X } from "lucide-react";
+import { Filter, Search, Camera, Pencil, ChevronDown, Image as ImageIcon, Download, Receipt as ReceiptIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { categoryMeta, type Category } from "@/data/mockData";
 import { useGarageData } from "@/context/garage-data";
 import { useSettings } from "@/context/settings";
+import { EmptyState } from "@/components/ui/empty-state";
 
 const categories: (Category | "all")[] = ["all", "fuel", "parts", "service", "insurance", "other"];
 
@@ -201,7 +202,18 @@ export function ReceiptList({ onAddReceipt, onEditReceipt }: Props) {
             );
           })}
           {filtered.length === 0 && (
-            <li className="p-10 text-center text-muted-foreground text-sm">No receipts match your filters.</li>
+            <li className="p-6">
+              <EmptyState
+                icon={ReceiptIcon}
+                title="No receipts found"
+                description={q ? "Try a different vendor name or clear the search." : "Add your first receipt or switch categories to see logged expenses."}
+                action={onAddReceipt && cat !== "all" ? (
+                  <button onClick={() => onAddReceipt(cat)} className="inline-flex items-center gap-2 rounded-md btn-primary-grad text-primary-foreground px-4 py-2 text-sm font-medium press">
+                    Add {categoryMeta[cat].label.toLowerCase()} receipt
+                  </button>
+                ) : null}
+              />
+            </li>
           )}
         </ul>
       </div>
