@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format, isSameMonth, parseISO } from "date-fns";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
+import { formatAppError } from "@/lib/errors";
 
 export default function Vehicles() {
   const [open, setOpen] = useState(false);
@@ -18,6 +20,7 @@ export default function Vehicles() {
   const [editingVehicle, setEditingVehicle] = useState<string | null>(null);
   const [deletingVehicle, setDeletingVehicle] = useState<string | null>(null);
   const { vehicles, receipts, maintenance, deleteVehicle } = useGarageData();
+  const { toast } = useToast();
 
   const vehicleToEdit = editingVehicle ? vehicles.find((vehicle) => vehicle.id === editingVehicle) ?? null : null;
   const vehicleToDelete = deletingVehicle ? vehicles.find((vehicle) => vehicle.id === deletingVehicle) ?? null : null;
@@ -166,9 +169,15 @@ export default function Vehicles() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => {
+              onClick={async () => {
                 if (deletingVehicle) {
-                  deleteVehicle(deletingVehicle);
+                  try {
+                    await deleteVehicle(deletingVehicle);
+                    toast({ title: "Vehicle deleted", description: "Vehicle and linked records were removed." });
+                  } catch (error) {
+                    const message = formatAppError(error, "Could not delete vehicle.");
+                    toast({ title: "Delete failed", description: message, variant: "destructive" });
+                  }
                 }
                 setDeletingVehicle(null);
               }}

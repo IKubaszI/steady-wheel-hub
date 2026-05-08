@@ -8,6 +8,8 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { EditMaintenanceForm } from "@/components/forms/EditMaintenanceForm";
+import { useToast } from "@/hooks/use-toast";
+import { formatAppError } from "@/lib/errors";
 
 const statusMap: Record<ServiceStatus, { label: string; cls: string; icon: any }> = {
   completed: { label: "Completed", cls: "bg-success/10 text-success border-success/30", icon: CheckCircle2 },
@@ -21,6 +23,7 @@ type Props = {
 
 export function MaintenanceTimeline({ status = "all" }: Props) {
   const { maintenance, vehicles, deleteMaintenance } = useGarageData();
+  const { toast } = useToast();
   const [editing, setEditing] = useState<Maintenance | null>(null);
   const [deleting, setDeleting] = useState<Maintenance | null>(null);
   const sorted = [...maintenance]
@@ -95,7 +98,18 @@ export function MaintenanceTimeline({ status = "all" }: Props) {
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            onClick={() => { if (deleting) deleteMaintenance(deleting.id); setDeleting(null); }}
+            onClick={async () => {
+              if (deleting) {
+                try {
+                  await deleteMaintenance(deleting.id);
+                  toast({ title: "Maintenance deleted", description: "Maintenance entry was removed." });
+                } catch (error) {
+                  const message = formatAppError(error, "Could not delete maintenance entry.");
+                  toast({ title: "Delete failed", description: message, variant: "destructive" });
+                }
+              }
+              setDeleting(null);
+            }}
           >
             Delete
           </AlertDialogAction>

@@ -13,10 +13,13 @@ import type { Vehicle } from "@/data/mockData";
 import { CAR_BRANDS, findBrandLogo } from "@/lib/car-brands";
 import { VEHICLE_THEMES, VEHICLE_PATTERNS } from "@/lib/vehicle-themes";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+import { formatAppError } from "@/lib/errors";
 
 export function VehicleDetailsDialog({ vehicle, open, onOpenChange }: { vehicle: Vehicle | null; open: boolean; onOpenChange: (o: boolean) => void }) {
   const { receipts, maintenance, updateVehicle } = useGarageData();
   const { format: fmtMoney } = useSettings();
+  const { toast } = useToast();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<Vehicle | null>(vehicle);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -39,11 +42,17 @@ export function VehicleDetailsDialog({ vehicle, open, onOpenChange }: { vehicle:
     reader.readAsDataURL(file);
   };
 
-  const save = () => {
+  const save = async () => {
     if (!draft) return;
     const { id, ...rest } = draft;
-    updateVehicle(id, rest);
-    setEditing(false);
+    try {
+      await updateVehicle(id, rest);
+      toast({ title: "Vehicle updated", description: "Vehicle details were saved successfully." });
+      setEditing(false);
+    } catch (error) {
+      const message = formatAppError(error, "Could not save changes.");
+      toast({ title: "Save failed", description: message, variant: "destructive" });
+    }
   };
 
   return (

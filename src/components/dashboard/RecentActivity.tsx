@@ -7,9 +7,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { AddReceiptForm } from "@/components/forms/AddReceiptForm";
+import { useToast } from "@/hooks/use-toast";
+import { formatAppError } from "@/lib/errors";
 
 export function RecentActivity() {
   const { maintenance, receipts, vehicles, deleteReceipt, deleteMaintenance } = useGarageData();
+  const { toast } = useToast();
   const [selected, setSelected] = useState<{ kind: "service" | "receipt"; id: string } | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -38,12 +41,19 @@ export function RecentActivity() {
       : receipts.find((r) => r.id === selected.id)
     : null;
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!selected) return;
-    if (selected.kind === "service") {
-      deleteMaintenance(selected.id);
-    } else {
-      deleteReceipt(selected.id);
+    try {
+      if (selected.kind === "service") {
+        await deleteMaintenance(selected.id);
+        toast({ title: "Service deleted", description: "Service entry was removed." });
+      } else {
+        await deleteReceipt(selected.id);
+        toast({ title: "Receipt deleted", description: "Receipt was removed." });
+      }
+    } catch (error) {
+      const message = formatAppError(error, "Could not delete item.");
+      toast({ title: "Delete failed", description: message, variant: "destructive" });
     }
     setSelected(null);
     setDeleteConfirm(false);

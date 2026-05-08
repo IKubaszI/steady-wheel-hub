@@ -11,6 +11,8 @@ import { AddMaintenanceForm } from "@/components/forms/AddMaintenanceForm";
 import { AddReceiptForm } from "@/components/forms/AddReceiptForm";
 import { useGarageData } from "@/context/garage-data";
 import { useSettings } from "@/context/settings";
+import { useAuth } from "@/context/auth";
+import { useToast } from "@/hooks/use-toast";
 import { isSameMonth, parseISO, subMonths } from "date-fns";
 
 export default function Dashboard() {
@@ -21,7 +23,13 @@ export default function Dashboard() {
     return () => clearTimeout(t);
   }, []);
   const { receipts, maintenance } = useGarageData();
+  const { user } = useAuth();
+  const { toast } = useToast();
   const { symbol, currency } = useSettings();
+  const firstName =
+    user?.displayName?.trim().split(/\s+/)[0] ||
+    user?.email?.split("@")[0] ||
+    "Driver";
   const moneyPrefix = currency === "PLN" ? "" : symbol;
   const moneySuffix = currency === "PLN" ? ` ${symbol}` : "";
   const totalExpenses = receipts.reduce((sum, receipt) => sum + receipt.amount, 0);
@@ -47,13 +55,24 @@ export default function Dashboard() {
     .filter((entry) => isSameMonth(parseISO(entry.date), previousMonthDate))
     .reduce((sum, entry) => sum + entry.cost, 0);
 
+  useEffect(() => {
+    const onboardingFlag = sessionStorage.getItem("steadywheelhub.onboarding");
+    if (onboardingFlag === "1") {
+      toast({
+        title: "Start here",
+        description: "Open Vehicles and add your first car, then add receipts and services.",
+      });
+      sessionStorage.removeItem("steadywheelhub.onboarding");
+    }
+  }, [toast]);
+
   return (
     <AppShell onQuickAdd={() => setOpen("receipt")}>
       <div className="hero-bg -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 pb-8 -mt-6 lg:-mt-8 pt-8 mb-6">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest text-primary">Welcome back</p>
-            <h1 className="font-display text-3xl md:text-4xl font-bold mt-1">Good morning, Alex 👋</h1>
+            <h1 className="font-display text-3xl md:text-4xl font-bold mt-1">Good morning, {firstName} 👋</h1>
             <p className="text-muted-foreground mt-1.5 max-w-xl">Here's a quick look at your fleet, upcoming services, and spending this month.</p>
           </div>
           <div className="flex gap-2">

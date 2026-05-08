@@ -5,12 +5,13 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { useGarageData } from "@/context/garage-data";
+import { useAuth } from "@/context/auth";
 import { ThemeToggle } from "./ThemeToggle";
 import { NotificationsPopover } from "./NotificationsPopover";
 import { AccountSettingsDialog } from "./AccountSettingsDialog";
@@ -31,6 +32,14 @@ export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; 
   const navigate = useNavigate();
   const location = useLocation();
   const { vehicles, receipts, maintenance } = useGarageData();
+  const { user, logout } = useAuth();
+  const displayName = user?.displayName?.trim() || user?.email?.split("@")[0] || "User";
+  const initials = displayName
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("") || "U";
 
   const searchResults = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -170,20 +179,29 @@ export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; 
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                   <Avatar className="h-9 w-9 ring-2 ring-background shadow-elev-sm">
-                    <AvatarFallback className="bg-gradient-primary text-primary-foreground font-semibold">AM</AvatarFallback>
+                    {user?.photoURL ? <AvatarImage src={user.photoURL} alt={displayName} /> : null}
+                    <AvatarFallback className="bg-gradient-primary text-primary-foreground font-semibold">{initials}</AvatarFallback>
                   </Avatar>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>
-                  <div className="font-semibold">Alex Morgan</div>
-                  <div className="text-xs font-normal text-muted-foreground">alex@garageos.app</div>
+                  <div className="font-semibold">{displayName}</div>
+                  <div className="text-xs font-normal text-muted-foreground">{user?.email ?? "No email"}</div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onSelect={() => setSettingsOpen(true)}><User className="mr-2 h-4 w-4" /> Profile</DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => setSettingsOpen(true)}><Settings className="mr-2 h-4 w-4" /> Account settings</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-destructive focus:text-destructive"><LogOut className="mr-2 h-4 w-4" /> Sign out</DropdownMenuItem>
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive"
+                  onSelect={async () => {
+                    await logout();
+                    navigate("/auth");
+                  }}
+                >
+                  <LogOut className="mr-2 h-4 w-4" /> Sign out
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

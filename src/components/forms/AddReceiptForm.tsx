@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { categoryMeta, type Category, type Receipt } from "@/data/mockData";
 import { useGarageData } from "@/context/garage-data";
 import { X } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { MAX_RECEIPT_FILES, MAX_RECEIPT_FILE_SIZE_BYTES } from "@/lib/schemas";
+import { formatAppError } from "@/lib/errors";
+import { useEffect } from "react";
 
 type Props = {
   onClose: () => void;
@@ -21,17 +25,9 @@ type PhotoItem = {
   file?: File;
 };
 
-function fileToDataUrl(file: File) {
-  return new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(new Error("Unable to read file"));
-    reader.readAsDataURL(file);
-  });
-}
-
 export function AddReceiptForm({ onClose, defaultCategory = "fuel", defaultVehicleId, initialReceipt }: Props) {
   const { vehicles, addReceipt, updateReceipt } = useGarageData();
+  const { toast } = useToast();
   const [vendor, setVendor] = useState(initialReceipt?.vendor ?? "");
   const [amount, setAmount] = useState(String(initialReceipt?.amount ?? ""));
   const [vehicleId, setVehicleId] = useState(initialReceipt?.vehicleId ?? defaultVehicleId ?? vehicles[0]?.id ?? "");
@@ -41,9 +37,16 @@ export function AddReceiptForm({ onClose, defaultCategory = "fuel", defaultVehic
   const [photoItems, setPhotoItems] = useState<PhotoItem[]>(
     (initialReceipt?.photos ?? []).map((url, index) => ({ id: `existing-${index}`, url }))
   );
+  const [busy, setBusy] = useState(false);
   const isEditing = Boolean(initialReceipt);
 
-  const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  useEffect(() => {
+    if (!vehicleId && vehicles.length > 0) {
+      setVehicleId(vehicles[0].id);
+    }
+  }, [vehicleId, vehicles]);
+
+  const handlePhotoSelect = async (e: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
 
     const newPreviews = await Promise.all(
@@ -73,30 +76,77 @@ export function AddReceiptForm({ onClose, defaultCategory = "fuel", defaultVehic
   return (
     <form className="space-y-4" onSubmit={async (e) => {
       e.preventDefault();
-      const photoUrls = await Promise.all(
-        photoItems.map((item) => (item.file ? fileToDataUrl(item.file) : Promise.resolve(item.url)))
-      );
+      if (!vendor.trim()) {
+        toast({
+          title: "Vendor required",
+          description: "Enter vendor/store name before saving the receipt.",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (!vehicleId.trim()) {
+        toast({
+          title: "Vehicle required",
+          description: "Add a vehicle first or pick an existing vehicle for this receipt.",
+          variant: "destructive",
+        });
+        return;
+      }
+      if ((Number(amount) || 0) <= 0) {
+        toast({
+          title: "Invalid amount",
+          description: "Receipt amount must be greater than 0.",
+          variant: "destructive",
+        });
+        return;
+      }
+      const existingPhotoUrls = photoItems.filter((item) => !item.file).map((item) => item.url);
+      const newFiles = photoItems.filter((item) => item.file).map((item) => item.file as File);
+      if (photoItems.length > MAX_RECEIPT_FILES) {
+        toast({
+          title: "Too many files",
+          description: `You can upload up to ${MAX_RECEIPT_FILES} files for one receipt.`,
+          variant: "destructive",
+        });
+        return;
+      }
+      if (newFiles.some((file) => file.size > MAX_RECEIPT_FILE_SIZE_BYTES)) {
+        toast({
+          title: "File too large",
+          description: "One of selected files exceeds 15MB before compression.",
+          variant: "destructive",
+        });
+        return;
+      }
 
       const nextReceipt = {
-        vendor,
+        vendor: vendor.trim(),
         amount: Number(amount) || 0,
         vehicleId,
         category,
         date,
         fuelLiters: category === "fuel" ? Number(fuelLiters) || undefined : undefined,
-        photos: photoUrls,
+        photos: existingPhotoUrls,
       };
-
-      if (initialReceipt) {
-        updateReceipt(initialReceipt.id, nextReceipt);
-      } else {
-        addReceipt(nextReceipt);
+      try {
+        setBusy(true);
+        if (initialReceipt) {
+          await updateReceipt(initialReceipt.id, nextReceipt, newFiles);
+          toast({ title: "Receipt updated", description: "Receipt changes were saved successfully." });
+        } else {
+          await addReceipt(nextReceipt, newFiles);
+          toast({ title: "Receipt added", description: "Receipt was added successfully." });
+        }
+        onClose();
+      } catch (error) {
+        const message = formatAppError(error, "Could not save receipt.");
+        toast({ title: "Save failed", description: message, variant: "destructive" });
+      } finally {
+        setBusy(false);
       }
-
-      onClose();
     }}>
       <div className="grid grid-cols-2 gap-4">
-        <Field id="vendor" label="Vendor"><Input id="vendor" value={vendor} onChange={(e) => setVendor(e.target.value)} placeholder="Shell Premium" /></Field>
+        <Field id="vendor" label="Vendor"><Input id="vendor" maxLength={160} value={vendor} onChange={(e) => setVendor(e.target.value)} placeholder="Shell Premium" /></Field>
         <Field id="amount" label="Amount ($)"><Input id="amount" value={amount} onChange={(e) => setAmount(e.target.value)} type="number" step="0.01" placeholder="62.80" /></Field>
         <Field id="vehicle" label="Vehicle tag">
           <Select value={vehicleId} onValueChange={setVehicleId}><SelectTrigger id="vehicle"><SelectValue placeholder="Select" /></SelectTrigger>
@@ -134,12 +184,23 @@ export function AddReceiptForm({ onClose, defaultCategory = "fuel", defaultVehic
             </div>
           ))}
         </div>
-        {photoItems.length === 0 && <span className="text-xs text-muted-foreground">You can attach multiple images.</span>}
+        {photoItems.length === 0 && (
+          <span className="text-xs text-muted-foreground">
+            You can attach up to {MAX_RECEIPT_FILES} images (15MB each, auto-compressed).
+          </span>
+        )}
       </div>
       <div className="flex justify-end gap-2">
-        <Button type="button" variant="ghost" onClick={onClose}>Cancel</Button>
-        <Button type="submit" className="bg-gradient-primary text-primary-foreground hover:opacity-90 shadow-glow">{isEditing ? "Save changes" : "Save receipt"}</Button>
+        <Button type="button" variant="ghost" onClick={onClose} disabled={busy}>Cancel</Button>
+        <Button type="submit" disabled={vehicles.length === 0 || busy} className="bg-gradient-primary text-primary-foreground hover:opacity-90 shadow-glow">
+          {busy ? "Saving..." : isEditing ? "Save changes" : "Save receipt"}
+        </Button>
       </div>
+      {vehicles.length === 0 && (
+        <p className="text-xs text-muted-foreground">
+          Add a vehicle first before creating receipts.
+        </p>
+      )}
     </form>
   );
 }

@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Redirecting...</title>
+    <script>
+      const segmentCount = 1;
+      const locationPath = window.location.pathname.split("/").slice(1);
+      const basePath = "/" + locationPath.slice(0, segmentCount).join("/");
+      const routePath = locationPath.slice(segmentCount).join("/");
+      const query = window.location.search;
+      const hash = window.location.hash;
+      window.location.replace(
+        basePath + "/?p=/" + routePath + (query ? "&q=" + encodeURIComponent(query.slice(1)) : "") + hash
+      );
+    </script>
+  </head>
+  <body></body>
+</html>

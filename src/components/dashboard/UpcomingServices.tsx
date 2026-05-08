@@ -7,9 +7,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Link } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import { formatAppError } from "@/lib/errors";
 
 export function UpcomingServices() {
   const { maintenance, vehicles, updateMaintenance, deleteMaintenance } = useGarageData();
+  const { toast } = useToast();
   const [selected, setSelected] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
 
@@ -21,18 +24,30 @@ export function UpcomingServices() {
 
   const selectedItem = selected ? maintenance.find((m) => m.id === selected) : null;
 
-  const handleMarkCompleted = () => {
+  const handleMarkCompleted = async () => {
     if (selectedItem) {
-      updateMaintenance(selectedItem.id, { status: "completed" });
-      setSelected(null);
+      try {
+        await updateMaintenance(selectedItem.id, { status: "completed" });
+        toast({ title: "Service updated", description: "Service marked as completed." });
+        setSelected(null);
+      } catch (error) {
+        const message = formatAppError(error, "Could not update service.");
+        toast({ title: "Update failed", description: message, variant: "destructive" });
+      }
     }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (selected) {
-      deleteMaintenance(selected);
-      setSelected(null);
-      setDeleteConfirm(false);
+      try {
+        await deleteMaintenance(selected);
+        toast({ title: "Service deleted", description: "Service entry was removed." });
+        setSelected(null);
+        setDeleteConfirm(false);
+      } catch (error) {
+        const message = formatAppError(error, "Could not delete service.");
+        toast({ title: "Delete failed", description: message, variant: "destructive" });
+      }
     }
   };
 
