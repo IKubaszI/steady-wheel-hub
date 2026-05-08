@@ -64,6 +64,7 @@ export default {
         'elev-sm': 'var(--shadow-sm)',
         'elev-md': 'var(--shadow-md)',
         'elev-lg': 'var(--shadow-lg)',
+        'elev-xl': 'var(--shadow-xl)',
         'glow': 'var(--shadow-glow)',
       },
       keyframes: {
