@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { formatAppError } from "@/lib/errors";
 import { userDisplayNameSchema } from "@/lib/schemas";
+import { DEMO_USER, seedDemoDataIfEmpty } from "@/lib/demo";
+import { auth } from "@/lib/firebase";
 
 export default function AuthPage() {
   const { user, login, register } = useAuth();
@@ -63,6 +65,38 @@ export default function AuthPage() {
     });
   };
 
+  const onDemoLogin = async () => {
+    setBusy(true);
+    try {
+      try {
+        await login(DEMO_USER.email, DEMO_USER.password);
+      } catch {
+        await register(DEMO_USER.name, DEMO_USER.email, DEMO_USER.password);
+      }
+
+      const uid = auth.currentUser?.uid;
+      if (uid) {
+        const seeded = await seedDemoDataIfEmpty(uid);
+        toast({
+          title: "Demo mode enabled",
+          description: seeded
+            ? "Logged in as demo user and loaded sample data."
+            : "Logged in as demo user.",
+        });
+      } else {
+        toast({ title: "Demo mode enabled", description: "Logged in as demo user." });
+      }
+    } catch (error) {
+      toast({
+        title: "Demo login failed",
+        description: formatAppError(error, "Could not start demo mode."),
+        variant: "destructive",
+      });
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <div className="min-h-screen grid place-items-center p-4 bg-muted/30">
       <Card className="w-full max-w-md">
@@ -93,6 +127,11 @@ export default function AuthPage() {
             <Button type="submit" disabled={busy} className="w-full">
               {busy ? "Please wait..." : mode === "login" ? "Sign in" : "Create account"}
             </Button>
+            {mode === "login" && (
+              <Button type="button" variant="outline" disabled={busy} className="w-full" onClick={onDemoLogin}>
+                {busy ? "Please wait..." : "Try demo account"}
+              </Button>
+            )}
             <div className="flex items-center justify-between text-sm">
               <button
                 type="button"
