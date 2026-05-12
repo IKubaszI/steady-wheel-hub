@@ -48,3 +48,20 @@ The workflow enforces:
 SPA deep-link fallback is handled by:
 - `public/404.html`
 - redirect parsing in `src/main.tsx`
+
+--
+
+## Deployment (quick)
+
+- GitHub Pages (recommended):
+   1. Ensure `vite.config.ts` `base` matches `/<repo-name>/` (already set to `/steady-wheel-hub/`).
+   2. Push this repo to GitHub and set the default branch to `main`.
+   3. The included GitHub Actions workflow (`.github/workflows/deploy-pages.yml`) will build and deploy automatically on push to `main`.
+
+- Firebase Hosting (alternative):
+   - `firebase.json` is configured to serve the `dist` directory and rewrite all routes to `index.html` (SPA).
+   - Provide Firebase config values in `.env.local` or GitHub Secrets and use CI to run `firebase deploy` with a `FIREBASE_TOKEN` secret.
+
+## Environment
+
+Copy `.env.example` to `.env.local` and fill in your Firebase values for local development. Do not commit secrets.
