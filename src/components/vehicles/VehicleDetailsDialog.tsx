@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { format, parseISO } from "date-fns";
-import { Car, Gauge, Calendar, Palette, Fuel, Wrench, ReceiptText, Pencil, ImagePlus, X, Check } from "lucide-react";
+import { Car, Gauge, Calendar, Palette, Fuel, Wrench, ReceiptText, Pencil, ImagePlus, X, Check, type LucideIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -266,7 +266,7 @@ function FieldEditor({ label, children }: { label: string; children: React.React
   );
 }
 
-function Stat({ icon: Icon, label, value }: any) {
+function Stat({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
   return (
     <div className="rounded-xl bg-secondary/60 p-3">
       <div className="flex items-center gap-1 text-muted-foreground"><Icon className="h-3 w-3" /><span className="text-[10px] uppercase tracking-wider font-semibold">{label}</span></div>

@@ -57,7 +57,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           : "ocean";
         return { currency: parsedCurrency, primaryColor: parsedPrimaryColor };
       }
-    } catch {}
+    } catch {
+      return { currency: "USD" as Currency, primaryColor: "ocean" as PrimaryColor };
+    }
     return { currency: "USD" as Currency, primaryColor: "ocean" as PrimaryColor };
   }, []);
   const [currency, setCurrencyState] = useState<Currency>(initialSettings.currency);

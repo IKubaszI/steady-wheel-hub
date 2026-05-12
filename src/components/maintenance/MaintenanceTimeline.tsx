@@ -1,7 +1,7 @@
 import { type ServiceStatus, type Maintenance } from "@/data/mockData";
 import { useGarageData } from "@/context/garage-data";
 import { format, parseISO } from "date-fns";
-import { CheckCircle2, Clock, AlertTriangle, Wrench, Pencil, Trash2 } from "lucide-react";
+import { CheckCircle2, Clock, AlertTriangle, Wrench, Pencil, Trash2, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -11,7 +11,7 @@ import { EditMaintenanceForm } from "@/components/forms/EditMaintenanceForm";
 import { useToast } from "@/hooks/use-toast";
 import { formatAppError } from "@/lib/errors";
 
-const statusMap: Record<ServiceStatus, { label: string; cls: string; icon: any }> = {
+const statusMap: Record<ServiceStatus, { label: string; cls: string; icon: LucideIcon }> = {
   completed: { label: "Completed", cls: "bg-success/10 text-success border-success/30", icon: CheckCircle2 },
   upcoming:  { label: "Upcoming",  cls: "bg-primary/10 text-primary border-primary/30",  icon: Clock },
   overdue:   { label: "Overdue",   cls: "bg-destructive/10 text-destructive border-destructive/30", icon: AlertTriangle },

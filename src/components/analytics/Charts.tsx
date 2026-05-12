@@ -6,8 +6,17 @@ import { memo, useMemo, useState, useCallback } from "react";
 import { format, isSameMonth, parseISO, subMonths } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const renderActiveShape = (props: any) => {
-  const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props;
+type ActiveShapeProps = {
+  cx: number;
+  cy: number;
+  innerRadius: number;
+  outerRadius: number;
+  startAngle: number;
+  endAngle: number;
+  fill: string;
+};
+
+const renderActiveShape = ({ cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill }: ActiveShapeProps) => {
   return (
     <g>
       <Sector cx={cx} cy={cy} innerRadius={innerRadius} outerRadius={outerRadius + 8} startAngle={startAngle} endAngle={endAngle} fill={fill} stroke="hsl(var(--card))" strokeWidth={3} style={{ filter: "drop-shadow(0 6px 14px hsl(var(--foreground) / 0.18))", transition: "all 200ms cubic-bezier(0.2,0.8,0.2,1)" }} />

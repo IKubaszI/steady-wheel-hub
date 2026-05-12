@@ -13,6 +13,7 @@ import { format, isSameMonth, parseISO } from "date-fns";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { formatAppError } from "@/lib/errors";
+import type { LucideIcon } from "lucide-react";
 
 export default function Vehicles() {
   const [open, setOpen] = useState(false);
@@ -204,7 +205,7 @@ export function PageHeader({ title, subtitle, action }: { title: string; subtitl
   );
 }
 
-function InfoCard({ label, value, icon: Icon, subtext }: { label: string; value: string; icon: any; subtext?: string }) {
+function InfoCard({ label, value, icon: Icon, subtext }: { label: string; value: string; icon: LucideIcon; subtext?: string }) {
   return (
     <div className="rounded-xl border border-border/70 bg-secondary/30 p-3">
       <div className="flex items-center gap-2 text-muted-foreground text-xs uppercase tracking-wider">

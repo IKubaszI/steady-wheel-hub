@@ -6,6 +6,7 @@ import { VehicleDetailsDialog } from "./VehicleDetailsDialog";
 import { findBrandLogo } from "@/lib/car-brands";
 import { getPattern, getTheme } from "@/lib/vehicle-themes";
 import { cn } from "@/lib/utils";
+import type { LucideIcon } from "lucide-react";
 
 export function VehicleCard({ v }: { v: Vehicle }) {
   const [open, setOpen] = useState(false);
@@ -88,7 +89,7 @@ export function VehicleCard({ v }: { v: Vehicle }) {
   );
 }
 
-function Stat({ icon: Icon, label, value }: any) {
+function Stat({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
   return (
     <div className="rounded-lg bg-secondary/60 p-2.5">
       <div className="flex items-center gap-1 text-muted-foreground"><Icon className="h-3 w-3" /><dt className="text-[10px] uppercase tracking-wider">{label}</dt></div>

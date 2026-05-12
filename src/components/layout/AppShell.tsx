@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type MouseEventHandler } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Car, Wrench, Receipt, BarChart3, Search, Menu, X, Plus, Settings, Sparkles, Camera, LogOut, User
@@ -240,7 +240,7 @@ function Brand({ compact = false }: { compact?: boolean }) {
   );
 }
 
-function SidebarLink({ to, label, icon: Icon, end, onClick }: any) {
+function SidebarLink({ to, label, icon: Icon, end, onClick }: { to: string; label: string; icon: typeof LayoutDashboard; end?: boolean; onClick?: MouseEventHandler<HTMLAnchorElement> }) {
   return (
     <NavLink
       to={to}
