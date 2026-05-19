@@ -314,8 +314,8 @@ export function GarageDataProvider({ children }: { children: ReactNode }) {
     addVehicle: async (vehicle) => {
       if (!isFirebaseConfigured) {
         const safeVehicle = vehicleInputSchema.parse(vehicle);
-        const nextVehicle = { id: `local-v-${crypto.randomUUID()}`, ...safeVehicle };
-        const nextVehicles = [nextVehicle, ...vehicles];
+        const nextVehicle: Vehicle = { id: `local-v-${crypto.randomUUID()}`, ...safeVehicle };
+        const nextVehicles: Vehicle[] = [nextVehicle, ...vehicles];
         setVehicles(nextVehicles);
         saveDemoData({ vehicles: nextVehicles, receipts, maintenance });
         return;
@@ -332,7 +332,7 @@ export function GarageDataProvider({ children }: { children: ReactNode }) {
     updateVehicle: async (id, updates) => {
       if (!isFirebaseConfigured) {
         const safeUpdates = vehicleInputSchema.partial().parse(updates);
-        const nextVehicles = vehicles.map((vehicle) => vehicle.id === id ? { ...vehicle, ...safeUpdates } : vehicle);
+        const nextVehicles: Vehicle[] = vehicles.map((vehicle) => vehicle.id === id ? { ...vehicle, ...safeUpdates } : vehicle);
         setVehicles(nextVehicles);
         saveDemoData({ vehicles: nextVehicles, receipts, maintenance });
         return;
