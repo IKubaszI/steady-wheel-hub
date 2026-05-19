@@ -122,21 +122,6 @@ export function GarageDataProvider({ children }: { children: ReactNode }) {
     }
 
     if (!user) {
-      // #region agent log
-      fetch("http://127.0.0.1:7473/ingest/c92d45c3-2486-4971-bdda-49f6ef1dcc6d", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "96ff81" },
-        body: JSON.stringify({
-          sessionId: "96ff81",
-          runId: "auth-debug-1",
-          hypothesisId: "H1",
-          location: "src/context/garage-data.tsx:useEffect",
-          message: "Skipping listeners because user missing",
-          data: { hasUser: false },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-      // #endregion
       setVehicles([]);
       setReceipts([]);
       setMaintenance([]);
@@ -144,26 +129,6 @@ export function GarageDataProvider({ children }: { children: ReactNode }) {
         cancelled = true;
       };
     }
-
-    // #region agent log
-    fetch("http://127.0.0.1:7473/ingest/c92d45c3-2486-4971-bdda-49f6ef1dcc6d", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "96ff81" },
-      body: JSON.stringify({
-        sessionId: "96ff81",
-        runId: "auth-debug-1",
-        hypothesisId: "H2",
-        location: "src/context/garage-data.tsx:useEffect",
-        message: "Starting Firestore listeners",
-        data: {
-          uid: user.uid,
-          projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID ?? null,
-          hasAuthDomain: Boolean(import.meta.env.VITE_FIREBASE_AUTH_DOMAIN),
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
 
     const initListeners = async () => {
       try {
