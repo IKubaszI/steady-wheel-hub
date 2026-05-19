@@ -155,21 +155,6 @@ export function GarageDataProvider({ children }: { children: ReactNode }) {
           onSnapshot(
             vehiclesQuery,
             (snapshot) => {
-          // #region agent log
-          fetch("http://127.0.0.1:7473/ingest/c92d45c3-2486-4971-bdda-49f6ef1dcc6d", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "96ff81" },
-            body: JSON.stringify({
-              sessionId: "96ff81",
-              runId: "auth-debug-1",
-              hypothesisId: "H4",
-              location: "src/context/garage-data.tsx:vehiclesSnapshot",
-              message: "Vehicles snapshot success",
-              data: { size: snapshot.size },
-              timestamp: Date.now(),
-            }),
-          }).catch(() => {});
-          // #endregion
           setVehicles(
             snapshot.docs.map((docItem) => ({
               id: docItem.id,
@@ -178,21 +163,6 @@ export function GarageDataProvider({ children }: { children: ReactNode }) {
           );
             },
             (error) => {
-          // #region agent log
-          fetch("http://127.0.0.1:7473/ingest/c92d45c3-2486-4971-bdda-49f6ef1dcc6d", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "96ff81" },
-            body: JSON.stringify({
-              sessionId: "96ff81",
-              runId: "auth-debug-1",
-              hypothesisId: "H4",
-              location: "src/context/garage-data.tsx:vehiclesSnapshotError",
-              message: "Vehicles snapshot error",
-              data: { code: (error as { code?: string })?.code ?? null, message: error.message },
-              timestamp: Date.now(),
-            }),
-          }).catch(() => {});
-          // #endregion
           console.error("Vehicles listener error:", error);
             }
           ),
