@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useRef, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useSettings, type Currency, type PrimaryColor } from "@/context/settings";
+import { useSettings, type Currency, type PrimaryColor, type FontScale } from "@/context/settings";
 import { useAuth } from "@/context/auth";
 import { uploadImage } from "@/services/cloudinaryService";
 import { formatAppError } from "@/lib/errors";
@@ -16,7 +16,14 @@ import { userDisplayNameSchema } from "@/lib/schemas";
 
 export function AccountSettingsDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const { toast } = useToast();
-  const { currency, setCurrency, primaryColor, setPrimaryColor, format: fmtMoney } = useSettings();
+  const {
+    currency, setCurrency, primaryColor, setPrimaryColor, format: fmtMoney,
+    highContrast, setHighContrast,
+    reduceMotion, setReduceMotion,
+    fontScale, setFontScale,
+    dyslexiaFont, setDyslexiaFont,
+    underlineLinks, setUnderlineLinks,
+  } = useSettings();
   const { user, updateUserProfile } = useAuth();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [name, setName] = useState(user?.displayName ?? "");
@@ -77,10 +84,11 @@ export function AccountSettingsDialog({ open, onOpenChange }: { open: boolean; o
         </DialogHeader>
 
         <Tabs defaultValue="profile" className="mt-2">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="prefs">Preferences</TabsTrigger>
             <TabsTrigger value="notify">Notifications</TabsTrigger>
+            <TabsTrigger value="a11y">Accessibility</TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile" className="space-y-4 pt-4 animate-fade-in">
@@ -149,6 +157,26 @@ export function AccountSettingsDialog({ open, onOpenChange }: { open: boolean; o
             <Row label="Overdue services" description="Alert when a service is past due" checked={notifyOverdue} onChange={setNotifyOverdue} />
             <Row label="Upcoming reminders" description="Notify 7 days before scheduled service" checked={notifyUpcoming} onChange={setNotifyUpcoming} />
             <Row label="Email digests" description="Weekly expense summary by email" checked={notifyEmail} onChange={setNotifyEmail} />
+          </TabsContent>
+
+          <TabsContent value="a11y" className="space-y-4 pt-4 animate-fade-in">
+            <p className="text-xs text-muted-foreground">Compliant with WCAG 2.1 AA. These options help users with vision, motor, or cognitive needs.</p>
+            <Row label="High contrast mode" description="Maximize contrast for low-vision users" checked={highContrast} onChange={setHighContrast} />
+            <Row label="Reduce motion" description="Disable animations and transitions" checked={reduceMotion} onChange={setReduceMotion} />
+            <Row label="Dyslexia-friendly font" description="Use Atkinson Hyperlegible across the app" checked={dyslexiaFont} onChange={setDyslexiaFont} />
+            <Row label="Underline all links" description="Distinguish links beyond color alone" checked={underlineLinks} onChange={setUnderlineLinks} />
+            <div className="space-y-2 rounded-xl border border-border p-3">
+              <Label htmlFor="font-scale">Text size</Label>
+              <Select value={fontScale} onValueChange={(v) => setFontScale(v as FontScale)}>
+                <SelectTrigger id="font-scale"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="normal">Normal (100%)</SelectItem>
+                  <SelectItem value="large">Large (112%)</SelectItem>
+                  <SelectItem value="xl">Extra large (125%)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Scales the whole interface using rem units.</p>
+            </div>
           </TabsContent>
         </Tabs>
 
