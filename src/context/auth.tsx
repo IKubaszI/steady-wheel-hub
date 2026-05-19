@@ -15,11 +15,13 @@ import {
   updateProfile,
   type User,
 } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { auth, isFirebaseConfigured } from "@/lib/firebase";
 import { userDisplayNameSchema } from "@/lib/schemas";
 
+type AppUser = Pick<User, "uid" | "email" | "displayName" | "photoURL" | "getIdToken">;
+
 type AuthValue = {
-  user: User | null;
+  user: AppUser | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
@@ -29,32 +31,38 @@ type AuthValue = {
 };
 
 const AuthContext = createContext<AuthValue | null>(null);
+const DEMO_SESSION_KEY = "steadywheelhub.demoUser";
+
+function createDemoUser(email: string, displayName = "Demo Driver", photoURL: string | null = null): AppUser {
+  return {
+    uid: "demo-user",
+    email,
+    displayName,
+    photoURL,
+    getIdToken: async () => "demo-token",
+  };
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<AppUser | null>(null);
+  const [loading, setLoading] = useState(() => isFirebaseConfigured);
 
   useEffect(() => {
+    if (!isFirebaseConfigured) {
+      const stored = window.sessionStorage.getItem(DEMO_SESSION_KEY);
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored) as { email?: string; displayName?: string; photoURL?: string | null };
+          setUser(createDemoUser(parsed.email || "demo@garageos.local", parsed.displayName || "Demo Driver", parsed.photoURL ?? null));
+        } catch {
+          window.sessionStorage.removeItem(DEMO_SESSION_KEY);
+        }
+      }
+      setLoading(false);
+      return;
+    }
+
     const unsub = onAuthStateChanged(auth, (nextUser) => {
-      // #region agent log
-      fetch("http://127.0.0.1:7473/ingest/c92d45c3-2486-4971-bdda-49f6ef1dcc6d", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "96ff81" },
-        body: JSON.stringify({
-          sessionId: "96ff81",
-          runId: "auth-debug-1",
-          hypothesisId: "H1",
-          location: "src/context/auth.tsx:onAuthStateChanged",
-          message: "Auth state changed",
-          data: {
-            hasUser: Boolean(nextUser),
-            uidPresent: Boolean(nextUser?.uid),
-            emailVerified: nextUser?.emailVerified ?? null,
-          },
-          timestamp: Date.now(),
-        }),
-      }).catch(() => {});
-      // #endregion
       setUser(nextUser);
       setLoading(false);
     });
@@ -66,23 +74,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       loading,
       login: async (email, password) => {
+        if (!isFirebaseConfigured) {
+          if (!email.trim() || password.length < 6) {
+            throw new Error("Enter an email and a password with at least 6 characters.");
+          }
+          const demoUser = createDemoUser(email.trim(), email.trim().split("@")[0] || "Demo Driver");
+          window.sessionStorage.setItem(DEMO_SESSION_KEY, JSON.stringify(demoUser));
+          setUser(demoUser);
+          return;
+        }
         await signInWithEmailAndPassword(auth, email, password);
       },
       register: async (name, email, password) => {
-        const creds = await createUserWithEmailAndPassword(auth, email, password);
         const parsedName = userDisplayNameSchema.safeParse(name);
         if (!parsedName.success) {
           throw parsedName.error;
         }
+        if (!isFirebaseConfigured) {
+          if (!email.trim() || password.length < 6) {
+            throw new Error("Enter an email and a password with at least 6 characters.");
+          }
+          const demoUser = createDemoUser(email.trim(), parsedName.data);
+          window.sessionStorage.setItem(DEMO_SESSION_KEY, JSON.stringify(demoUser));
+          setUser(demoUser);
+          return;
+        }
+        const creds = await createUserWithEmailAndPassword(auth, email, password);
         await updateProfile(creds.user, { displayName: parsedName.data });
       },
       resetPassword: async (email) => {
+        if (!isFirebaseConfigured) {
+          throw new Error("Password reset is available after Firebase is configured.");
+        }
         await sendPasswordResetEmail(auth, email);
       },
       logout: async () => {
+        if (!isFirebaseConfigured) {
+          window.sessionStorage.removeItem(DEMO_SESSION_KEY);
+          setUser(null);
+          return;
+        }
         await signOut(auth);
       },
       updateUserProfile: async ({ displayName, photoURL }) => {
+        if (!isFirebaseConfigured) {
+          const nextUser = createDemoUser(user?.email ?? "demo@garageos.local", displayName ?? user?.displayName ?? "Demo Driver", photoURL ?? user?.photoURL ?? null);
+          window.sessionStorage.setItem(DEMO_SESSION_KEY, JSON.stringify(nextUser));
+          setUser(nextUser);
+          return;
+        }
         if (!auth.currentUser) {
           throw new Error("You must be logged in to update profile.");
         }
