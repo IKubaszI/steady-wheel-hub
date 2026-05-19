@@ -312,6 +312,14 @@ export function GarageDataProvider({ children }: { children: ReactNode }) {
     receipts,
     maintenance,
     addVehicle: async (vehicle) => {
+      if (!isFirebaseConfigured) {
+        const safeVehicle = vehicleInputSchema.parse(vehicle);
+        const nextVehicle = { id: `local-v-${crypto.randomUUID()}`, ...safeVehicle };
+        const nextVehicles = [nextVehicle, ...vehicles];
+        setVehicles(nextVehicles);
+        saveDemoData({ vehicles: nextVehicles, receipts, maintenance });
+        return;
+      }
       if (!user) {
         throw new Error("You must be logged in to add a vehicle.");
       }
@@ -322,6 +330,13 @@ export function GarageDataProvider({ children }: { children: ReactNode }) {
       });
     },
     updateVehicle: async (id, updates) => {
+      if (!isFirebaseConfigured) {
+        const safeUpdates = vehicleInputSchema.partial().parse(updates);
+        const nextVehicles = vehicles.map((vehicle) => vehicle.id === id ? { ...vehicle, ...safeUpdates } : vehicle);
+        setVehicles(nextVehicles);
+        saveDemoData({ vehicles: nextVehicles, receipts, maintenance });
+        return;
+      }
       if (!user) {
         throw new Error("You must be logged in to update a vehicle.");
       }
@@ -333,6 +348,16 @@ export function GarageDataProvider({ children }: { children: ReactNode }) {
       await updateDoc(doc(db, "users", user.uid, "vehicles", id), safeUpdates);
     },
     deleteVehicle: async (id) => {
+      if (!isFirebaseConfigured) {
+        const nextVehicles = vehicles.filter((vehicle) => vehicle.id !== id);
+        const nextReceipts = receipts.filter((item) => item.vehicleId !== id);
+        const nextMaintenance = maintenance.filter((item) => item.vehicleId !== id);
+        setVehicles(nextVehicles);
+        setReceipts(nextReceipts);
+        setMaintenance(nextMaintenance);
+        saveDemoData({ vehicles: nextVehicles, receipts: nextReceipts, maintenance: nextMaintenance });
+        return;
+      }
       if (!user) {
         throw new Error("You must be logged in to delete a vehicle.");
       }
