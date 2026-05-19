@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 
 export type Currency = "USD" | "EUR" | "GBP" | "PLN" | "JPY";
 export type PrimaryColor = "ocean" | "violet" | "emerald" | "rose" | "amber";
+export type FontScale = "normal" | "large" | "xl";
 
 const SYMBOLS: Record<Currency, string> = {
   USD: "$",
@@ -18,6 +19,17 @@ type SettingsValue = {
   setCurrency: (c: Currency) => void;
   setPrimaryColor: (color: PrimaryColor) => void;
   format: (n: number, opts?: { decimals?: number }) => string;
+  // a11y
+  highContrast: boolean;
+  reduceMotion: boolean;
+  fontScale: FontScale;
+  dyslexiaFont: boolean;
+  underlineLinks: boolean;
+  setHighContrast: (v: boolean) => void;
+  setReduceMotion: (v: boolean) => void;
+  setFontScale: (v: FontScale) => void;
+  setDyslexiaFont: (v: boolean) => void;
+  setUnderlineLinks: (v: boolean) => void;
 };
 
 const SettingsContext = createContext<SettingsValue | null>(null);
@@ -45,7 +57,7 @@ function applyPrimaryColorTokens(color: PrimaryColor) {
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const initialSettings = useMemo(() => {
     if (typeof window === "undefined") {
-      return { currency: "USD" as Currency, primaryColor: "ocean" as PrimaryColor };
+      return { currency: "USD" as Currency, primaryColor: "ocean" as PrimaryColor, highContrast: false, reduceMotion: false, fontScale: "normal" as FontScale, dyslexiaFont: false, underlineLinks: false };
     }
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
@@ -55,23 +67,46 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         const parsedPrimaryColor = parsed?.primaryColor && parsed.primaryColor in PRIMARY_COLOR_TOKENS
           ? (parsed.primaryColor as PrimaryColor)
           : "ocean";
-        return { currency: parsedCurrency, primaryColor: parsedPrimaryColor };
+        const fs = (["normal", "large", "xl"].includes(parsed?.fontScale) ? parsed.fontScale : "normal") as FontScale;
+        return {
+          currency: parsedCurrency,
+          primaryColor: parsedPrimaryColor,
+          highContrast: !!parsed?.highContrast,
+          reduceMotion: !!parsed?.reduceMotion,
+          fontScale: fs,
+          dyslexiaFont: !!parsed?.dyslexiaFont,
+          underlineLinks: !!parsed?.underlineLinks,
+        };
       }
     } catch {
-      return { currency: "USD" as Currency, primaryColor: "ocean" as PrimaryColor };
+      return { currency: "USD" as Currency, primaryColor: "ocean" as PrimaryColor, highContrast: false, reduceMotion: false, fontScale: "normal" as FontScale, dyslexiaFont: false, underlineLinks: false };
     }
-    return { currency: "USD" as Currency, primaryColor: "ocean" as PrimaryColor };
+    return { currency: "USD" as Currency, primaryColor: "ocean" as PrimaryColor, highContrast: false, reduceMotion: false, fontScale: "normal" as FontScale, dyslexiaFont: false, underlineLinks: false };
   }, []);
   const [currency, setCurrencyState] = useState<Currency>(initialSettings.currency);
   const [primaryColor, setPrimaryColorState] = useState<PrimaryColor>(initialSettings.primaryColor);
+  const [highContrast, setHighContrast] = useState<boolean>(initialSettings.highContrast);
+  const [reduceMotion, setReduceMotion] = useState<boolean>(initialSettings.reduceMotion);
+  const [fontScale, setFontScale] = useState<FontScale>(initialSettings.fontScale);
+  const [dyslexiaFont, setDyslexiaFont] = useState<boolean>(initialSettings.dyslexiaFont);
+  const [underlineLinks, setUnderlineLinks] = useState<boolean>(initialSettings.underlineLinks);
 
   useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ currency, primaryColor }));
-  }, [currency, primaryColor]);
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ currency, primaryColor, highContrast, reduceMotion, fontScale, dyslexiaFont, underlineLinks }));
+  }, [currency, primaryColor, highContrast, reduceMotion, fontScale, dyslexiaFont, underlineLinks]);
 
   useEffect(() => {
     applyPrimaryColorTokens(primaryColor);
   }, [primaryColor]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.toggle("a11y-high-contrast", highContrast);
+    root.classList.toggle("a11y-reduce-motion", reduceMotion);
+    root.classList.toggle("a11y-dyslexia", dyslexiaFont);
+    root.classList.toggle("a11y-underline-links", underlineLinks);
+    root.dataset.fontScale = fontScale;
+  }, [highContrast, reduceMotion, fontScale, dyslexiaFont, underlineLinks]);
 
   const value = useMemo<SettingsValue>(() => {
     const symbol = SYMBOLS[currency];
@@ -89,8 +124,18 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         });
         return currency === "PLN" ? `${num} ${symbol}` : `${symbol}${num}`;
       },
+      highContrast,
+      reduceMotion,
+      fontScale,
+      dyslexiaFont,
+      underlineLinks,
+      setHighContrast,
+      setReduceMotion,
+      setFontScale,
+      setDyslexiaFont,
+      setUnderlineLinks,
     };
-  }, [currency, primaryColor]);
+  }, [currency, primaryColor, highContrast, reduceMotion, fontScale, dyslexiaFont, underlineLinks]);
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
 }
