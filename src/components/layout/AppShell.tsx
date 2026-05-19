@@ -87,8 +87,9 @@ export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; 
 
   return (
     <div className="min-h-screen bg-background">
+      <a href="#main-content" className="skip-link">Skip to main content</a>
       {/* Sidebar — desktop */}
-      <aside className="hidden lg:flex fixed inset-y-0 left-0 w-64 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border z-30">
+      <aside aria-label="Primary navigation" className="hidden lg:flex fixed inset-y-0 left-0 w-64 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border z-30">
         <Brand />
         <nav className="flex-1 px-3 py-4 space-y-1">
           {navItems.map((item) => (
@@ -100,12 +101,12 @@ export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; 
 
       {/* Sidebar — mobile drawer */}
       {mobileOpen && (
-        <div className="lg:hidden fixed inset-0 z-50">
+        <div className="lg:hidden fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label="Mobile navigation">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={() => setMobileOpen(false)} />
           <aside className="absolute inset-y-0 left-0 w-72 bg-sidebar text-sidebar-foreground flex flex-col animate-slide-in-left shadow-elev-lg">
             <div className="flex items-center justify-between px-5 pt-5">
               <Brand compact />
-              <Button variant="ghost" size="icon" className="text-sidebar-foreground hover:bg-sidebar-accent" onClick={() => setMobileOpen(false)}>
+              <Button variant="ghost" size="icon" aria-label="Close navigation menu" className="text-sidebar-foreground hover:bg-sidebar-accent" onClick={() => setMobileOpen(false)}>
                 <X className="h-5 w-5" />
               </Button>
             </div>
@@ -207,7 +208,7 @@ export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; 
           </div>
         </header>
 
-        <main key={location.pathname} className="flex-1 px-4 sm:px-6 lg:px-8 py-6 lg:py-8 animate-fade-in">
+        <main id="main-content" tabIndex={-1} key={location.pathname} className="flex-1 px-4 sm:px-6 lg:px-8 py-6 lg:py-8 animate-fade-in focus:outline-none">
           {children}
         </main>
       </div>
@@ -215,10 +216,10 @@ export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; 
       {/* Floating action button */}
       <button
         onClick={onQuickAdd}
-        aria-label="Quick add"
+        aria-label="Quick add new entry"
         className="fixed bottom-6 right-6 z-40 h-14 w-14 rounded-full bg-gradient-primary text-primary-foreground shadow-glow hover:scale-105 active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/40"
       >
-        <Plus className="h-6 w-6 mx-auto" />
+        <Plus className="h-6 w-6 mx-auto" aria-hidden="true" />
       </button>
 
       <AccountSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />

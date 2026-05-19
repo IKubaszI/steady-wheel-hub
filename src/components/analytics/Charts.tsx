@@ -99,7 +99,7 @@ export const MonthlyBars = memo(function MonthlyBars({ receipts: externalReceipt
           return null;
         }
       })
-      .filter((item): item is { amount: number; parsedDate: Date } => item !== null);
+      .filter((item): item is NonNullable<typeof item> => item !== null);
 
     const now = new Date();
     const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);

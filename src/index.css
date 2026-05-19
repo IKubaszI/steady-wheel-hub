@@ -154,3 +154,114 @@
     transform: scaleY(1);
   }
 }
+
+/* ============================================================
+   Accessibility (WCAG 2.1 AA helpers)
+   ============================================================ */
+@layer base {
+  /* Skip-to-content link */
+  .skip-link {
+    position: fixed;
+    top: -100px;
+    left: 1rem;
+    z-index: 100;
+    padding: 0.75rem 1rem;
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    border-radius: 0.5rem;
+    font-weight: 600;
+    box-shadow: var(--shadow-lg);
+    transition: top 200ms ease;
+  }
+  .skip-link:focus { top: 1rem; outline: 3px solid hsl(var(--ring)); outline-offset: 2px; }
+
+  /* Visible focus for keyboard users on every focusable element */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Visually hidden helper for screen-reader-only content */
+  .sr-only-focusable:not(:focus):not(:focus-within) {
+    position: absolute !important;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0);
+    white-space: nowrap; border: 0;
+  }
+
+  /* Font scaling */
+  html[data-font-scale="large"] { font-size: 112.5%; }
+  html[data-font-scale="xl"]    { font-size: 125%; }
+
+  /* High contrast mode */
+  html.a11y-high-contrast {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 0%;
+    --muted: 0 0% 92%;
+    --muted-foreground: 0 0% 15%;
+    --border: 0 0% 0%;
+    --input: 0 0% 0%;
+    --ring: 220 100% 35%;
+    --primary: 220 100% 30%;
+    --primary-foreground: 0 0% 100%;
+  }
+  html.a11y-high-contrast.dark {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 5%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 5%;
+    --popover-foreground: 0 0% 100%;
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 85%;
+    --border: 0 0% 100%;
+    --input: 0 0% 100%;
+    --ring: 55 100% 60%;
+    --primary: 55 100% 60%;
+    --primary-foreground: 0 0% 0%;
+  }
+  html.a11y-high-contrast * { border-color: hsl(var(--border)) !important; }
+
+  /* Dyslexia-friendly font */
+  html.a11y-dyslexia,
+  html.a11y-dyslexia body,
+  html.a11y-dyslexia h1,
+  html.a11y-dyslexia h2,
+  html.a11y-dyslexia h3,
+  html.a11y-dyslexia h4 {
+    font-family: "Atkinson Hyperlegible", "Comic Sans MS", Verdana, system-ui, sans-serif !important;
+    letter-spacing: 0.02em;
+    word-spacing: 0.05em;
+  }
+
+  /* Underline all links */
+  html.a11y-underline-links a { text-decoration: underline !important; text-underline-offset: 2px; }
+
+  /* Reduce motion — user toggle and OS preference */
+  html.a11y-reduce-motion *,
+  html.a11y-reduce-motion *::before,
+  html.a11y-reduce-motion *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+
+  /* Ensure 44x44 minimum tap targets on coarse pointers */
+  @media (pointer: coarse) {
+    button, [role="button"], a.button, .tap-target { min-height: 44px; min-width: 44px; }
+  }
+}
