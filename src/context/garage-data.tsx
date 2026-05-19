@@ -177,21 +177,6 @@ export function GarageDataProvider({ children }: { children: ReactNode }) {
           );
             },
             (error) => {
-          // #region agent log
-          fetch("http://127.0.0.1:7473/ingest/c92d45c3-2486-4971-bdda-49f6ef1dcc6d", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "96ff81" },
-            body: JSON.stringify({
-              sessionId: "96ff81",
-              runId: "auth-debug-1",
-              hypothesisId: "H4",
-              location: "src/context/garage-data.tsx:receiptsSnapshotError",
-              message: "Receipts snapshot error",
-              data: { code: (error as { code?: string })?.code ?? null, message: error.message },
-              timestamp: Date.now(),
-            }),
-          }).catch(() => {});
-          // #endregion
           console.error("Receipts listener error:", error);
             }
           ),
@@ -206,21 +191,6 @@ export function GarageDataProvider({ children }: { children: ReactNode }) {
           );
             },
             (error) => {
-          // #region agent log
-          fetch("http://127.0.0.1:7473/ingest/c92d45c3-2486-4971-bdda-49f6ef1dcc6d", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "96ff81" },
-            body: JSON.stringify({
-              sessionId: "96ff81",
-              runId: "auth-debug-1",
-              hypothesisId: "H4",
-              location: "src/context/garage-data.tsx:maintenanceSnapshotError",
-              message: "Maintenance snapshot error",
-              data: { code: (error as { code?: string })?.code ?? null, message: error.message },
-              timestamp: Date.now(),
-            }),
-          }).catch(() => {});
-          // #endregion
           console.error("Maintenance listener error:", error);
             }
           ),
