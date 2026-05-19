@@ -466,6 +466,14 @@ export function GarageDataProvider({ children }: { children: ReactNode }) {
       await updateDoc(doc(db, "users", user.uid, "receipts", id), removeUndefinedFields(safeReceipt));
     },
     addMaintenance: async (entry) => {
+      if (!isFirebaseConfigured) {
+        const safeEntry = maintenanceInputSchema.parse(entry) as Omit<Maintenance, "id">;
+        const nextEntry: Maintenance = { id: `local-m-${crypto.randomUUID()}`, ...safeEntry };
+        const nextMaintenance = [nextEntry, ...maintenance];
+        setMaintenance(nextMaintenance);
+        saveDemoData({ vehicles, receipts, maintenance: nextMaintenance });
+        return;
+      }
       if (!user) {
         throw new Error("You must be logged in to add maintenance.");
       }
@@ -476,12 +484,25 @@ export function GarageDataProvider({ children }: { children: ReactNode }) {
       });
     },
     deleteReceipt: async (id) => {
+      if (!isFirebaseConfigured) {
+        const nextReceipts = receipts.filter((receipt) => receipt.id !== id);
+        setReceipts(nextReceipts);
+        saveDemoData({ vehicles, receipts: nextReceipts, maintenance });
+        return;
+      }
       if (!user) {
         throw new Error("You must be logged in to delete a receipt.");
       }
       await deleteDoc(doc(db, "users", user.uid, "receipts", id));
     },
     updateMaintenance: async (id, updates) => {
+      if (!isFirebaseConfigured) {
+        const safeUpdates = maintenanceInputSchema.partial().parse(updates) as Partial<Omit<Maintenance, "id">>;
+        const nextMaintenance = maintenance.map((entry) => entry.id === id ? { ...entry, ...safeUpdates } : entry);
+        setMaintenance(nextMaintenance);
+        saveDemoData({ vehicles, receipts, maintenance: nextMaintenance });
+        return;
+      }
       if (!user) {
         throw new Error("You must be logged in to update maintenance.");
       }
@@ -489,6 +510,12 @@ export function GarageDataProvider({ children }: { children: ReactNode }) {
       await updateDoc(doc(db, "users", user.uid, "maintenance", id), safeUpdates);
     },
     deleteMaintenance: async (id) => {
+      if (!isFirebaseConfigured) {
+        const nextMaintenance = maintenance.filter((entry) => entry.id !== id);
+        setMaintenance(nextMaintenance);
+        saveDemoData({ vehicles, receipts, maintenance: nextMaintenance });
+        return;
+      }
       if (!user) {
         throw new Error("You must be logged in to delete maintenance.");
       }
