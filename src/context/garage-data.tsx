@@ -102,6 +102,25 @@ export function GarageDataProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
     let cleanup: (() => void) | undefined;
 
+    if (!isFirebaseConfigured) {
+      if (!user) {
+        setVehicles([]);
+        setReceipts([]);
+        setMaintenance([]);
+        return () => {
+          cancelled = true;
+        };
+      }
+
+      const demoData = readDemoData();
+      setVehicles(demoData.vehicles);
+      setReceipts(demoData.receipts);
+      setMaintenance(demoData.maintenance);
+      return () => {
+        cancelled = true;
+      };
+    }
+
     if (!user) {
       // #region agent log
       fetch("http://127.0.0.1:7473/ingest/c92d45c3-2486-4971-bdda-49f6ef1dcc6d", {
