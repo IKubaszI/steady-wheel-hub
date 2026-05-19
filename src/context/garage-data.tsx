@@ -18,7 +18,7 @@ import {
   type Vehicle,
 } from "@/data/mockData";
 import { useAuth } from "@/context/auth";
-import { db } from "@/lib/firebase";
+import { db, isFirebaseConfigured } from "@/lib/firebase";
 import {
   MAX_RECEIPT_FILE_SIZE_BYTES,
   MAX_RECEIPT_FILES,
@@ -45,11 +45,37 @@ type GarageDataValue = {
 };
 
 const GarageDataContext = createContext<GarageDataValue | null>(null);
+const DEMO_DATA_KEY = "steadywheelhub.demoData";
 
 function removeUndefinedFields<T extends Record<string, unknown>>(payload: T): T {
   return Object.fromEntries(
     Object.entries(payload).filter(([, value]) => value !== undefined)
   ) as T;
+}
+
+function readDemoData() {
+  try {
+    const stored = window.localStorage.getItem(DEMO_DATA_KEY);
+    if (stored) {
+      return JSON.parse(stored) as { vehicles: Vehicle[]; receipts: Receipt[]; maintenance: Maintenance[] };
+    }
+  } catch {
+    window.localStorage.removeItem(DEMO_DATA_KEY);
+  }
+  return { vehicles: initialVehicles, receipts: initialReceipts, maintenance: initialMaintenance };
+}
+
+function saveDemoData(next: { vehicles: Vehicle[]; receipts: Receipt[]; maintenance: Maintenance[] }) {
+  window.localStorage.setItem(DEMO_DATA_KEY, JSON.stringify(next));
+}
+
+function fileToDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error ?? new Error("Could not read image file."));
+    reader.readAsDataURL(file);
+  });
 }
 
 export function GarageDataProvider({ children }: { children: ReactNode }) {
