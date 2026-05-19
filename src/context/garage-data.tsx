@@ -370,6 +370,20 @@ export function GarageDataProvider({ children }: { children: ReactNode }) {
       ]);
     },
     addReceipt: async (receipt, files = []) => {
+      if (!isFirebaseConfigured) {
+        assertFiles(files);
+        const preparedFiles = await Promise.all(files.map((file) => compressImageIfNeeded(file)));
+        const uploadedUrls = await Promise.all(preparedFiles.map((file) => fileToDataUrl(file)));
+        const safeReceipt = receiptInputSchema.parse({
+          ...receipt,
+          photos: [...receipt.photos, ...uploadedUrls],
+        }) as Omit<Receipt, "id">;
+        const nextReceipt: Receipt = { id: `local-r-${crypto.randomUUID()}`, ...safeReceipt };
+        const nextReceipts = [nextReceipt, ...receipts];
+        setReceipts(nextReceipts);
+        saveDemoData({ vehicles, receipts: nextReceipts, maintenance });
+        return;
+      }
       if (!user) {
         throw new Error("You must be logged in to add a receipt.");
       }
@@ -394,9 +408,6 @@ export function GarageDataProvider({ children }: { children: ReactNode }) {
       });
     },
     updateReceipt: async (id, updates, files = []) => {
-      if (!user) {
-        throw new Error("You must be logged in to update a receipt.");
-      }
       const existing = receipts.find((receipt) => receipt.id === id);
       if (!existing) {
         return;
@@ -404,6 +415,32 @@ export function GarageDataProvider({ children }: { children: ReactNode }) {
 
       assertFiles(files);
       const preparedFiles = await Promise.all(files.map((file) => compressImageIfNeeded(file)));
+
+      if (!isFirebaseConfigured) {
+        const uploadedUrls = await Promise.all(preparedFiles.map((file) => fileToDataUrl(file)));
+        const merged = {
+          ...existing,
+          ...updates,
+          photos: [...(updates.photos ?? existing.photos), ...uploadedUrls],
+        };
+        const safeReceipt = receiptInputSchema.parse({
+          vehicleId: merged.vehicleId,
+          vendor: merged.vendor,
+          category: merged.category,
+          amount: merged.amount,
+          date: merged.date,
+          fuelLiters: merged.fuelLiters,
+          photos: merged.photos,
+        }) as Omit<Receipt, "id">;
+        const nextReceipts = receipts.map((receiptItem) => receiptItem.id === id ? { id, ...safeReceipt } : receiptItem);
+        setReceipts(nextReceipts);
+        saveDemoData({ vehicles, receipts: nextReceipts, maintenance });
+        return;
+      }
+
+      if (!user) {
+        throw new Error("You must be logged in to update a receipt.");
+      }
 
       const uploadedUrls = await Promise.all(
         preparedFiles.map(async (file) => {
