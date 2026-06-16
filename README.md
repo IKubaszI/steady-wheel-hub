@@ -1,5 +1,8 @@
 # Steady Wheel Hub
 
+## Host webside 
+https://ikubaszi.github.io/steady-wheel-hub/
+
 React + Vite application hosted on GitHub Pages, with Firebase used for:
 - authentication (email + password)
 - user-scoped data storage (Firestore)
