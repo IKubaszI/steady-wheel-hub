@@ -15,6 +15,12 @@ React + Vite application hosted on GitHub Pages, with Firebase used for:
 - user-scoped data storage (Firestore)
 - receipt image upload and delivery (Cloudinary)
 
+## Materiały projektowe / Design files
+
+- **Figma (makiety/prototypy):** [Link do projektu Figma](https://www.figma.com/design/znkLTwh7Y2yBfXkxSARfo7/GarageOS-%E2%80%94-Wireframes---Hi-Fi?node-id=1-2&t=m1jolWB9lHmcgJN3-1)
+- **Notatka UX (opis grupy docelowej, persona, heurystyki Nielsena, UCD):** [design/ux-note.md](design/ux-note.md)
+- **Zestaw promptów do makiet/grafik:** [design/prompts.md](design/prompts.md)
+
 ## Local setup
 
 1. Install dependencies:
