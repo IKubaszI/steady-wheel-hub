@@ -1,7 +1,14 @@
 # Steady Wheel Hub
 
-## Host webside 
-https://ikubaszi.github.io/steady-wheel-hub/
+**Steady Wheel Hub** to intuicyjna aplikacja webowa stworzona z myślą o kierowcach (zarówno prywatnych, jak i prowadzących jednoosobową działalność), służąca do prostego i szybkiego kontrolowania kosztów eksploatacji pojazdów oraz nadzorowania terminów serwisowych.
+
+### Do czego służy i po co powstała?
+Aplikacja ma na celu wyeliminowanie skomplikowanych arkuszy kalkulacyjnych oraz papierowych notatek na rzecz jednego, zintegrowanego asystenta mobilnego. Rozwiązuje kluczowe problemy użytkowników takie jak:
+* **Przechowywanie dowodów zakupu:** Umożliwia szybkie rejestrowanie kosztów (paliwo, naprawy, opłaty) wraz z możliwością załączenia zdjęcia paragonu (przechowywanego w chmurze Cloudinary).
+* **Zarządzanie terminami (OC/przeglądy):** Automatycznie przypomina i ostrzega (za pomocą kodowania kolorystycznego) o nadchodzących oraz przeterminowanych badaniach technicznych, ubezpieczeniach czy wymianach części eksploatacyjnych.
+* **Wygoda i mobilność:** Zoptymalizowany pod urządzenia mobilne interfejs pozwala na dodanie nowego wydatku lub sprawdzenie statusu auta w kilkanaście sekund – bezpośrednio na stacji benzynowej lub w warsztacie.
+
+Demo (public): https://ikubaszi.github.io/steady-wheel-hub/
 
 React + Vite application hosted on GitHub Pages, with Firebase used for:
 - authentication (email + password)
