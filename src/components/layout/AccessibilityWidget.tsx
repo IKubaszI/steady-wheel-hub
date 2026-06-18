@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useSettings } from "@/context/settings";
+import { useSettings, type FontScale } from "@/context/settings";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -191,7 +191,7 @@ export function AccessibilityWidget({ hasSidebar = false }: AccessibilityWidgetP
               type="single"
               value={fontScale}
               onValueChange={(val) => {
-                if (val) setFontScale(val as any);
+                if (val) setFontScale(val as FontScale);
               }}
               className="w-full grid grid-cols-3 gap-1 border border-border/80 rounded-xl p-1 bg-secondary/50"
             >
