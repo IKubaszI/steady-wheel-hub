@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { useEffect } from "react";
+import { AccessibilityWidget } from "@/components/layout/AccessibilityWidget";
 
 const NotFound = () => {
   const location = useLocation();
@@ -17,6 +18,7 @@ const NotFound = () => {
           Return to Home
         </Link>
       </div>
+      <AccessibilityWidget hasSidebar={false} />
     </div>
   );
 };

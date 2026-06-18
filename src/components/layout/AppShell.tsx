@@ -15,6 +15,7 @@ import { useAuth } from "@/context/auth";
 import { ThemeToggle } from "./ThemeToggle";
 import { NotificationsPopover } from "./NotificationsPopover";
 import { AccountSettingsDialog } from "./AccountSettingsDialog";
+import { AccessibilityWidget } from "./AccessibilityWidget";
 
 const navItems = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
@@ -221,6 +222,9 @@ export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; 
       >
         <Plus className="h-6 w-6 mx-auto" aria-hidden="true" />
       </button>
+
+      {/* Accessibility widget */}
+      <AccessibilityWidget hasSidebar={true} />
 
       <AccountSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     </div>

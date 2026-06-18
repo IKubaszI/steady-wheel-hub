@@ -10,6 +10,7 @@ import { formatAppError } from "@/lib/errors";
 import { userDisplayNameSchema } from "@/lib/schemas";
 import { DEMO_USER, seedDemoDataIfEmpty } from "@/lib/demo";
 import { auth } from "@/lib/firebase";
+import { AccessibilityWidget } from "@/components/layout/AccessibilityWidget";
 
 export default function AuthPage() {
   const { user, login, register } = useAuth();
@@ -149,6 +150,7 @@ export default function AuthPage() {
           </form>
         </CardContent>
       </Card>
+      <AccessibilityWidget hasSidebar={false} />
     </div>
   );
 }

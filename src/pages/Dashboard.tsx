@@ -120,7 +120,8 @@ export default function Dashboard() {
             <DialogTitle className="font-display text-xl">{open === "service" ? "Log a maintenance service" : "Add a receipt"}</DialogTitle>
             <DialogDescription>{open === "service" ? "Record a completed or upcoming service." : "Track a new car-related expense."}</DialogDescription>
           </DialogHeader>
-          {open === "service" ? <AddMaintenanceForm onClose={() => setOpen(null)} /> : <AddReceiptForm onClose={() => setOpen(null)} />}
+          {open === "service" && <AddMaintenanceForm onClose={() => setOpen(null)} />}
+          {open === "receipt" && <AddReceiptForm onClose={() => setOpen(null)} />}
         </DialogContent>
       </Dialog>
     </AppShell>

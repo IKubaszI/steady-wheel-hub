@@ -47,7 +47,7 @@ export function AddReceiptForm({ onClose, defaultCategory = "fuel", defaultVehic
 
   type FormValues = z.infer<typeof schema>;
 
-  const { control, handleSubmit, formState, reset } = useForm<FormValues>({
+  const { control, handleSubmit, formState, reset, getValues, watch } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       vendor: initialReceipt?.vendor ?? "",
@@ -59,9 +59,11 @@ export function AddReceiptForm({ onClose, defaultCategory = "fuel", defaultVehic
     },
   });
 
+  const categoryValue = watch("category");
+
   useEffect(() => {
-    if (!control.getValues("vehicleId") && vehicles.length > 0) {
-      reset({ ...control.getValues(), vehicleId: vehicles[0].id });
+    if (!getValues("vehicleId") && vehicles.length > 0) {
+      reset({ ...getValues(), vehicleId: vehicles[0].id });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vehicles]);
@@ -138,11 +140,17 @@ export function AddReceiptForm({ onClose, defaultCategory = "fuel", defaultVehic
           <Controller control={control} name="vendor" render={({ field }) => (
             <Input id="vendor" maxLength={160} value={field.value} onChange={field.onChange} placeholder="Shell Premium" />
           )} />
+          {formState.errors.vendor && (
+            <p className="text-xs text-destructive mt-1">{formState.errors.vendor.message}</p>
+          )}
         </Field>
         <Field id="amount" label="Amount ($)">
           <Controller control={control} name="amount" render={({ field }) => (
             <Input id="amount" value={field.value} onChange={field.onChange} type="number" step="0.01" placeholder="62.80" />
           )} />
+          {formState.errors.amount && (
+            <p className="text-xs text-destructive mt-1">{formState.errors.amount.message}</p>
+          )}
         </Field>
         <Field id="vehicle" label="Vehicle tag">
           <Controller control={control} name="vehicleId" render={({ field }) => (
@@ -165,11 +173,16 @@ export function AddReceiptForm({ onClose, defaultCategory = "fuel", defaultVehic
             <Input id="date" value={field.value} onChange={field.onChange} type="date" />
           )} />
         </Field>
-        <Controller control={control} name="fuelLiters" render={({ field }) => (
-          field.value && (
-            <Field id="fuelLiters" label="Fuel liters (L)"><Input id="fuelLiters" value={field.value} onChange={field.onChange} type="number" step="0.1" placeholder="31.4" /></Field>
-          )
-        )} />
+        {categoryValue === "fuel" && (
+          <Field id="fuelLiters" label="Fuel liters (L)">
+            <Controller control={control} name="fuelLiters" render={({ field }) => (
+              <Input id="fuelLiters" value={field.value} onChange={field.onChange} type="number" step="0.1" placeholder="31.4" />
+            )} />
+            {formState.errors.fuelLiters && (
+              <p className="text-xs text-destructive mt-1">{formState.errors.fuelLiters.message}</p>
+            )}
+          </Field>
+        )}
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="photos" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Receipt photos</Label>
