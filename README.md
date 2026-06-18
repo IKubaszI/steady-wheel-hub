@@ -72,7 +72,7 @@ SPA deep-link fallback is handled by:
 - GitHub Pages (recommended):
    1. Ensure `vite.config.ts` `base` matches `/<repo-name>/` (already set to `/steady-wheel-hub/`).
    2. Push this repo to GitHub and set the default branch to `main`.
-   3. The included GitHub Actions workflow (`.github/workflows/deploy-pages.yml`) will build and deploy automatically on push to `main`.
+   3. The included GitHub Actions workflow (`.github/workflows/deploy.yml`) will build and deploy automatically on push to `main`.
 
 - Firebase Hosting (alternative):
    - `firebase.json` is configured to serve the `dist` directory and rewrite all routes to `index.html` (SPA).
