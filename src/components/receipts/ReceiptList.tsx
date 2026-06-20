@@ -23,6 +23,7 @@ export function ReceiptList({ onAddReceipt, onEditReceipt }: Props) {
   const { receipts, vehicles } = useGarageData();
   const { format: fmtMoney, t, language, currency, symbol } = useSettings();
   const [cat, setCat] = useState<Category | "all">("all");
+  const [filterVehicle, setFilterVehicle] = useState<string>("all");
   const [q, setQ] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [preview, setPreview] = useState<{ src: string; name: string } | null>(null);
@@ -30,13 +31,15 @@ export function ReceiptList({ onAddReceipt, onEditReceipt }: Props) {
   const filtered = useMemo(
     () => receipts
       .filter((receipt) => cat === "all" || receipt.category === cat)
+      .filter((receipt) => filterVehicle === "all" || receipt.vehicleId === filterVehicle)
       .filter((receipt) => receipt.vendor.toLowerCase().includes(q.toLowerCase()))
       .sort((a, b) => +parseISO(b.date) - +parseISO(a.date)),
-    [cat, q, receipts]
+    [cat, filterVehicle, q, receipts]
   );
 
   const total = filtered.reduce((sum, receipt) => sum + receipt.amount, 0);
   const fuelLiters = filtered.filter((receipt) => receipt.category === "fuel").reduce((sum, receipt) => sum + (receipt.fuelLiters ?? 0), 0);
+  const activeFilters = cat !== "all" || filterVehicle !== "all" || q !== "";
 
   const handleExportCSV = () => {
     const escapeCSV = (val: unknown) => {
@@ -138,33 +141,80 @@ export function ReceiptList({ onAddReceipt, onEditReceipt }: Props) {
         </div>
       </div>
 
-      <div className="surface-card p-4">
-        <div className="flex flex-col lg:flex-row lg:items-center gap-3">
-          <div className="flex items-center gap-2 flex-wrap flex-1">
-            <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
-            {categories.map((category) => {
-              const active = cat === category;
-              const meta = category !== "all" ? categoryMeta[category] : null;
-              return (
-                <button
-                  key={category}
-                  onClick={() => setCat(category)}
-                  className={cn(
-                    "px-3 py-1.5 rounded-full text-xs font-semibold capitalize transition-all border",
-                    active
-                      ? "bg-foreground text-background border-foreground shadow-elev-sm"
-                      : "bg-card border-border text-muted-foreground hover:text-foreground hover:border-foreground/30"
-                  )}
+      <div className="surface-card p-4 space-y-3">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("receipts.filterBy")}</p>
+          {activeFilters && (
+            <Button variant="ghost" size="sm" onClick={() => {
+              setCat("all");
+              setFilterVehicle("all");
+              setQ("");
+            }}>
+              {t("photos.clearFilters")}
+            </Button>
+          )}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs text-muted-foreground block mb-2">{t("common.category")}</label>
+              <div className="flex flex-wrap gap-2">
+                <Badge 
+                  variant={cat === "all" ? "default" : "outline"}
+                  className="cursor-pointer"
+                  onClick={() => setCat("all")}
                 >
-                  {meta && <meta.icon className="inline h-3 w-3 mr-1 -mt-0.5" />}
-                  {category === "all" ? t("common.all") : t(`category.${category}` as any)}
-                </button>
-              );
-            })}
+                  {t("photos.allCategories")}
+                </Badge>
+                {categories.filter((c) => c !== "all").map((category) => {
+                  const meta = categoryMeta[category as Category];
+                  const active = cat === category;
+                  return (
+                    <Badge 
+                      key={category}
+                      variant={active ? "default" : "outline"}
+                      className={cn(
+                        "cursor-pointer",
+                        !active && meta ? meta.bg : ""
+                      )}
+                      onClick={() => setCat(category as Category)}
+                    >
+                      {meta && <meta.icon className="inline h-3 w-3 mr-1 -mt-0.5" />}
+                      {t(`category.${category}` as any)}
+                    </Badge>
+                  );
+                })}
+              </div>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground block mb-2">{t("common.vehicle")}</label>
+              <div className="flex flex-wrap gap-2">
+                <Badge 
+                  variant={filterVehicle === "all" ? "default" : "outline"}
+                  className="cursor-pointer"
+                  onClick={() => setFilterVehicle("all")}
+                >
+                  {t("photos.allVehicles")}
+                </Badge>
+                {vehicles.map((v) => (
+                  <Badge 
+                    key={v.id}
+                    variant={filterVehicle === v.id ? "default" : "outline"}
+                    className="cursor-pointer"
+                    onClick={() => setFilterVehicle(v.id)}
+                  >
+                    {v.brand} {v.model}
+                  </Badge>
+                ))}
+              </div>
+            </div>
           </div>
-          <div className="relative w-full lg:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input value={q} onChange={(event) => setQ(event.target.value)} placeholder={t("receipts.searchVendor")} className="pl-9 h-9 bg-secondary/60 border-transparent" />
+          <div>
+            <label className="text-xs text-muted-foreground block mb-2">{t("receipts.searchVendor")}</label>
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input value={q} onChange={(event) => setQ(event.target.value)} placeholder={t("receipts.searchVendor")} className="pl-9 h-9 bg-secondary/60 border-transparent w-full" />
+            </div>
           </div>
         </div>
       </div>
