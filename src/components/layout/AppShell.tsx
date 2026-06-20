@@ -17,11 +17,19 @@ import { NotificationsPopover } from "./NotificationsPopover";
 import { AccountSettingsDialog } from "./AccountSettingsDialog";
 import { AccessibilityWidget } from "./AccessibilityWidget";
 import { useSettings } from "@/context/settings";
+import { AssistantChatWidget } from "./AssistantChatWidget";
+import { AssistantConfirmDialog } from "./AssistantConfirmDialog";
+import { type ParsedAssistantCommand } from "@/services/assistantService";
+import { type TranslationKey } from "@/lib/translations";
 
 export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; onQuickAdd?: () => void }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [fabMenuOpen, setFabMenuOpen] = useState(false);
+  const [assistantOpen, setAssistantOpen] = useState(false);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [parsedData, setParsedData] = useState<ParsedAssistantCommand | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { vehicles, receipts, maintenance } = useGarageData();
@@ -62,20 +70,20 @@ export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; 
       }));
 
     const receiptMatches = receipts
-      .filter((receipt) => [receipt.vendor, t(`category.${receipt.category}` as any), receipt.date].join(" ").toLowerCase().includes(query))
+      .filter((receipt) => [receipt.vendor, t(`category.${receipt.category}` as TranslationKey), receipt.date].join(" ").toLowerCase().includes(query))
       .map((receipt) => ({
         kind: "receipt" as const,
         title: receipt.vendor,
-        subtitle: `${t(`category.${receipt.category}` as any)} · ${fmtMoney(receipt.amount)}`,
+        subtitle: `${t(`category.${receipt.category}` as TranslationKey)} · ${fmtMoney(receipt.amount)}`,
         to: "/receipts",
       }));
 
     const serviceMatches = maintenance
-      .filter((entry) => [entry.type, entry.notes, t(`status.${entry.status}` as any)].join(" ").toLowerCase().includes(query))
+      .filter((entry) => [entry.type, entry.notes, t(`status.${entry.status}` as TranslationKey)].join(" ").toLowerCase().includes(query))
       .map((entry) => ({
         kind: "service" as const,
         title: entry.type,
-        subtitle: `${t(`status.${entry.status}` as any)} · ${fmtMoney(entry.cost)}`,
+        subtitle: `${t(`status.${entry.status}` as TranslationKey)} · ${fmtMoney(entry.cost)}`,
         to: "/maintenance",
       }));
 
@@ -219,14 +227,84 @@ export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; 
         </main>
       </div>
 
+      {/* Click outside overlay for FAB menu */}
+      {fabMenuOpen && (
+        <div 
+          className="fixed inset-0 z-30 bg-black/5 backdrop-blur-[1px]" 
+          onClick={() => setFabMenuOpen(false)} 
+        />
+      )}
+
+      {/* Floating action button menu */}
+      {fabMenuOpen && (
+        <div className="fixed bottom-24 right-6 z-40 flex flex-col items-end gap-2.5 animate-fade-in">
+          {/* Manual Add Button */}
+          {onQuickAdd && (
+            <button
+              onClick={() => {
+                setFabMenuOpen(false);
+                onQuickAdd();
+              }}
+              className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-card hover:bg-secondary border border-border shadow-lg text-xs font-semibold hover-lift text-foreground transition-all"
+            >
+              <span>{t("fab.addManually")}</span>
+              <div className="h-8 w-8 rounded-lg bg-primary/10 text-primary grid place-items-center shrink-0">
+                <Plus className="h-4 w-4" />
+              </div>
+            </button>
+          )}
+
+          {/* AI Assistant Button */}
+          <button
+            onClick={() => {
+              setFabMenuOpen(false);
+              setAssistantOpen(true);
+            }}
+            className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-gradient-primary text-primary-foreground shadow-glow hover:opacity-90 text-xs font-semibold hover-lift transition-all"
+          >
+            <span>{t("fab.assistant")}</span>
+            <div className="h-8 w-8 rounded-lg bg-white/20 text-white grid place-items-center shrink-0">
+              <Sparkles className="h-4 w-4" />
+            </div>
+          </button>
+        </div>
+      )}
+
       {/* Floating action button */}
       <button
-        onClick={onQuickAdd}
-        aria-label="Quick add new entry"
+        onClick={() => setFabMenuOpen((prev) => !prev)}
+        aria-label="Toggle quick actions menu"
         className="fixed bottom-6 right-6 z-40 h-14 w-14 rounded-full bg-gradient-primary text-primary-foreground shadow-glow hover:scale-105 active:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/40"
       >
-        <Plus className="h-6 w-6 mx-auto" aria-hidden="true" />
+        <Plus
+          className={cn(
+            "h-6 w-6 mx-auto transition-transform duration-300",
+            fabMenuOpen && "rotate-[135deg]"
+          )}
+          aria-hidden="true"
+        />
       </button>
+
+      {/* Chat Assistant Widget */}
+      <AssistantChatWidget
+        open={assistantOpen}
+        onClose={() => setAssistantOpen(false)}
+        onParseComplete={(parsed) => {
+          setParsedData(parsed);
+          setConfirmDialogOpen(true);
+        }}
+      />
+
+      {/* Parsed Data Confirmation Popup */}
+      <AssistantConfirmDialog
+        open={confirmDialogOpen}
+        onOpenChange={setConfirmDialogOpen}
+        parsedData={parsedData}
+        onSaveSuccess={() => {
+          setAssistantOpen(false);
+          setParsedData(null);
+        }}
+      />
 
       {/* Accessibility widget */}
       <AccessibilityWidget hasSidebar={true} />

@@ -429,7 +429,24 @@ export const translations = {
     "photos.countSingle": "{count} photo",
     "photos.countPlural": "{count} photos",
     "vehicles.selectVehicle": "Select vehicle",
-    "maintenance.selectStatus": "Select status"
+    "maintenance.selectStatus": "Select status",
+    "fab.addManually": "Add manually",
+    "fab.assistant": "AI Assistant",
+    "assistant.title": "GarageOS Assistant",
+    "assistant.welcome": "Hello! I am your GarageOS Assistant. You can tell me what to add (e.g., \"add fuel invoice 150 PLN for Tesla TS-3204\") or click the microphone to speak.",
+    "assistant.placeholder": "Type what to add, or /chat...",
+    "assistant.listening": "Listening...",
+    "assistant.processing": "Analyzing command...",
+    "assistant.error": "Could not understand or process the request. Please try again.",
+    "assistant.success": "Entry added successfully!",
+    "assistant.noSpeech": "Speech recognition is not supported in this browser.",
+    "assistant.typePrompt": "Choose an option below or type/speak your command:",
+    "assistant.btn.receipt": "Add Expense/Receipt",
+    "assistant.btn.maintenance": "Add Service Reminder",
+    "assistant.confirm.title": "Confirm Detected Details",
+    "assistant.confirm.desc": "Please review the information parsed by the AI before adding it to your garage data.",
+    "assistant.confirm.type": "Entry Type",
+    "assistant.confirm.save": "Confirm and Add"
   },
   pl: {
     // Navigation
@@ -861,7 +878,24 @@ export const translations = {
     "photos.countSingle": "{count} zdjęcie",
     "photos.countPlural": "{count} zdj.",
     "vehicles.selectVehicle": "Wybierz pojazd",
-    "maintenance.selectStatus": "Wybierz status"
+    "maintenance.selectStatus": "Wybierz status",
+    "fab.addManually": "Dodaj manualnie",
+    "fab.assistant": "Asystent AI",
+    "assistant.title": "Asystent GarageOS",
+    "assistant.welcome": "Cześć! Jestem Twoim asystentem GarageOS. Możesz napisać, co chcesz dodać (np. \"dodaj do samochodu z rejestracją kbc1246 fakturę za paliwo kwota 1350\") lub kliknąć mikrofon, aby powiedzieć.",
+    "assistant.placeholder": "Wpisz co chcesz dodać, lub /czat...",
+    "assistant.listening": "Słucham...",
+    "assistant.processing": "Analizuję polecenie...",
+    "assistant.error": "Nie udało się zrozumieć ani przetworzyć polecenia. Spróbuj napisać lub powiedzieć ponownie.",
+    "assistant.success": "Wpis został dodany pomyślnie!",
+    "assistant.noSpeech": "Rozpoznawanie mowy nie jest wspierane w tej przeglądarce.",
+    "assistant.typePrompt": "Wybierz opcję poniżej lub napisz/powiedz swoje życzenie:",
+    "assistant.btn.receipt": "Dodaj Wydatek/Rachunek",
+    "assistant.btn.maintenance": "Dodaj Przypomnienie o Serwisie",
+    "assistant.confirm.title": "Potwierdź Wykryte Dane",
+    "assistant.confirm.desc": "Sprawdź informacje wyodrębnione przez AI przed zapisaniem ich w garażu.",
+    "assistant.confirm.type": "Typ wpisu",
+    "assistant.confirm.save": "Zatwierdź i dodaj"
   }
 } as const;
 
