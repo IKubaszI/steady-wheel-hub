@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useRef, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useSettings, type Currency, type PrimaryColor, type FontScale } from "@/context/settings";
+import { useSettings, type Currency, type PrimaryColor, type FontScale, type Language, type DistanceUnit } from "@/context/settings";
 import { useAuth } from "@/context/auth";
 import { uploadImage } from "@/services/cloudinaryService";
 import { formatAppError } from "@/lib/errors";
@@ -18,6 +18,7 @@ export function AccountSettingsDialog({ open, onOpenChange }: { open: boolean; o
   const { toast } = useToast();
   const {
     currency, setCurrency, primaryColor, setPrimaryColor, format: fmtMoney,
+    language, setLanguage, distanceUnit, setDistanceUnit, t,
     highContrast, setHighContrast,
     reduceMotion, setReduceMotion,
     fontScale, setFontScale,
@@ -27,11 +28,10 @@ export function AccountSettingsDialog({ open, onOpenChange }: { open: boolean; o
   const { user, updateUserProfile } = useAuth();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [name, setName] = useState(user?.displayName ?? "");
-  const [email, setEmail] = useState(user?.email ?? "");
+  const [email] = useState(user?.email ?? "");
   const [photoUrl, setPhotoUrl] = useState(user?.photoURL ?? "");
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const [units, setUnits] = useState<"imperial" | "metric">("imperial");
   const [notifyOverdue, setNotifyOverdue] = useState(true);
   const [notifyUpcoming, setNotifyUpcoming] = useState(true);
   const [notifyEmail, setNotifyEmail] = useState(false);
@@ -44,10 +44,10 @@ export function AccountSettingsDialog({ open, onOpenChange }: { open: boolean; o
         throw parsedName.error;
       }
       await updateUserProfile({ displayName: parsedName.data, photoURL: photoUrl || undefined });
-      toast({ title: "Settings saved", description: "Your profile preferences have been updated." });
+      toast({ title: t("auth.toast.loggedIn"), description: t("settings.accountSettingsDesc") });
       onOpenChange(false);
     } catch (error) {
-      toast({ title: "Save failed", description: formatAppError(error, "Could not update profile."), variant: "destructive" });
+      toast({ title: t("auth.toast.demoFailed"), description: formatAppError(error, t("validate.brandDesc")), variant: "destructive" });
     } finally {
       setSaving(false);
     }
@@ -60,16 +60,16 @@ export function AccountSettingsDialog({ open, onOpenChange }: { open: boolean; o
       return;
     }
     if (!file.type.startsWith("image/")) {
-      toast({ title: "Invalid file", description: "Select an image file for profile photo.", variant: "destructive" });
+      toast({ title: t("validate.fileTooLarge"), description: t("validate.fileTooLargeDesc"), variant: "destructive" });
       return;
     }
     try {
       setUploadingPhoto(true);
       const uploaded = await uploadImage(file);
       setPhotoUrl(uploaded.secureUrl);
-      toast({ title: "Photo uploaded", description: "Save changes to apply this profile photo." });
+      toast({ title: t("ocr.scanComplete"), description: t("common.saveChanges") });
     } catch (error) {
-      toast({ title: "Upload failed", description: formatAppError(error, "Could not upload profile photo."), variant: "destructive" });
+      toast({ title: t("ocr.scanFailed"), description: formatAppError(error, t("ocr.scanFailedDesc")), variant: "destructive" });
     } finally {
       setUploadingPhoto(false);
     }
@@ -79,16 +79,16 @@ export function AccountSettingsDialog({ open, onOpenChange }: { open: boolean; o
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="font-display text-xl">Account settings</DialogTitle>
-          <DialogDescription>Manage your profile, preferences, and notifications.</DialogDescription>
+          <DialogTitle className="font-display text-xl">{t("settings.accountSettingsTitle")}</DialogTitle>
+          <DialogDescription>{t("settings.accountSettingsDesc")}</DialogDescription>
         </DialogHeader>
 
         <Tabs defaultValue="profile" className="mt-2">
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="prefs">Preferences</TabsTrigger>
-            <TabsTrigger value="notify">Notifications</TabsTrigger>
-            <TabsTrigger value="a11y">Accessibility</TabsTrigger>
+            <TabsTrigger value="profile">{t("settings.profile")}</TabsTrigger>
+            <TabsTrigger value="prefs">{t("settings.preferences")}</TabsTrigger>
+            <TabsTrigger value="notify">{t("settings.notifications")}</TabsTrigger>
+            <TabsTrigger value="a11y">{t("settings.accessibility")}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile" className="space-y-4 pt-4 animate-fade-in">
@@ -101,89 +101,101 @@ export function AccountSettingsDialog({ open, onOpenChange }: { open: boolean; o
               </Avatar>
               <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={onPhotoSelect} />
               <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploadingPhoto}>
-                {uploadingPhoto ? "Uploading..." : "Change photo"}
+                {uploadingPhoto ? t("common.loading") : t("settings.changePhoto")}
               </Button>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="acc-name">Full name</Label>
+              <Label htmlFor="acc-name">{t("settings.fullName")}</Label>
               <Input id="acc-name" maxLength={80} value={name} onChange={(e) => setName(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="acc-email">Email</Label>
-              <Input id="acc-email" maxLength={254} type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-              <p className="text-xs text-muted-foreground">Email change requires secure re-authentication and is currently read-only.</p>
+              <Label htmlFor="acc-email">{t("settings.email")}</Label>
+              <Input id="acc-email" maxLength={254} type="email" value={email} readOnly disabled />
+              <p className="text-xs text-muted-foreground">{t("settings.emailWarning")}</p>
             </div>
           </TabsContent>
 
           <TabsContent value="prefs" className="space-y-4 pt-4 animate-fade-in">
             <div className="space-y-2">
-              <Label>Distance units</Label>
+              <Label>{t("settings.distanceUnits")}</Label>
               <div className="grid grid-cols-2 gap-2">
-                <Button variant={units === "imperial" ? "default" : "outline"} onClick={() => setUnits("imperial")}>Imperial (mi)</Button>
-                <Button variant={units === "metric" ? "default" : "outline"} onClick={() => setUnits("metric")}>Metric (km)</Button>
+                <Button variant={distanceUnit === "mi" ? "default" : "outline"} onClick={() => setDistanceUnit("mi")}>{t("settings.imperial")}</Button>
+                <Button variant={distanceUnit === "km" ? "default" : "outline"} onClick={() => setDistanceUnit("km")}>{t("settings.metric")}</Button>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>{t("settings.currency")}</Label>
+                <Select value={currency} onValueChange={(v) => setCurrency(v as Currency)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="USD">USD — US Dollar ($)</SelectItem>
+                    <SelectItem value="EUR">EUR — Euro (€)</SelectItem>
+                    <SelectItem value="GBP">GBP — British Pound (£)</SelectItem>
+                    <SelectItem value="PLN">PLN — Polish Zloty (zł)</SelectItem>
+                    <SelectItem value="JPY">JPY — Japanese Yen (¥)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">{t("settings.currencyPreview", { val: fmtMoney(1234.5) })}</p>
+              </div>
+              <div className="space-y-2">
+                <Label>{t("settings.language")}</Label>
+                <Select value={language} onValueChange={(v) => setLanguage(v as Language)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pl">{t("settings.languagePL")}</SelectItem>
+                    <SelectItem value="en">{t("settings.languageEN")}</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Currency</Label>
-              <Select value={currency} onValueChange={(v) => setCurrency(v as Currency)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="USD">USD — US Dollar ($)</SelectItem>
-                  <SelectItem value="EUR">EUR — Euro (€)</SelectItem>
-                  <SelectItem value="GBP">GBP — British Pound (£)</SelectItem>
-                  <SelectItem value="PLN">PLN — Polish Zloty (zł)</SelectItem>
-                  <SelectItem value="JPY">JPY — Japanese Yen (¥)</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">Preview: {fmtMoney(1234.5)}</p>
-            </div>
-            <div className="space-y-2">
-              <Label>Primary color</Label>
+              <Label>{t("settings.primaryColor")}</Label>
               <Select value={primaryColor} onValueChange={(v) => setPrimaryColor(v as PrimaryColor)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ocean">Ocean blue</SelectItem>
-                  <SelectItem value="violet">Violet</SelectItem>
-                  <SelectItem value="emerald">Emerald</SelectItem>
-                  <SelectItem value="rose">Rose</SelectItem>
-                  <SelectItem value="amber">Amber</SelectItem>
+                  <SelectItem value="ocean">{t("color.ocean")}</SelectItem>
+                  <SelectItem value="violet">{t("color.violet")}</SelectItem>
+                  <SelectItem value="emerald">{t("color.emerald")}</SelectItem>
+                  <SelectItem value="rose">{t("color.rose")}</SelectItem>
+                  <SelectItem value="amber">{t("color.amber")}</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground">Updates buttons, highlights, and charts across the app.</p>
+              <p className="text-xs text-muted-foreground">{t("settings.colorDesc")}</p>
             </div>
           </TabsContent>
 
           <TabsContent value="notify" className="space-y-4 pt-4 animate-fade-in">
-            <Row label="Overdue services" description="Alert when a service is past due" checked={notifyOverdue} onChange={setNotifyOverdue} />
-            <Row label="Upcoming reminders" description="Notify 7 days before scheduled service" checked={notifyUpcoming} onChange={setNotifyUpcoming} />
-            <Row label="Email digests" description="Weekly expense summary by email" checked={notifyEmail} onChange={setNotifyEmail} />
+            <Row label={t("settings.overdueServices")} description={t("settings.overdueServicesDesc")} checked={notifyOverdue} onChange={setNotifyOverdue} />
+            <Row label={t("settings.upcomingReminders")} description={t("settings.upcomingRemindersDesc")} checked={notifyUpcoming} onChange={setNotifyUpcoming} />
+            <Row label={t("settings.emailDigests")} description={t("settings.emailDigestsDesc")} checked={notifyEmail} onChange={setNotifyEmail} />
           </TabsContent>
 
           <TabsContent value="a11y" className="space-y-4 pt-4 animate-fade-in">
-            <p className="text-xs text-muted-foreground">Compliant with WCAG 2.1 AA. These options help users with vision, motor, or cognitive needs.</p>
-            <Row label="High contrast mode" description="Maximize contrast for low-vision users" checked={highContrast} onChange={setHighContrast} />
-            <Row label="Reduce motion" description="Disable animations and transitions" checked={reduceMotion} onChange={setReduceMotion} />
-            <Row label="Dyslexia-friendly font" description="Use Atkinson Hyperlegible across the app" checked={dyslexiaFont} onChange={setDyslexiaFont} />
-            <Row label="Underline all links" description="Distinguish links beyond color alone" checked={underlineLinks} onChange={setUnderlineLinks} />
+            <p className="text-xs text-muted-foreground">{t("settings.wcagCompliance")}</p>
+            <Row label={t("settings.highContrast")} description={t("settings.highContrastDesc")} checked={highContrast} onChange={setHighContrast} />
+            <Row label={t("settings.reduceMotion")} description={t("settings.reduceMotionDesc")} checked={reduceMotion} onChange={setReduceMotion} />
+            <Row label={t("settings.dyslexia")} description={t("settings.dyslexiaDesc")} checked={dyslexiaFont} onChange={setDyslexiaFont} />
+            <Row label={t("settings.underlineLinks")} description={t("settings.underlineLinksDesc")} checked={underlineLinks} onChange={setUnderlineLinks} />
             <div className="space-y-2 rounded-xl border border-border p-3">
-              <Label htmlFor="font-scale">Text size</Label>
+              <Label htmlFor="font-scale">{t("settings.textSize")}</Label>
               <Select value={fontScale} onValueChange={(v) => setFontScale(v as FontScale)}>
                 <SelectTrigger id="font-scale"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="normal">Normal (100%)</SelectItem>
-                  <SelectItem value="large">Large (112%)</SelectItem>
-                  <SelectItem value="xl">Extra large (125%)</SelectItem>
+                  <SelectItem value="normal">{t("settings.textSizeNormal")}</SelectItem>
+                  <SelectItem value="large">{t("settings.textSizeLarge")}</SelectItem>
+                  <SelectItem value="xl">{t("settings.textSizeXL")}</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground">Scales the whole interface using rem units.</p>
+              <p className="text-xs text-muted-foreground">{t("settings.textSizeDesc")}</p>
             </div>
           </TabsContent>
         </Tabs>
 
         <div className="flex justify-end gap-2 pt-4 border-t border-border">
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving || uploadingPhoto}>Cancel</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving || uploadingPhoto}>{t("common.cancel")}</Button>
           <Button onClick={save} disabled={saving || uploadingPhoto} className="bg-gradient-primary text-primary-foreground hover:opacity-90">
-            {saving ? "Saving..." : "Save changes"}
+            {saving ? t("common.saving") : t("common.saveChanges")}
           </Button>
         </div>
       </DialogContent>

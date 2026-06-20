@@ -15,14 +15,16 @@ import { VEHICLE_THEMES, VEHICLE_PATTERNS } from "@/lib/vehicle-themes";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { formatAppError } from "@/lib/errors";
+import { pl, enUS } from "date-fns/locale";
 
 export function VehicleDetailsDialog({ vehicle, open, onOpenChange }: { vehicle: Vehicle | null; open: boolean; onOpenChange: (o: boolean) => void }) {
   const { receipts, maintenance, updateVehicle } = useGarageData();
-  const { format: fmtMoney } = useSettings();
+  const { format: fmtMoney, t, distanceUnit, language } = useSettings();
   const { toast } = useToast();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<Vehicle | null>(vehicle);
   const fileRef = useRef<HTMLInputElement>(null);
+  const dateLocale = language === "pl" ? pl : enUS;
 
   useEffect(() => { setDraft(vehicle); setEditing(false); }, [vehicle, open]);
 
@@ -42,18 +44,29 @@ export function VehicleDetailsDialog({ vehicle, open, onOpenChange }: { vehicle:
     reader.readAsDataURL(file);
   };
 
+  const getMileageString = (mileage: number) => {
+    const isMetric = distanceUnit === "km";
+    const factor = isMetric ? 1.609344 : 1;
+    const value = (mileage * factor) / 1000;
+    const suffix = isMetric ? "km" : "mi";
+    const formatted = value.toLocaleString(language === "pl" ? "pl-PL" : "en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    return `${formatted}k ${suffix}`;
+  };
+
   const save = async () => {
     if (!draft) return;
     const { id, ...rest } = draft;
     try {
       await updateVehicle(id, rest);
-      toast({ title: "Vehicle updated", description: "Vehicle details were saved successfully." });
+      toast({ title: t("ocr.scanComplete"), description: t("common.saveChanges") });
       setEditing(false);
     } catch (error) {
-      const message = formatAppError(error, "Could not save changes.");
-      toast({ title: "Save failed", description: message, variant: "destructive" });
+      const message = formatAppError(error, t("validate.brandDesc"));
+      toast({ title: t("ocr.scanFailed"), description: message, variant: "destructive" });
     }
   };
+
+  const translatedColor = t(`color.${draft.color.toLowerCase()}` as any) || draft.color;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -82,12 +95,12 @@ export function VehicleDetailsDialog({ vehicle, open, onOpenChange }: { vehicle:
               <div className="flex-1 min-w-0">
                 <DialogTitle className="font-display text-2xl truncate">{draft.brand} {draft.model}</DialogTitle>
                 <DialogDescription className="truncate">
-                  {draft.year} · {draft.color} · <span className="font-mono">{draft.plate}</span>
+                  {draft.year} · {translatedColor} · <span className="font-mono">{draft.plate}</span>
                 </DialogDescription>
               </div>
               {!editing ? (
                 <Button size="sm" variant="outline" className="gap-2 backdrop-blur bg-card/80" onClick={() => setEditing(true)}>
-                  <Pencil className="h-4 w-4" /> Edit
+                  <Pencil className="h-4 w-4" /> {t("common.edit")}
                 </Button>
               ) : (
                 <div className="flex gap-2">
@@ -95,7 +108,7 @@ export function VehicleDetailsDialog({ vehicle, open, onOpenChange }: { vehicle:
                     <X className="h-4 w-4" />
                   </Button>
                   <Button size="sm" className="bg-gradient-primary text-primary-foreground gap-1" onClick={save}>
-                    <Check className="h-4 w-4" /> Save
+                    <Check className="h-4 w-4" /> {t("common.save")}
                   </Button>
                 </div>
               )}
@@ -111,11 +124,11 @@ export function VehicleDetailsDialog({ vehicle, open, onOpenChange }: { vehicle:
                   onChange={(e) => { const f = e.target.files?.[0]; if (f) onPickPhoto(f); }}
                 />
                 <Button size="sm" variant="secondary" className="gap-2" onClick={() => fileRef.current?.click()}>
-                  <ImagePlus className="h-4 w-4" /> {bgSrc ? "Change photo" : "Add photo"}
+                  <ImagePlus className="h-4 w-4" /> {bgSrc ? t("vehicles.photo.change") : t("vehicles.photo.add")}
                 </Button>
                 {bgSrc && (
                   <Button size="sm" variant="ghost" onClick={() => setDraft((d) => d ? { ...d, image: undefined } : d)}>
-                    Remove photo
+                    {t("vehicles.photo.remove")}
                   </Button>
                 )}
               </div>
@@ -127,9 +140,9 @@ export function VehicleDetailsDialog({ vehicle, open, onOpenChange }: { vehicle:
 
         {editing && (
           <section className="rounded-xl border border-border bg-card p-4 mb-4 space-y-3 animate-fade-in">
-            <h4 className="text-sm font-semibold">Vehicle details</h4>
+            <h4 className="text-sm font-semibold">{t("vehicles.detailsHeader")}</h4>
             <div className="grid grid-cols-2 gap-3">
-              <FieldEditor label="Brand">
+              <FieldEditor label={t("form.brand")}>
                 <Select value={draft.brand} onValueChange={(v) => setDraft((d) => d ? { ...d, brand: v, logoUrl: findBrandLogo(v) ?? undefined } : d)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent className="max-h-72">
@@ -144,49 +157,49 @@ export function VehicleDetailsDialog({ vehicle, open, onOpenChange }: { vehicle:
                   </SelectContent>
                 </Select>
               </FieldEditor>
-              <FieldEditor label="Model">
+              <FieldEditor label={t("form.model")}>
                 <Input value={draft.model} onChange={(e) => setDraft((d) => d ? { ...d, model: e.target.value } : d)} />
               </FieldEditor>
-              <FieldEditor label="Year">
+              <FieldEditor label={t("form.year")}>
                 <Input type="number" value={draft.year} onChange={(e) => setDraft((d) => d ? { ...d, year: Number(e.target.value) || d.year } : d)} />
               </FieldEditor>
-              <FieldEditor label="Mileage">
+              <FieldEditor label={`${t("form.mileage")} (${distanceUnit})`}>
                 <Input type="number" value={draft.mileage} onChange={(e) => setDraft((d) => d ? { ...d, mileage: Number(e.target.value) || 0 } : d)} />
               </FieldEditor>
-              <FieldEditor label="License plate">
+              <FieldEditor label={t("form.licensePlate")}>
                 <Input value={draft.plate} onChange={(e) => setDraft((d) => d ? { ...d, plate: e.target.value } : d)} />
               </FieldEditor>
-              <FieldEditor label="Color">
+              <FieldEditor label={t("form.color")}>
                 <Input value={draft.color} onChange={(e) => setDraft((d) => d ? { ...d, color: e.target.value } : d)} />
               </FieldEditor>
-              <FieldEditor label="Next service">
+              <FieldEditor label={t("vehicles.nextService")}>
                 <Input type="date" value={draft.nextService} onChange={(e) => setDraft((d) => d ? { ...d, nextService: e.target.value } : d)} />
               </FieldEditor>
             </div>
 
             <div className="pt-2">
-              <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Card theme</Label>
+              <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t("vehicles.cardTheme")}</Label>
               <div className="mt-2 grid grid-cols-4 gap-2">
-                {VEHICLE_THEMES.map((t) => (
+                {VEHICLE_THEMES.map((tTheme) => (
                   <button
-                    key={t.key}
+                    key={tTheme.key}
                     type="button"
-                    onClick={() => setDraft((d) => d ? { ...d, theme: t.key } : d)}
+                    onClick={() => setDraft((d) => d ? { ...d, theme: tTheme.key } : d)}
                     className={cn(
                       "h-12 rounded-lg ring-1 ring-border text-[10px] font-semibold transition-all hover:scale-[1.03]",
-                      t.cardClass || "bg-card",
-                      (draft.theme ?? "default") === t.key && "ring-2 ring-primary"
+                      tTheme.cardClass || "bg-card",
+                      (draft.theme ?? "default") === tTheme.key && "ring-2 ring-primary"
                     )}
-                    aria-label={t.label}
-                    title={t.label}
+                    aria-label={tTheme.label}
+                    title={tTheme.label}
                   >
-                    {t.label}
+                    {tTheme.label}
                   </button>
                 ))}
               </div>
             </div>
             <div>
-              <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Pattern</Label>
+              <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t("vehicles.cardPattern")}</Label>
               <div className="mt-2 grid grid-cols-3 gap-2">
                 {VEHICLE_PATTERNS.map((p) => (
                   <button
@@ -208,47 +221,47 @@ export function VehicleDetailsDialog({ vehicle, open, onOpenChange }: { vehicle:
         )}
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-2">
-          <Stat icon={Gauge} label="Mileage" value={`${(draft.mileage / 1000).toFixed(1)}k mi`} />
-          <Stat icon={Calendar} label="Next service" value={format(parseISO(draft.nextService), "MMM d")} />
-          <Stat icon={Palette} label="Color" value={draft.color.split(" ")[0]} />
-          <Stat icon={Fuel} label="Fuel logged" value={`${fuelLiters.toFixed(0)} L`} />
+          <Stat icon={Gauge} label={t("vehicles.mileageLabel")} value={getMileageString(draft.mileage)} />
+          <Stat icon={Calendar} label={t("vehicles.nextSvcLabel")} value={format(parseISO(draft.nextService), "MMM d", { locale: dateLocale })} />
+          <Stat icon={Palette} label={t("vehicles.colorLabel")} value={translatedColor.split(" ")[0]} />
+          <Stat icon={Fuel} label={t("vehicles.fuelLogged")} value={`${fuelLiters.toFixed(0)} L`} />
         </div>
 
         <div className="grid grid-cols-3 gap-3 mt-4">
-          <Tile label="Total spend" value={fmtMoney(totalSpent, { decimals: 0 })} />
-          <Tile label="Receipts" value={String(vReceipts.length)} />
-          <Tile label="Services" value={String(vServices.length)} />
+          <Tile label={t("vehicles.totalSpend")} value={fmtMoney(totalSpent, { decimals: 0 })} />
+          <Tile label={t("vehicles.receipts")} value={String(vReceipts.length)} />
+          <Tile label={t("vehicles.services")} value={String(vServices.length)} />
         </div>
 
         <section className="mt-6">
-          <h4 className="font-semibold text-sm flex items-center gap-2 mb-2"><Wrench className="h-4 w-4 text-primary" /> Recent services</h4>
+          <h4 className="font-semibold text-sm flex items-center gap-2 mb-2"><Wrench className="h-4 w-4 text-primary" /> {t("vehicles.recentServices")}</h4>
           <ul className="space-y-2">
             {vServices.slice(0, 4).map((m) => (
               <li key={m.id} className="flex items-center justify-between rounded-lg border border-border/70 bg-secondary/30 px-3 py-2">
                 <div>
                   <p className="text-sm font-medium">{m.type}</p>
-                  <p className="text-xs text-muted-foreground">{format(parseISO(m.date), "MMM d, yyyy")}</p>
+                  <p className="text-xs text-muted-foreground">{format(parseISO(m.date), "MMM d, yyyy", { locale: dateLocale })}</p>
                 </div>
-                <Badge variant="secondary" className="capitalize rounded-full">{m.status}</Badge>
+                <Badge variant="secondary" className="capitalize rounded-full">{t(`status.${m.status}` as any)}</Badge>
               </li>
             ))}
-            {vServices.length === 0 && <li className="text-sm text-muted-foreground italic">No services yet</li>}
+            {vServices.length === 0 && <li className="text-sm text-muted-foreground italic">{t("vehicles.noServicesYet")}</li>}
           </ul>
         </section>
 
         <section className="mt-5">
-          <h4 className="font-semibold text-sm flex items-center gap-2 mb-2"><ReceiptText className="h-4 w-4 text-primary" /> Recent receipts</h4>
+          <h4 className="font-semibold text-sm flex items-center gap-2 mb-2"><ReceiptText className="h-4 w-4 text-primary" /> {t("vehicles.recentReceipts")}</h4>
           <ul className="space-y-2">
             {vReceipts.slice(0, 4).map((r) => (
               <li key={r.id} className="flex items-center justify-between rounded-lg border border-border/70 bg-secondary/30 px-3 py-2">
                 <div>
                   <p className="text-sm font-medium">{r.vendor}</p>
-                  <p className="text-xs text-muted-foreground capitalize">{r.category} · {format(parseISO(r.date), "MMM d, yyyy")}</p>
+                  <p className="text-xs text-muted-foreground capitalize">{t(`category.${r.category}` as any)} · {format(parseISO(r.date), "MMM d, yyyy", { locale: dateLocale })}</p>
                 </div>
                 <p className="text-sm font-bold tabular-nums">{fmtMoney(r.amount)}</p>
               </li>
             ))}
-            {vReceipts.length === 0 && <li className="text-sm text-muted-foreground italic">No receipts yet</li>}
+            {vReceipts.length === 0 && <li className="text-sm text-muted-foreground italic">{t("vehicles.noReceiptsYet")}</li>}
           </ul>
         </section>
         </div>

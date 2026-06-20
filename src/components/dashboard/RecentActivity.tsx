@@ -9,6 +9,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { AddReceiptForm } from "@/components/forms/AddReceiptForm";
 import { useToast } from "@/hooks/use-toast";
 import { formatAppError } from "@/lib/errors";
+import { useSettings } from "@/context/settings";
+import { pl, enUS } from "date-fns/locale";
 
 export function RecentActivity() {
   const { maintenance, receipts, vehicles, deleteReceipt, deleteMaintenance } = useGarageData();
@@ -17,6 +19,9 @@ export function RecentActivity() {
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [editingReceiptId, setEditingReceiptId] = useState<string | null>(null);
+  const { t, format: fmtMoney, language } = useSettings();
+  const dateLocale = language === "pl" ? pl : enUS;
+
   const editingReceipt = editingReceiptId ? receipts.find((receipt) => receipt.id === editingReceiptId) ?? null : null;
 
   const vehicleName = (id: string) => {
@@ -46,14 +51,14 @@ export function RecentActivity() {
     try {
       if (selected.kind === "service") {
         await deleteMaintenance(selected.id);
-        toast({ title: "Service deleted", description: "Service entry was removed." });
+        toast({ title: t("common.delete"), description: t("activity.serviceToastDeleted") });
       } else {
         await deleteReceipt(selected.id);
-        toast({ title: "Receipt deleted", description: "Receipt was removed." });
+        toast({ title: t("common.delete"), description: t("activity.receiptToastDeleted") });
       }
     } catch (error) {
-      const message = formatAppError(error, "Could not delete item.");
-      toast({ title: "Delete failed", description: message, variant: "destructive" });
+      const message = formatAppError(error, t("ocr.scanFailedDesc"));
+      toast({ title: t("ocr.scanFailed"), description: message, variant: "destructive" });
     }
     setSelected(null);
     setDeleteConfirm(false);
@@ -64,8 +69,8 @@ export function RecentActivity() {
       <div className="surface-card p-6">
         <div className="flex items-center justify-between mb-5">
           <div>
-            <h3 className="font-display text-lg font-semibold">Recent activity</h3>
-            <p className="text-sm text-muted-foreground">Latest services and receipts</p>
+            <h3 className="font-display text-lg font-semibold">{t("dashboard.recentActivity")}</h3>
+            <p className="text-sm text-muted-foreground">{t("dashboard.recentActivitySub")}</p>
           </div>
         </div>
         <ul className="divide-y divide-border/60">
@@ -83,11 +88,13 @@ export function RecentActivity() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium truncate">{it.title}</p>
-                  <p className="text-xs text-muted-foreground truncate">{it.sub} · {format(parseISO(it.date), "MMM d, yyyy")}</p>
+                  <p className="text-xs text-muted-foreground truncate">{it.sub} · {format(parseISO(it.date), "MMM d, yyyy", { locale: dateLocale })}</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold tabular-nums">${it.amount.toFixed(2)}</p>
-                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{it.kind}</p>
+                  <p className="font-semibold tabular-nums">{fmtMoney(it.amount)}</p>
+                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                    {it.kind === "receipt" ? t("nav.receipts") : t("category.service")}
+                  </p>
                 </div>
               </li>
             );
@@ -107,75 +114,75 @@ export function RecentActivity() {
       >
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{selected?.kind === "service" ? "Service Details" : "Receipt Details"}</DialogTitle>
-            <DialogDescription>Full information about this entry</DialogDescription>
+            <DialogTitle>{selected?.kind === "service" ? t("activity.serviceDetails") : t("activity.receiptDetails")}</DialogTitle>
+            <DialogDescription>{t("activity.infoEntry")}</DialogDescription>
           </DialogHeader>
           {selectedItem && selected?.kind === "service" && "type" in selectedItem && (
             <div className="space-y-4">
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Service Type</label>
+                <label className="text-xs font-semibold text-muted-foreground uppercase">{t("activity.serviceType")}</label>
                 <p className="text-base font-medium">{selectedItem.type}</p>
               </div>
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Vehicle</label>
+                <label className="text-xs font-semibold text-muted-foreground uppercase">{t("activity.vehicle")}</label>
                 <p className="text-base font-medium">{vehicleName(selectedItem.vehicleId)}</p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-semibold text-muted-foreground uppercase">Date</label>
-                  <p className="text-base font-medium">{format(parseISO(selectedItem.date), "MMM d, yyyy")}</p>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase">{t("activity.date")}</label>
+                  <p className="text-base font-medium">{format(parseISO(selectedItem.date), "MMM d, yyyy", { locale: dateLocale })}</p>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-muted-foreground uppercase">Cost</label>
-                  <p className="text-base font-medium">${selectedItem.cost.toFixed(2)}</p>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase">{t("activity.cost")}</label>
+                  <p className="text-base font-medium">{fmtMoney(selectedItem.cost)}</p>
                 </div>
               </div>
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Status</label>
-                <p className="text-base font-medium capitalize">{selectedItem.status}</p>
+                <label className="text-xs font-semibold text-muted-foreground uppercase">{t("activity.status")}</label>
+                <p className="text-base font-medium capitalize">{t(`status.${selectedItem.status}` as any)}</p>
               </div>
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Notes</label>
+                <label className="text-xs font-semibold text-muted-foreground uppercase">{t("activity.notes")}</label>
                 <p className="text-sm text-foreground/80">{selectedItem.notes || "—"}</p>
               </div>
               <Button variant="destructive" className="w-full gap-2" onClick={() => setDeleteConfirm(true)}>
-                <Trash2 className="h-4 w-4" /> Delete Service
+                <Trash2 className="h-4 w-4" /> {t("activity.deleteService")}
               </Button>
             </div>
           )}
           {selectedItem && selected?.kind === "receipt" && "vendor" in selectedItem && (
             <div className="space-y-4">
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Vendor</label>
+                <label className="text-xs font-semibold text-muted-foreground uppercase">{t("activity.vendor")}</label>
                 <p className="text-base font-medium">{selectedItem.vendor}</p>
               </div>
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Vehicle</label>
+                <label className="text-xs font-semibold text-muted-foreground uppercase">{t("activity.vehicle")}</label>
                 <p className="text-base font-medium">{vehicleName(selectedItem.vehicleId)}</p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-semibold text-muted-foreground uppercase">Category</label>
-                  <p className="text-base font-medium">{categoryMeta[selectedItem.category].label}</p>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase">{t("activity.category")}</label>
+                  <p className="text-base font-medium">{t(`category.${selectedItem.category}` as any)}</p>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-muted-foreground uppercase">Amount</label>
-                  <p className="text-base font-medium">${selectedItem.amount.toFixed(2)}</p>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase">{t("activity.amount")}</label>
+                  <p className="text-base font-medium">{fmtMoney(selectedItem.amount)}</p>
                 </div>
               </div>
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Date</label>
-                <p className="text-base font-medium">{format(parseISO(selectedItem.date), "MMM d, yyyy")}</p>
+                <label className="text-xs font-semibold text-muted-foreground uppercase">{t("activity.date")}</label>
+                <p className="text-base font-medium">{format(parseISO(selectedItem.date), "MMM d, yyyy", { locale: dateLocale })}</p>
               </div>
               {selectedItem.fuelLiters && (
                 <div>
-                  <label className="text-xs font-semibold text-muted-foreground uppercase">Fuel Liters</label>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase">{t("activity.fuelLiters")}</label>
                   <p className="text-base font-medium">{selectedItem.fuelLiters.toFixed(1)}L</p>
                 </div>
               )}
               {selectedItem.photos && selectedItem.photos.length > 0 && (
                 <div>
-                  <label className="text-xs font-semibold text-muted-foreground uppercase">Photos</label>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase">{t("activity.photos")}</label>
                   <div className="grid grid-cols-3 gap-2 mt-2">
                     {selectedItem.photos.map((photo, idx) => (
                       <button
@@ -200,10 +207,10 @@ export function RecentActivity() {
                     setSelected(null);
                   }}
                 >
-                  <Pencil className="h-4 w-4" /> Edit Receipt
+                  <Pencil className="h-4 w-4" /> {t("activity.editReceipt")}
                 </Button>
                 <Button variant="destructive" className="w-full gap-2" onClick={() => setDeleteConfirm(true)}>
-                  <Trash2 className="h-4 w-4" /> Delete Receipt
+                  <Trash2 className="h-4 w-4" /> {t("activity.deleteReceipt")}
                 </Button>
               </div>
             </div>
@@ -215,8 +222,8 @@ export function RecentActivity() {
       <Dialog open={editingReceipt !== null} onOpenChange={(open) => !open && setEditingReceiptId(null)}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Edit receipt</DialogTitle>
-            <DialogDescription>Update expense details, tags, and photos.</DialogDescription>
+            <DialogTitle>{t("form.receipt.editTitle")}</DialogTitle>
+            <DialogDescription>{t("form.receipt.editDesc")}</DialogDescription>
           </DialogHeader>
           {editingReceipt && <AddReceiptForm onClose={() => setEditingReceiptId(null)} initialReceipt={editingReceipt} />}
         </DialogContent>
@@ -241,12 +248,14 @@ export function RecentActivity() {
       <AlertDialog open={deleteConfirm} onOpenChange={setDeleteConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete {selected?.kind === "service" ? "service" : "receipt"}?</AlertDialogTitle>
-            <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+            <AlertDialogTitle>
+              {t("activity.deleteConfirmTitle", { item: selected?.kind === "service" ? t("category.service").toLowerCase() : t("nav.receipts").toLowerCase() })}
+            </AlertDialogTitle>
+            <AlertDialogDescription>{t("activity.deleteConfirmDesc")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{t("common.delete")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

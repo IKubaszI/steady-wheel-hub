@@ -7,11 +7,15 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { getNotificationPermission, notifyOnce, requestNotificationPermission, type Permission } from "@/lib/browser-notifications";
 import { toast } from "sonner";
+import { useSettings } from "@/context/settings";
+import { pl, enUS } from "date-fns/locale";
 
 export function NotificationsPopover() {
   const { maintenance, vehicles } = useGarageData();
   const navigate = useNavigate();
   const [perm, setPerm] = useState<Permission>("default");
+  const { t, language } = useSettings();
+  const dateLocale = language === "pl" ? pl : enUS;
 
   useEffect(() => { setPerm(getNotificationPermission()); }, []);
 
@@ -34,33 +38,33 @@ export function NotificationsPopover() {
     if (perm !== "granted") return;
     items.forEach((m) => {
       if (m.status === "overdue") {
-        notifyOnce(`overdue:${m.id}`, "Service overdue", {
+        notifyOnce(`overdue:${m.id}`, t("notify.browser.overdue"), {
           body: `${m.type} — ${m.vehicle?.brand ?? ""} ${m.vehicle?.model ?? ""}`.trim(),
           icon: "/favicon.ico",
           tag: `overdue-${m.id}`,
         });
       } else if (m.status === "upcoming" && m.days >= 0 && m.days <= 3) {
-        notifyOnce(`upcoming:${m.id}:${m.days}`, "Upcoming service", {
+        notifyOnce(`upcoming:${m.id}:${m.days}`, t("notify.browser.upcoming"), {
           body: `${m.type} in ${m.days}d — ${m.vehicle?.brand ?? ""} ${m.vehicle?.model ?? ""}`.trim(),
           icon: "/favicon.ico",
           tag: `upcoming-${m.id}`,
         });
       }
     });
-  }, [items, perm]);
+  }, [items, perm, t]);
 
   const enable = async () => {
     const res = await requestNotificationPermission();
     setPerm(res);
-    if (res === "granted") toast.success("Browser notifications enabled");
-    else if (res === "denied") toast.error("Notifications blocked in browser settings");
-    else if (res === "unsupported") toast.error("Notifications not supported in this browser");
+    if (res === "granted") toast.success(t("notify.toast.enabled"));
+    else if (res === "denied") toast.error(t("notify.toast.blocked"));
+    else if (res === "unsupported") toast.error(t("notify.toast.unsupported"));
   };
 
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative" aria-label="Notifications">
+        <Button variant="ghost" size="icon" className="relative" aria-label={t("notify.title")}>
           <Bell className="h-5 w-5" />
           {unread > 0 && (
             <span className="absolute top-1.5 right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold grid place-items-center animate-scale-in">
@@ -72,22 +76,22 @@ export function NotificationsPopover() {
       <PopoverContent align="end" className="w-80 p-0 overflow-hidden">
         <div className="px-4 py-3 border-b border-border flex items-center justify-between">
           <div>
-            <p className="font-semibold text-sm">Notifications</p>
-            <p className="text-xs text-muted-foreground">{items.length} pending services</p>
+            <p className="font-semibold text-sm">{t("notify.title")}</p>
+            <p className="text-xs text-muted-foreground">{t("notify.pending", { count: items.length })}</p>
           </div>
           {perm === "granted" ? (
-            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-success"><BellRing className="h-3.5 w-3.5" /> On</span>
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-success"><BellRing className="h-3.5 w-3.5" /> {t("notify.on")}</span>
           ) : perm === "denied" ? (
-            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-destructive"><BellOff className="h-3.5 w-3.5" /> Blocked</span>
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-destructive"><BellOff className="h-3.5 w-3.5" /> {t("notify.blocked")}</span>
           ) : (
-            <Button size="sm" variant="outline" className="h-7 px-2 text-[11px]" onClick={enable}>Enable</Button>
+            <Button size="sm" variant="outline" className="h-7 px-2 text-[11px]" onClick={enable}>{t("notify.enable")}</Button>
           )}
         </div>
         <ul className="max-h-80 overflow-auto divide-y divide-border">
           {items.length === 0 && (
             <li className="px-4 py-8 text-center text-sm text-muted-foreground flex flex-col items-center gap-2">
               <CheckCircle2 className="h-6 w-6 text-success" />
-              All caught up!
+              {t("notify.empty")}
             </li>
           )}
           {items.map((m) => {
@@ -105,11 +109,11 @@ export function NotificationsPopover() {
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium truncate">{m.type}</p>
                     <p className="text-xs text-muted-foreground truncate">
-                      {m.vehicle?.brand} {m.vehicle?.model} · {format(parseISO(m.date), "MMM d")}
+                      {m.vehicle?.brand} {m.vehicle?.model} · {format(parseISO(m.date), "MMM d", { locale: dateLocale })}
                     </p>
                   </div>
                   <span className={`text-[11px] font-semibold ${m.status === "overdue" ? "text-destructive" : "text-primary"}`}>
-                    {m.status === "overdue" ? "Overdue" : `in ${m.days}d`}
+                    {m.status === "overdue" ? t("status.overdue") : t("notify.days", { days: m.days })}
                   </span>
                 </button>
               </li>
@@ -117,7 +121,7 @@ export function NotificationsPopover() {
           })}
         </ul>
         <div className="p-2 border-t border-border">
-          <Button variant="ghost" size="sm" className="w-full" onClick={() => navigate("/maintenance")}>View all</Button>
+          <Button variant="ghost" size="sm" className="w-full" onClick={() => navigate("/maintenance")}>{t("notify.viewAll")}</Button>
         </div>
       </PopoverContent>
     </Popover>

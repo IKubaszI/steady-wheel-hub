@@ -14,6 +14,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from "@/hooks/use-toast";
 import { formatAppError } from "@/lib/errors";
 import type { LucideIcon } from "lucide-react";
+import { useSettings } from "@/context/settings";
+import { pl, enUS } from "date-fns/locale";
 
 export default function Vehicles() {
   const [open, setOpen] = useState(false);
@@ -22,6 +24,8 @@ export default function Vehicles() {
   const [deletingVehicle, setDeletingVehicle] = useState<string | null>(null);
   const { vehicles, receipts, maintenance, deleteVehicle } = useGarageData();
   const { toast } = useToast();
+  const { t, format: fmtMoney, language } = useSettings();
+  const dateLocale = language === "pl" ? pl : enUS;
 
   const vehicleToEdit = editingVehicle ? vehicles.find((vehicle) => vehicle.id === editingVehicle) ?? null : null;
   const vehicleToDelete = deletingVehicle ? vehicles.find((vehicle) => vehicle.id === deletingVehicle) ?? null : null;
@@ -35,14 +39,14 @@ export default function Vehicles() {
   return (
     <AppShell onQuickAdd={() => setOpen(true)}>
       <PageHeader
-        title="Vehicles"
-        subtitle="Switch between tabs to see one car, its receipts, and linked tags"
-        action={<Button onClick={() => setOpen(true)} className="gap-2 bg-gradient-primary text-primary-foreground hover:opacity-90 shadow-glow"><Plus className="h-4 w-4" /> Add vehicle</Button>}
+        title={t("vehicles.title")}
+        subtitle={t("vehicles.subtitle")}
+        action={<Button onClick={() => setOpen(true)} className="gap-2 bg-gradient-primary text-primary-foreground hover:opacity-90 shadow-glow"><Plus className="h-4 w-4" /> {t("vehicles.addVehicle")}</Button>}
       />
 
       <Tabs defaultValue="all" className="space-y-5">
         <TabsList className="flex w-full flex-wrap h-auto justify-start gap-2 bg-transparent p-0">
-          <TabsTrigger value="all">All vehicles</TabsTrigger>
+          <TabsTrigger value="all">{t("vehicles.allVehicles")}</TabsTrigger>
           {vehicles.map((vehicle) => (
             <TabsTrigger key={vehicle.id} value={vehicle.id}>{vehicle.brand} {vehicle.model}</TabsTrigger>
           ))}
@@ -74,7 +78,7 @@ export default function Vehicles() {
                 <div className="surface-card p-6 space-y-5">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Vehicle tag</p>
+                      <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("vehicles.vehicleTag")}</p>
                       <h3 className="font-display text-lg font-semibold mt-1">{vehicle.brand} {vehicle.model}</h3>
                     </div>
                     <Badge variant="secondary" className="rounded-full px-3 py-1">{vehicle.plate}</Badge>
@@ -82,25 +86,25 @@ export default function Vehicles() {
 
                   <div className="grid grid-cols-2 gap-3">
                     <Button variant="outline" className="gap-2" onClick={() => setEditingVehicle(vehicle.id)}>
-                      <Pencil className="h-4 w-4" /> Edit vehicle
+                      <Pencil className="h-4 w-4" /> {t("vehicles.editVehicle")}
                     </Button>
                     <Button variant="destructive" className="gap-2" onClick={() => setDeletingVehicle(vehicle.id)}>
-                      <Trash2 className="h-4 w-4" /> Delete vehicle
+                      <Trash2 className="h-4 w-4" /> {t("vehicles.deleteVehicle")}
                     </Button>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3 text-sm">
-                    <InfoCard label="Total spend" value={`$${totalSpent.toFixed(0)}`} subtext={`(spend this month: $${spendThisMonth.toFixed(0)})`} icon={ReceiptText} />
-                    <InfoCard label="Fuel logged" value={`${fuelLiters.toFixed(1)} L`} icon={Fuel} />
-                    <InfoCard label="Receipts" value={String(vehicleReceipts.length)} icon={ReceiptText} />
-                    <InfoCard label="Services" value={String(vehicleServices.length)} icon={Wrench} />
+                    <InfoCard label={t("vehicles.totalSpend")} value={fmtMoney(totalSpent, { decimals: 0 })} subtext={`(${t("vehicles.spendThisMonth")}: ${fmtMoney(spendThisMonth, { decimals: 0 })})`} icon={ReceiptText} />
+                    <InfoCard label={t("vehicles.fuelLogged")} value={`${fuelLiters.toFixed(1)} L`} icon={Fuel} />
+                    <InfoCard label={t("vehicles.receipts")} value={String(vehicleReceipts.length)} icon={ReceiptText} />
+                    <InfoCard label={t("vehicles.services")} value={String(vehicleServices.length)} icon={Wrench} />
                   </div>
 
                   <div className="space-y-3">
                     <div className="flex items-center justify-between gap-3">
-                      <p className="text-sm font-semibold">Recent receipts</p>
+                      <p className="text-sm font-semibold">{t("vehicles.recentReceipts")}</p>
                       <Button size="sm" variant="outline" onClick={() => setReceiptVehicleId(vehicle.id)} className="gap-2">
-                        <Plus className="h-4 w-4" /> Add receipt
+                        <Plus className="h-4 w-4" /> {t("dashboard.addReceipt")}
                       </Button>
                     </div>
 
@@ -109,15 +113,15 @@ export default function Vehicles() {
                         <div key={receipt.id} className="flex items-center justify-between gap-3 rounded-xl border border-border/70 bg-secondary/30 px-3 py-2">
                           <div className="min-w-0">
                             <p className="text-sm font-medium truncate">{receipt.vendor}</p>
-                            <p className="text-xs text-muted-foreground">{receipt.category} · {format(parseISO(receipt.date), "MMM d, yyyy")}</p>
+                            <p className="text-xs text-muted-foreground">{t(`category.${receipt.category}` as any)} · {format(parseISO(receipt.date), "MMM d, yyyy", { locale: dateLocale })}</p>
                           </div>
                           <div className="text-right">
-                            <p className="text-sm font-semibold tabular-nums">${receipt.amount.toFixed(2)}</p>
+                            <p className="text-sm font-semibold tabular-nums">{fmtMoney(receipt.amount)}</p>
                             {receipt.fuelLiters != null && <p className="text-xs text-muted-foreground">{receipt.fuelLiters.toFixed(1)} L</p>}
                           </div>
                         </div>
                       ))}
-                      {vehicleReceipts.length === 0 && <p className="text-sm text-muted-foreground">No receipts are linked to this vehicle yet.</p>}
+                      {vehicleReceipts.length === 0 && <p className="text-sm text-muted-foreground">{t("vehicles.noReceipts")}</p>}
                     </div>
                   </div>
                 </div>
@@ -130,8 +134,8 @@ export default function Vehicles() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle className="font-display text-xl">Add a new vehicle</DialogTitle>
-            <DialogDescription>Store basic details to start tracking maintenance and receipts.</DialogDescription>
+            <DialogTitle className="font-display text-xl">{t("form.addVehicleTitle")}</DialogTitle>
+            <DialogDescription>{t("form.addVehicleDesc")}</DialogDescription>
           </DialogHeader>
           <AddVehicleForm onClose={() => setOpen(false)} />
         </DialogContent>
@@ -140,8 +144,8 @@ export default function Vehicles() {
       <Dialog open={vehicleToEdit !== null} onOpenChange={(isOpen) => !isOpen && setEditingVehicle(null)}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle className="font-display text-xl">Edit vehicle</DialogTitle>
-            <DialogDescription>Update the details for this car.</DialogDescription>
+            <DialogTitle className="font-display text-xl">{t("form.editVehicleTitle")}</DialogTitle>
+            <DialogDescription>{t("form.editVehicleDesc")}</DialogDescription>
           </DialogHeader>
           {vehicleToEdit && <AddVehicleForm onClose={() => setEditingVehicle(null)} initialVehicle={vehicleToEdit} />}
         </DialogContent>
@@ -150,8 +154,8 @@ export default function Vehicles() {
       <Dialog open={receiptVehicleId !== null} onOpenChange={(isOpen) => !isOpen && setReceiptVehicleId(null)}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle className="font-display text-xl">Add a vehicle receipt</DialogTitle>
-            <DialogDescription>Save a fuel, parts, or service receipt for the selected vehicle.</DialogDescription>
+            <DialogTitle className="font-display text-xl">{t("form.receipt.addVehicleTitle")}</DialogTitle>
+            <DialogDescription>{t("form.receipt.addVehicleDesc")}</DialogDescription>
           </DialogHeader>
           <AddReceiptForm onClose={() => setReceiptVehicleId(null)} defaultVehicleId={receiptVehicleId ?? undefined} />
         </DialogContent>
@@ -160,31 +164,31 @@ export default function Vehicles() {
       <AlertDialog open={deletingVehicle !== null} onOpenChange={(isOpen) => !isOpen && setDeletingVehicle(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete vehicle?</AlertDialogTitle>
+            <AlertDialogTitle>{t("vehicles.delete.title")}</AlertDialogTitle>
             <AlertDialogDescription>
               {vehicleToDelete
-                ? `This will remove ${deleteSummary?.receipts ?? 0} receipts and ${deleteSummary?.services ?? 0} services linked to ${vehicleToDelete.brand} ${vehicleToDelete.model}.`
-                : "This action cannot be undone."}
+                ? t("vehicles.delete.confirm", { receipts: deleteSummary?.receipts ?? 0, services: deleteSummary?.services ?? 0, brand: vehicleToDelete.brand, model: vehicleToDelete.model })
+                : t("vehicles.delete.undone")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={async () => {
                 if (deletingVehicle) {
                   try {
                     await deleteVehicle(deletingVehicle);
-                    toast({ title: "Vehicle deleted", description: "Vehicle and linked records were removed." });
+                    toast({ title: t("common.delete"), description: t("activity.receiptToastDeleted") });
                   } catch (error) {
-                    const message = formatAppError(error, "Could not delete vehicle.");
-                    toast({ title: "Delete failed", description: message, variant: "destructive" });
+                    const message = formatAppError(error, t("validate.brandDesc"));
+                    toast({ title: t("ocr.scanFailed"), description: message, variant: "destructive" });
                   }
                 }
                 setDeletingVehicle(null);
               }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete
+              {t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

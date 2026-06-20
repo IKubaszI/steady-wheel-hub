@@ -54,7 +54,7 @@ const demoReceipts: DemoReceipt[] = [
     amount: 286.4,
     date: "2026-04-18",
     fuelLiters: 46.2,
-    photos: ["https://picsum.photos/seed/demo-receipt-1/1000/700"],
+    photos: ["/receipt-1.png"],
   },
   {
     id: "demo-r2",
@@ -63,7 +63,7 @@ const demoReceipts: DemoReceipt[] = [
     category: "parts",
     amount: 429.99,
     date: "2026-03-21",
-    photos: ["https://picsum.photos/seed/demo-receipt-2/1000/700"],
+    photos: ["/receipt-2.png"],
   },
   {
     id: "demo-r3",
@@ -72,7 +72,7 @@ const demoReceipts: DemoReceipt[] = [
     category: "insurance",
     amount: 920,
     date: "2026-02-10",
-    photos: ["https://picsum.photos/seed/demo-receipt-3/1000/700"],
+    photos: ["/receipt-3.png"],
   },
   {
     id: "demo-r4",
@@ -81,7 +81,7 @@ const demoReceipts: DemoReceipt[] = [
     category: "service",
     amount: 560,
     date: "2026-04-05",
-    photos: ["https://picsum.photos/seed/demo-receipt-4/1000/700"],
+    photos: ["/receipt-4.png"],
   },
 ];
 

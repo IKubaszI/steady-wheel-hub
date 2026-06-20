@@ -16,15 +16,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import { NotificationsPopover } from "./NotificationsPopover";
 import { AccountSettingsDialog } from "./AccountSettingsDialog";
 import { AccessibilityWidget } from "./AccessibilityWidget";
-
-const navItems = [
-  { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
-  { to: "/vehicles", label: "Vehicles", icon: Car },
-  { to: "/maintenance", label: "Maintenance", icon: Wrench },
-  { to: "/receipts", label: "Receipts", icon: Receipt },
-  { to: "/receipt-photos", label: "Receipt photos", icon: Camera },
-  { to: "/analytics", label: "Analytics", icon: BarChart3 },
-];
+import { useSettings } from "@/context/settings";
 
 export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; onQuickAdd?: () => void }) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -34,7 +26,18 @@ export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; 
   const location = useLocation();
   const { vehicles, receipts, maintenance } = useGarageData();
   const { user, logout } = useAuth();
-  const displayName = user?.displayName?.trim() || user?.email?.split("@")[0] || "User";
+  const { t, format: fmtMoney } = useSettings();
+
+  const navItems = useMemo(() => [
+    { to: "/", label: t("nav.dashboard"), icon: LayoutDashboard, end: true },
+    { to: "/vehicles", label: t("nav.vehicles"), icon: Car },
+    { to: "/maintenance", label: t("nav.maintenance"), icon: Wrench },
+    { to: "/receipts", label: t("nav.receipts"), icon: Receipt },
+    { to: "/receipt-photos", label: t("nav.receiptPhotos"), icon: Camera },
+    { to: "/analytics", label: t("nav.analytics"), icon: BarChart3 },
+  ], [t]);
+
+  const displayName = user?.displayName?.trim() || user?.email?.split("@")[0] || t("dashboard.driver");
   const initials = displayName
     .split(" ")
     .filter(Boolean)
@@ -59,25 +62,25 @@ export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; 
       }));
 
     const receiptMatches = receipts
-      .filter((receipt) => [receipt.vendor, receipt.category, receipt.date].join(" ").toLowerCase().includes(query))
+      .filter((receipt) => [receipt.vendor, t(`category.${receipt.category}` as any), receipt.date].join(" ").toLowerCase().includes(query))
       .map((receipt) => ({
         kind: "receipt" as const,
         title: receipt.vendor,
-        subtitle: `${receipt.category} · $${receipt.amount.toFixed(2)}`,
+        subtitle: `${t(`category.${receipt.category}` as any)} · ${fmtMoney(receipt.amount)}`,
         to: "/receipts",
       }));
 
     const serviceMatches = maintenance
-      .filter((entry) => [entry.type, entry.notes, entry.status].join(" ").toLowerCase().includes(query))
+      .filter((entry) => [entry.type, entry.notes, t(`status.${entry.status}` as any)].join(" ").toLowerCase().includes(query))
       .map((entry) => ({
         kind: "service" as const,
         title: entry.type,
-        subtitle: `${entry.status} · $${entry.cost.toFixed(2)}`,
+        subtitle: `${t(`status.${entry.status}` as any)} · ${fmtMoney(entry.cost)}`,
         to: "/maintenance",
       }));
 
     return [...vehicleMatches, ...receiptMatches, ...serviceMatches].slice(0, 6);
-  }, [maintenance, receipts, searchQuery, vehicles]);
+  }, [maintenance, receipts, searchQuery, vehicles, t, fmtMoney]);
 
   const handleSearchSubmit = () => {
     if (searchResults[0]) {
@@ -132,7 +135,7 @@ export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; 
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 type="search"
-                placeholder="Search vehicles, services, receipts, photos…"
+                placeholder={t("nav.searchPlaceholder")}
                 className="pl-9 h-10 bg-secondary/60 border-transparent focus-visible:bg-card focus-visible:border-border"
                 aria-label="Search"
                 value={searchQuery}
@@ -147,7 +150,9 @@ export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; 
               {searchQuery.trim() && (
                 <div className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-50 rounded-2xl border border-border bg-card shadow-elev-lg overflow-hidden">
                   <div className="px-3 py-2 border-b border-border text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    {searchResults.length} result{searchResults.length === 1 ? "" : "s"}
+                    {searchResults.length === 1
+                      ? t("nav.results", { count: 1 })
+                      : t("nav.resultsPlural", { count: searchResults.length })}
                   </div>
                   <div className="max-h-80 overflow-auto">
                     {searchResults.map((result, index) => (
@@ -169,7 +174,7 @@ export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; 
                       </button>
                     ))}
                     {searchResults.length === 0 && (
-                      <div className="px-4 py-6 text-sm text-muted-foreground">No matches. Try a vehicle brand, receipt vendor, or service type.</div>
+                      <div className="px-4 py-6 text-sm text-muted-foreground">{t("nav.noMatches")}</div>
                     )}
                   </div>
                 </div>
@@ -192,8 +197,8 @@ export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; 
                   <div className="text-xs font-normal text-muted-foreground">{user?.email ?? "No email"}</div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={() => setSettingsOpen(true)}><User className="mr-2 h-4 w-4" /> Profile</DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => setSettingsOpen(true)}><Settings className="mr-2 h-4 w-4" /> Account settings</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setSettingsOpen(true)}><User className="mr-2 h-4 w-4" /> {t("nav.profile")}</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setSettingsOpen(true)}><Settings className="mr-2 h-4 w-4" /> {t("nav.accountSettings")}</DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="text-destructive focus:text-destructive"
@@ -202,7 +207,7 @@ export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; 
                     navigate("/auth");
                   }}
                 >
-                  <LogOut className="mr-2 h-4 w-4" /> Sign out
+                  <LogOut className="mr-2 h-4 w-4" /> {t("nav.signOut")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -232,6 +237,7 @@ export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; 
 }
 
 function Brand({ compact = false }: { compact?: boolean }) {
+  const { t } = useSettings();
   return (
     <div className={cn("flex items-center gap-3 px-5", compact ? "" : "h-16 border-b border-sidebar-border")}>
       <div className="h-9 w-9 rounded-xl bg-gradient-primary grid place-items-center shadow-glow">
@@ -239,7 +245,7 @@ function Brand({ compact = false }: { compact?: boolean }) {
       </div>
       <div className="leading-tight">
         <div className="font-display font-bold text-base text-white">GarageOS</div>
-        <div className="text-[11px] text-sidebar-foreground/70">Maintenance & Expenses</div>
+        <div className="text-[11px] text-sidebar-foreground/70">{t("brand.subtitle")}</div>
       </div>
     </div>
   );
@@ -268,14 +274,15 @@ function SidebarLink({ to, label, icon: Icon, end, onClick }: { to: string; labe
 }
 
 function UpsellCard() {
+  const { t } = useSettings();
   return (
     <div className="m-3 p-4 rounded-xl bg-sidebar-accent/60 border border-sidebar-border">
       <div className="flex items-center gap-2 text-sidebar-primary mb-2">
         <Sparkles className="h-4 w-4" />
-        <span className="text-xs font-semibold uppercase tracking-wider">Pro tip</span>
+        <span className="text-xs font-semibold uppercase tracking-wider">{t("upsell.proTip")}</span>
       </div>
       <p className="text-xs text-sidebar-foreground/80 leading-relaxed">
-        Store receipts, photos, fuel logs, and vehicle records in one place.
+        {t("upsell.desc")}
       </p>
     </div>
   );

@@ -1,8 +1,11 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { translations, type TranslationKey } from "@/lib/translations";
 
 export type Currency = "USD" | "EUR" | "GBP" | "PLN" | "JPY";
 export type PrimaryColor = "ocean" | "violet" | "emerald" | "rose" | "amber";
 export type FontScale = "normal" | "large" | "xl";
+export type Language = "pl" | "en";
+export type DistanceUnit = "mi" | "km";
 
 const SYMBOLS: Record<Currency, string> = {
   USD: "$",
@@ -16,8 +19,13 @@ type SettingsValue = {
   currency: Currency;
   symbol: string;
   primaryColor: PrimaryColor;
+  language: Language;
+  distanceUnit: DistanceUnit;
   setCurrency: (c: Currency) => void;
   setPrimaryColor: (color: PrimaryColor) => void;
+  setLanguage: (l: Language) => void;
+  setDistanceUnit: (u: DistanceUnit) => void;
+  t: (key: TranslationKey, params?: Record<string, string | number>) => string;
   format: (n: number, opts?: { decimals?: number }) => string;
   // a11y
   highContrast: boolean;
@@ -56,21 +64,40 @@ function applyPrimaryColorTokens(color: PrimaryColor) {
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const initialSettings = useMemo(() => {
+    const isPolish = typeof navigator !== "undefined" && navigator.language?.startsWith("pl");
+    const defaultLang = (isPolish ? "pl" : "en") as Language;
+    const defaultUnit = (isPolish ? "km" : "mi") as DistanceUnit;
+    const defaultCurrency = (isPolish ? "PLN" : "USD") as Currency;
+
     if (typeof window === "undefined") {
-      return { currency: "USD" as Currency, primaryColor: "ocean" as PrimaryColor, highContrast: false, reduceMotion: false, fontScale: "normal" as FontScale, dyslexiaFont: false, underlineLinks: false };
+      return {
+        currency: defaultCurrency,
+        primaryColor: "ocean" as PrimaryColor,
+        language: defaultLang,
+        distanceUnit: defaultUnit,
+        highContrast: false,
+        reduceMotion: false,
+        fontScale: "normal" as FontScale,
+        dyslexiaFont: false,
+        underlineLinks: false
+      };
     }
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        const parsedCurrency = parsed?.currency && parsed.currency in SYMBOLS ? (parsed.currency as Currency) : "USD";
+        const parsedCurrency = parsed?.currency && parsed.currency in SYMBOLS ? (parsed.currency as Currency) : defaultCurrency;
         const parsedPrimaryColor = parsed?.primaryColor && parsed.primaryColor in PRIMARY_COLOR_TOKENS
           ? (parsed.primaryColor as PrimaryColor)
           : "ocean";
+        const parsedLang = parsed?.language === "pl" || parsed?.language === "en" ? (parsed.language as Language) : defaultLang;
+        const parsedUnit = parsed?.distanceUnit === "mi" || parsed?.distanceUnit === "km" ? (parsed.distanceUnit as DistanceUnit) : defaultUnit;
         const fs = (["normal", "large", "xl"].includes(parsed?.fontScale) ? parsed.fontScale : "normal") as FontScale;
         return {
           currency: parsedCurrency,
           primaryColor: parsedPrimaryColor,
+          language: parsedLang,
+          distanceUnit: parsedUnit,
           highContrast: !!parsed?.highContrast,
           reduceMotion: !!parsed?.reduceMotion,
           fontScale: fs,
@@ -79,12 +106,25 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         };
       }
     } catch {
-      return { currency: "USD" as Currency, primaryColor: "ocean" as PrimaryColor, highContrast: false, reduceMotion: false, fontScale: "normal" as FontScale, dyslexiaFont: false, underlineLinks: false };
+      // ignore errors
     }
-    return { currency: "USD" as Currency, primaryColor: "ocean" as PrimaryColor, highContrast: false, reduceMotion: false, fontScale: "normal" as FontScale, dyslexiaFont: false, underlineLinks: false };
+    return {
+      currency: defaultCurrency,
+      primaryColor: "ocean" as PrimaryColor,
+      language: defaultLang,
+      distanceUnit: defaultUnit,
+      highContrast: false,
+      reduceMotion: false,
+      fontScale: "normal" as FontScale,
+      dyslexiaFont: false,
+      underlineLinks: false
+    };
   }, []);
+
   const [currency, setCurrencyState] = useState<Currency>(initialSettings.currency);
   const [primaryColor, setPrimaryColorState] = useState<PrimaryColor>(initialSettings.primaryColor);
+  const [language, setLanguageState] = useState<Language>(initialSettings.language);
+  const [distanceUnit, setDistanceUnitState] = useState<DistanceUnit>(initialSettings.distanceUnit);
   const [highContrast, setHighContrast] = useState<boolean>(initialSettings.highContrast);
   const [reduceMotion, setReduceMotion] = useState<boolean>(initialSettings.reduceMotion);
   const [fontScale, setFontScale] = useState<FontScale>(initialSettings.fontScale);
@@ -92,8 +132,18 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [underlineLinks, setUnderlineLinks] = useState<boolean>(initialSettings.underlineLinks);
 
   useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ currency, primaryColor, highContrast, reduceMotion, fontScale, dyslexiaFont, underlineLinks }));
-  }, [currency, primaryColor, highContrast, reduceMotion, fontScale, dyslexiaFont, underlineLinks]);
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      currency,
+      primaryColor,
+      language,
+      distanceUnit,
+      highContrast,
+      reduceMotion,
+      fontScale,
+      dyslexiaFont,
+      underlineLinks
+    }));
+  }, [currency, primaryColor, language, distanceUnit, highContrast, reduceMotion, fontScale, dyslexiaFont, underlineLinks]);
 
   useEffect(() => {
     applyPrimaryColorTokens(primaryColor);
@@ -110,15 +160,33 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<SettingsValue>(() => {
     const symbol = SYMBOLS[currency];
+    
+    const t = (key: TranslationKey, params?: Record<string, string | number>): string => {
+      const translationSet = translations[language] || translations["en"];
+      let text = translationSet[key] || translations["en"][key] || String(key);
+      if (params) {
+        Object.entries(params).forEach(([k, v]) => {
+          text = text.replace(new RegExp(`\\{${k}\\}`, "g"), String(v));
+        });
+      }
+      return text;
+    };
+
     return {
       currency,
       symbol,
       primaryColor,
+      language,
+      distanceUnit,
       setCurrency: setCurrencyState,
       setPrimaryColor: setPrimaryColorState,
+      setLanguage: setLanguageState,
+      setDistanceUnit: setDistanceUnitState,
+      t,
       format: (n, opts) => {
         const decimals = opts?.decimals ?? 2;
-        const num = (n ?? 0).toLocaleString(undefined, {
+        const locale = language === "pl" ? "pl-PL" : "en-US";
+        const num = (n ?? 0).toLocaleString(locale, {
           minimumFractionDigits: decimals,
           maximumFractionDigits: decimals,
         });
@@ -135,7 +203,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       setDyslexiaFont,
       setUnderlineLinks,
     };
-  }, [currency, primaryColor, highContrast, reduceMotion, fontScale, dyslexiaFont, underlineLinks]);
+  }, [currency, primaryColor, language, distanceUnit, highContrast, reduceMotion, fontScale, dyslexiaFont, underlineLinks]);
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
 }

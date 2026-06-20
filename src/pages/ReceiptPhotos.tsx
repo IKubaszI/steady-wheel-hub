@@ -9,6 +9,7 @@ import { Camera, Images, Upload, ChevronLeft, ChevronRight, Download } from "luc
 import { useGarageData } from "@/context/garage-data";
 import { categoryMeta, type Category, type Receipt } from "@/data/mockData";
 import { Link } from "react-router-dom";
+import { useSettings } from "@/context/settings";
 
 export default function ReceiptPhotos() {
   const [open, setOpen] = useState(false);
@@ -17,6 +18,7 @@ export default function ReceiptPhotos() {
   const [activeReceipt, setActiveReceipt] = useState<Receipt | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const { receipts, vehicles } = useGarageData();
+  const { t, format: fmtMoney, language } = useSettings();
 
   const albums = useMemo(() => receipts.filter((receipt) => receipt.photos.length > 0), [receipts]);
   
@@ -36,45 +38,49 @@ export default function ReceiptPhotos() {
   return (
     <AppShell onQuickAdd={() => setOpen(true)}>
       <PageHeader
-        title="Receipt photos"
-        subtitle="A separate archive for receipt images, grouped by vehicle and category"
+        title={t("receipts.receiptPhotos")}
+        subtitle={t("photos.subtitle")}
         action={(
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" asChild className="gap-2"><Link to="/receipts"><Images className="h-4 w-4" /> Back to receipts</Link></Button>
-            <Button onClick={() => setOpen(true)} className="gap-2 bg-gradient-primary text-primary-foreground hover:opacity-90 shadow-glow"><Upload className="h-4 w-4" /> Add receipt with photos</Button>
+            <Button variant="outline" asChild className="gap-2">
+              <Link to="/receipts"><Images className="h-4 w-4" /> {t("photos.backToReceipts")}</Link>
+            </Button>
+            <Button onClick={() => setOpen(true)} className="gap-2 bg-gradient-primary text-primary-foreground hover:opacity-90 shadow-glow">
+              <Upload className="h-4 w-4" /> {t("photos.addPhotos")}
+            </Button>
           </div>
         )}
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <Stat label="Albums" value={String(albums.length)} />
-        <Stat label="Photos" value={String(photoCount)} />
-        <Stat label="Vehicles covered" value={String(uniqueVehicles)} />
+        <Stat label={t("photos.albums")} value={String(albums.length)} />
+        <Stat label={t("photos.photos")} value={String(photoCount)} />
+        <Stat label={t("photos.vehiclesCovered")} value={String(uniqueVehicles)} />
       </div>
 
       {/* Filters */}
       <div className="surface-card p-4 rounded-lg mb-6 space-y-3">
         <div className="flex items-center justify-between gap-3 flex-wrap">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Filter by</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t("receipts.filterBy")}</p>
           {activeFilters && (
             <Button variant="ghost" size="sm" onClick={() => {
               setFilterCategory("all");
               setFilterVehicle("all");
             }}>
-              Clear filters
+              {t("photos.clearFilters")}
             </Button>
           )}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="text-xs text-muted-foreground block mb-2">Category</label>
+            <label className="text-xs text-muted-foreground block mb-2">{t("common.category")}</label>
             <div className="flex flex-wrap gap-2">
               <Badge 
                 variant={filterCategory === "all" ? "default" : "outline"}
                 className="cursor-pointer"
                 onClick={() => setFilterCategory("all")}
               >
-                All categories
+                {t("photos.allCategories")}
               </Badge>
               {Object.entries(categoryMeta).map(([cat, meta]) => (
                 <Badge 
@@ -83,20 +89,20 @@ export default function ReceiptPhotos() {
                   className={`cursor-pointer ${filterCategory === cat ? "" : meta.bg}`}
                   onClick={() => setFilterCategory(cat as Category)}
                 >
-                  {meta.label}
+                  {t(`category.${cat}` as any)}
                 </Badge>
               ))}
             </div>
           </div>
           <div>
-            <label className="text-xs text-muted-foreground block mb-2">Vehicle</label>
+            <label className="text-xs text-muted-foreground block mb-2">{t("common.vehicle")}</label>
             <div className="flex flex-wrap gap-2">
               <Badge 
                 variant={filterVehicle === "all" ? "default" : "outline"}
                 className="cursor-pointer"
                 onClick={() => setFilterVehicle("all")}
               >
-                All vehicles
+                {t("photos.allVehicles")}
               </Badge>
               {vehicles.map((v) => (
                 <Badge 
@@ -111,7 +117,7 @@ export default function ReceiptPhotos() {
             </div>
           </div>
         </div>
-        <p className="text-xs text-muted-foreground">Photos are displayed uncropped to keep receipt text readable.</p>
+        <p className="text-xs text-muted-foreground">{t("photos.helpText")}</p>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
@@ -125,9 +131,9 @@ export default function ReceiptPhotos() {
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-xs uppercase tracking-wider text-muted-foreground">{receipt.vendor}</p>
-                  <h3 className="font-display text-lg font-semibold mt-1">{vehicle ? `${vehicle.brand} ${vehicle.model}` : "Unknown vehicle"}</h3>
+                  <h3 className="font-display text-lg font-semibold mt-1">{vehicle ? `${vehicle.brand} ${vehicle.model}` : t("photos.unknownVehicle")}</h3>
                 </div>
-                <Badge variant="secondary" className={meta.bg}>{meta.label}</Badge>
+                <Badge variant="secondary" className={meta.bg}>{t(`category.${receipt.category}` as any)}</Badge>
               </div>
 
               <div className={`grid ${gridClass} gap-3`}>
@@ -142,16 +148,24 @@ export default function ReceiptPhotos() {
                   >
                     <img src={photo} alt={`${receipt.vendor} receipt ${index + 1}`} className="h-full w-full object-contain p-1" />
                     <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <span className="text-white text-xs font-semibold">Click to expand</span>
+                      <span className="text-white text-xs font-semibold">{t("photos.clickExpand")}</span>
                     </div>
                   </button>
                 ))}
               </div>
 
               <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                <Badge variant="outline" className="rounded-full">{receipt.amount.toFixed(2)} USD</Badge>
-                <Badge variant="outline" className="rounded-full">{receipt.photos.length} photo{receipt.photos.length === 1 ? "" : "s"}</Badge>
-                {receipt.fuelLiters != null && <Badge variant="outline" className="rounded-full">{receipt.fuelLiters.toFixed(1)} L</Badge>}
+                <Badge variant="outline" className="rounded-full">{fmtMoney(receipt.amount)}</Badge>
+                <Badge variant="outline" className="rounded-full">
+                  {receipt.photos.length === 1
+                    ? t("photos.countSingle", { count: 1 })
+                    : t("photos.countPlural", { count: receipt.photos.length })}
+                </Badge>
+                {receipt.fuelLiters != null && (
+                  <Badge variant="outline" className="rounded-full">
+                    {language === "pl" ? receipt.fuelLiters.toFixed(1).replace(".", ",") : receipt.fuelLiters.toFixed(1)} L
+                  </Badge>
+                )}
               </div>
             </article>
           );
@@ -161,16 +175,16 @@ export default function ReceiptPhotos() {
       {filtered.length === 0 && (
         <div className="surface-card p-10 text-center">
           <Camera className="mx-auto h-10 w-10 text-muted-foreground" />
-          <p className="mt-3 font-semibold">No photos match your filters</p>
-          <p className="text-sm text-muted-foreground mt-1">Try adjusting the category or vehicle filter.</p>
+          <p className="mt-3 font-semibold">{t("photos.noPhotosMatch")}</p>
+          <p className="text-sm text-muted-foreground mt-1">{t("photos.adjustFilters")}</p>
         </div>
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle className="font-display text-xl">Add receipt photos</DialogTitle>
-            <DialogDescription>Upload one receipt entry with multiple images so it is archived separately.</DialogDescription>
+            <DialogTitle className="font-display text-xl">{t("photos.addPhotos")}</DialogTitle>
+            <DialogDescription>{t("form.receipt.addDesc")}</DialogDescription>
           </DialogHeader>
           <AddReceiptForm onClose={() => setOpen(false)} />
         </DialogContent>
@@ -181,8 +195,8 @@ export default function ReceiptPhotos() {
         <Dialog open={!!lightboxPhoto} onOpenChange={() => setActiveReceipt(null)}>
           <DialogContent className="max-w-4xl max-h-[90vh]">
             <DialogHeader className="sr-only">
-              <DialogTitle>Receipt photo preview</DialogTitle>
-              <DialogDescription>Browse images attached to this receipt.</DialogDescription>
+              <DialogTitle>{t("photos.lightboxTitle")}</DialogTitle>
+              <DialogDescription>{t("photos.lightboxDesc")}</DialogDescription>
             </DialogHeader>
             <a
               href={lightboxPhoto}
@@ -202,17 +216,17 @@ export default function ReceiptPhotos() {
                 onClick={() => setLightboxIndex((current) => Math.max(0, current - 1))}
                 disabled={lightboxIndex === 0}
               >
-                <ChevronLeft className="h-4 w-4 mr-2" /> Previous
+                <ChevronLeft className="h-4 w-4 mr-2" /> {t("photos.previous")}
               </Button>
               <span className="text-xs text-muted-foreground">
-                Photo {lightboxIndex + 1} of {activeReceipt?.photos.length ?? 0}
+                {t("photos.photoOf", { current: lightboxIndex + 1, total: activeReceipt?.photos.length ?? 0 })}
               </span>
               <Button
                 variant="ghost"
                 onClick={() => setLightboxIndex((current) => Math.min((activeReceipt?.photos.length ?? 1) - 1, current + 1))}
                 disabled={!activeReceipt || lightboxIndex >= activeReceipt.photos.length - 1}
               >
-                Next <ChevronRight className="h-4 w-4 ml-2" />
+                {t("photos.next")} <ChevronRight className="h-4 w-4 ml-2" />
               </Button>
             </div>
           </DialogContent>

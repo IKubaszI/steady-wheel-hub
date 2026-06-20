@@ -7,6 +7,8 @@ import { findBrandLogo } from "@/lib/car-brands";
 import { getPattern, getTheme } from "@/lib/vehicle-themes";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
+import { useSettings } from "@/context/settings";
+import { pl, enUS } from "date-fns/locale";
 
 export function VehicleCard({ v }: { v: Vehicle }) {
   const [open, setOpen] = useState(false);
@@ -14,6 +16,20 @@ export function VehicleCard({ v }: { v: Vehicle }) {
   const theme = getTheme(v.theme);
   const pattern = getPattern(v.pattern);
   const themed = !!theme.cardClass;
+  const { t, distanceUnit, language } = useSettings();
+  const dateLocale = language === "pl" ? pl : enUS;
+
+  const getMileageString = (mileage: number) => {
+    const isMetric = distanceUnit === "km";
+    const factor = isMetric ? 1.609344 : 1;
+    const value = (mileage * factor) / 1000;
+    const suffix = isMetric ? "km" : "mi";
+    const formatted = value.toLocaleString(language === "pl" ? "pl-PL" : "en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    return `${formatted}k ${suffix}`;
+  };
+
+  const translatedColor = t(`color.${v.color.toLowerCase()}` as any) || v.color;
+
   return (
     <>
     <article
@@ -71,9 +87,9 @@ export function VehicleCard({ v }: { v: Vehicle }) {
       <p className="relative mt-4 text-sm text-muted-foreground">{v.model}</p>
 
       <dl className="relative mt-5 grid grid-cols-3 gap-3 text-sm">
-        <Stat icon={Gauge} label="Mileage" value={`${(v.mileage/1000).toFixed(1)}k mi`} />
-        <Stat icon={Calendar} label="Next svc" value={format(parseISO(v.nextService), "MMM d")} />
-        <Stat icon={Palette} label="Color" value={v.color.split(" ")[0]} />
+        <Stat icon={Gauge} label={t("vehicles.mileageLabel")} value={getMileageString(v.mileage)} />
+        <Stat icon={Calendar} label={t("vehicles.nextSvcLabel")} value={format(parseISO(v.nextService), "MMM d", { locale: dateLocale })} />
+        <Stat icon={Palette} label={t("vehicles.colorLabel")} value={translatedColor.split(" ")[0]} />
       </dl>
 
       <button
@@ -81,7 +97,7 @@ export function VehicleCard({ v }: { v: Vehicle }) {
         onClick={(e) => { e.stopPropagation(); setOpen(true); }}
         className="relative mt-5 w-full inline-flex items-center justify-center gap-1 text-sm font-medium text-primary group-hover:gap-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md py-1"
       >
-        View details <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+        {t("vehicles.viewDetails")} <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
       </button>
     </article>
     <VehicleDetailsDialog vehicle={v} open={open} onOpenChange={setOpen} />

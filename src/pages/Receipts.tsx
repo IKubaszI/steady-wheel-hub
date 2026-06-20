@@ -9,21 +9,27 @@ import { ReceiptList } from "@/components/receipts/ReceiptList";
 import { Link } from "react-router-dom";
 import { type Category } from "@/data/mockData";
 import { useGarageData } from "@/context/garage-data";
+import { useSettings } from "@/context/settings";
 
 export default function Receipts() {
   const [open, setOpen] = useState<null | { mode: "add"; category?: Category } | { mode: "edit"; receiptId: string }>(null);
   const { receipts } = useGarageData();
+  const { t } = useSettings();
   const receiptToEdit = open?.mode === "edit" ? receipts.find((receipt) => receipt.id === open.receiptId) ?? null : null;
 
   return (
     <AppShell onQuickAdd={() => setOpen({ mode: "add" })}>
       <PageHeader
-        title="Receipts & expenses"
-        subtitle="Track fuel, parts, and service receipts with linked vehicle tags and photo uploads"
+        title={t("receipts.title")}
+        subtitle={t("receipts.subtitle")}
         action={(
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" asChild className="gap-2"><Link to="/receipt-photos"><Camera className="h-4 w-4" /> Receipt photos</Link></Button>
-            <Button onClick={() => setOpen({ mode: "add" })} className="gap-2 bg-gradient-primary text-primary-foreground hover:opacity-90 shadow-glow"><Plus className="h-4 w-4" /> Add receipt</Button>
+            <Button variant="outline" asChild className="gap-2">
+              <Link to="/receipt-photos"><Camera className="h-4 w-4" /> {t("receipts.receiptPhotos")}</Link>
+            </Button>
+            <Button onClick={() => setOpen({ mode: "add" })} className="gap-2 bg-gradient-primary text-primary-foreground hover:opacity-90 shadow-glow">
+              <Plus className="h-4 w-4" /> {t("dashboard.addReceipt")}
+            </Button>
           </div>
         )}
       />
@@ -34,8 +40,18 @@ export default function Receipts() {
       <Dialog open={open !== null} onOpenChange={(isOpen) => !isOpen && setOpen(null)}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle className="font-display text-xl">{open?.mode === "edit" ? "Edit receipt" : open?.category ? `Add ${open.category} receipt` : "Add a receipt"}</DialogTitle>
-            <DialogDescription>{open?.mode === "edit" ? "Update expense details, tags, and photos." : "Track a new car-related expense and attach one or more images."}</DialogDescription>
+            <DialogTitle className="font-display text-xl">
+              {open?.mode === "edit"
+                ? t("form.receipt.editTitle")
+                : open?.category
+                  ? t(`receipts.add${open.category.charAt(0).toUpperCase() + open.category.slice(1)}Receipt` as any)
+                  : t("form.receipt.addTitle")}
+            </DialogTitle>
+            <DialogDescription>
+              {open?.mode === "edit"
+                ? t("form.receipt.editDesc")
+                : t("form.receipt.addDesc")}
+            </DialogDescription>
           </DialogHeader>
           <AddReceiptForm
             onClose={() => setOpen(null)}

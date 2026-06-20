@@ -66,18 +66,18 @@ export type Receipt = {
 };
 
 export const receipts: Receipt[] = [
-  { id: "r1",  vehicleId: "v1", vendor: "Supercharger Station", category: "fuel",      amount: 24.30, date: "2026-05-02", fuelLiters: 7.8,  photos: ["https://picsum.photos/seed/garage-r1/900/700"] },
-  { id: "r2",  vehicleId: "v2", vendor: "Shell Premium",        category: "fuel",      amount: 62.80, date: "2026-05-01", fuelLiters: 31.4, photos: ["https://picsum.photos/seed/garage-r2/900/700"] },
-  { id: "r3",  vehicleId: "v3", vendor: "BMW Dealer Parts",     category: "parts",     amount: 318.40, date: "2026-04-28", photos: ["https://picsum.photos/seed/garage-r3/900/700", "https://picsum.photos/seed/garage-r3b/900/700"] },
-  { id: "r4",  vehicleId: "v4", vendor: "Mike's Auto Service",  category: "service",   amount: 240.00, date: "2026-04-22", photos: ["https://picsum.photos/seed/garage-r4/900/700"] },
+  { id: "r1",  vehicleId: "v1", vendor: "Supercharger Station", category: "fuel",      amount: 24.30, date: "2026-05-02", fuelLiters: 7.8,  photos: ["/receipt-1.png"] },
+  { id: "r2",  vehicleId: "v2", vendor: "Shell Premium",        category: "fuel",      amount: 62.80, date: "2026-05-01", fuelLiters: 31.4, photos: ["/receipt-2.png"] },
+  { id: "r3",  vehicleId: "v3", vendor: "BMW Dealer Parts",     category: "parts",     amount: 318.40, date: "2026-04-28", photos: ["/receipt-3.png", "/receipt-4.png"] },
+  { id: "r4",  vehicleId: "v4", vendor: "Mike's Auto Service",  category: "service",   amount: 240.00, date: "2026-04-22", photos: ["/receipt-4.png"] },
   { id: "r5",  vehicleId: "v1", vendor: "GEICO",                category: "insurance", amount: 162.00, date: "2026-04-15", photos: [] },
-  { id: "r6",  vehicleId: "v2", vendor: "AutoZone",             category: "parts",     amount: 84.20,  date: "2026-04-12", photos: ["https://picsum.photos/seed/garage-r6/900/700"] },
-  { id: "r7",  vehicleId: "v3", vendor: "Detail Pros",          category: "other",     amount: 220.00, date: "2026-04-09", photos: ["https://picsum.photos/seed/garage-r7/900/700"] },
-  { id: "r8",  vehicleId: "v4", vendor: "Costco Gas",           category: "fuel",      amount: 71.10,  date: "2026-04-05", fuelLiters: 34.8, photos: ["https://picsum.photos/seed/garage-r8/900/700"] },
+  { id: "r6",  vehicleId: "v2", vendor: "AutoZone",             category: "parts",     amount: 84.20,  date: "2026-04-12", photos: ["/receipt-1.png"] },
+  { id: "r7",  vehicleId: "v3", vendor: "Detail Pros",          category: "other",     amount: 220.00, date: "2026-04-09", photos: ["/receipt-2.png"] },
+  { id: "r8",  vehicleId: "v4", vendor: "Costco Gas",           category: "fuel",      amount: 71.10,  date: "2026-04-05", fuelLiters: 34.8, photos: ["/receipt-3.png"] },
   { id: "r9",  vehicleId: "v2", vendor: "Allstate",             category: "insurance", amount: 148.00, date: "2026-03-28", photos: [] },
-  { id: "r10", vehicleId: "v3", vendor: "Quick Lube",           category: "service",   amount: 95.50,  date: "2026-03-21", photos: ["https://picsum.photos/seed/garage-r10/900/700"] },
-  { id: "r11", vehicleId: "v1", vendor: "Tire Rack",            category: "parts",     amount: 612.00, date: "2026-03-12", photos: ["https://picsum.photos/seed/garage-r11/900/700", "https://picsum.photos/seed/garage-r11b/900/700"] },
-  { id: "r12", vehicleId: "v4", vendor: "Shell Premium",        category: "fuel",      amount: 78.40,  date: "2026-03-04", fuelLiters: 39.1, photos: ["https://picsum.photos/seed/garage-r12/900/700"] },
+  { id: "r10", vehicleId: "v3", vendor: "Quick Lube",           category: "service",   amount: 95.50,  date: "2026-03-21", photos: ["/receipt-4.png"] },
+  { id: "r11", vehicleId: "v1", vendor: "Tire Rack",            category: "parts",     amount: 612.00, date: "2026-03-12", photos: ["/receipt-1.png", "/receipt-2.png"] },
+  { id: "r12", vehicleId: "v4", vendor: "Shell Premium",        category: "fuel",      amount: 78.40,  date: "2026-03-04", fuelLiters: 39.1, photos: ["/receipt-3.png"] },
 ];
 
 export const monthlyExpenses = [

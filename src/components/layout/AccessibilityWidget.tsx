@@ -32,6 +32,7 @@ export function AccessibilityWidget({ hasSidebar = false }: AccessibilityWidgetP
     setFontScale,
     setDyslexiaFont,
     setUnderlineLinks,
+    t,
   } = useSettings();
 
   const handleReset = () => {
@@ -50,8 +51,8 @@ export function AccessibilityWidget({ hasSidebar = false }: AccessibilityWidgetP
         <button
           id="a11y-floating-widget"
           type="button"
-          aria-label="Accessibility options"
-          title="Accessibility options"
+          aria-label={t("settings.accessibilityWidget.trigger")}
+          title={t("settings.accessibilityWidget.trigger")}
           className={cn(
             "fixed bottom-6 z-40 h-14 w-14 rounded-full border border-border bg-card shadow-lg transition-all duration-300",
             "hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/40",
@@ -83,10 +84,10 @@ export function AccessibilityWidget({ hasSidebar = false }: AccessibilityWidgetP
             </div>
             <div>
               <h2 className="text-sm font-semibold tracking-tight leading-none text-foreground">
-                Accessibility Options
+                {t("settings.accessibilityWidget.title")}
               </h2>
               <p className="text-[11px] text-muted-foreground mt-1">
-                Customize your display settings
+                {t("settings.accessibilityWidget.subtitle")}
               </p>
             </div>
           </div>
@@ -99,10 +100,10 @@ export function AccessibilityWidget({ hasSidebar = false }: AccessibilityWidgetP
                 <Contrast className="h-4.5 w-4.5 text-muted-foreground mt-0.5 shrink-0" />
                 <div className="space-y-0.5">
                   <Label htmlFor="a11y-high-contrast" className="text-xs font-semibold leading-none cursor-pointer">
-                    High Contrast
+                    {t("settings.highContrast")}
                   </Label>
                   <p className="text-[10px] text-muted-foreground leading-normal">
-                    High contrast color theme
+                    {t("settings.highContrastDesc")}
                   </p>
                 </div>
               </div>
@@ -110,7 +111,7 @@ export function AccessibilityWidget({ hasSidebar = false }: AccessibilityWidgetP
                 id="a11y-high-contrast"
                 checked={highContrast}
                 onCheckedChange={setHighContrast}
-                aria-label="Toggle High Contrast"
+                aria-label={t("settings.highContrast")}
               />
             </div>
 
@@ -120,10 +121,10 @@ export function AccessibilityWidget({ hasSidebar = false }: AccessibilityWidgetP
                 <Smile className="h-4.5 w-4.5 text-muted-foreground mt-0.5 shrink-0" />
                 <div className="space-y-0.5">
                   <Label htmlFor="a11y-dyslexia" className="text-xs font-semibold leading-none cursor-pointer">
-                    Dyslexia Font
+                    {t("settings.accessibilityWidget.dyslexia")}
                   </Label>
                   <p className="text-[10px] text-muted-foreground leading-normal">
-                    Dyslexia-friendly typeface
+                    {t("settings.accessibilityWidget.dyslexiaDesc")}
                   </p>
                 </div>
               </div>
@@ -131,7 +132,7 @@ export function AccessibilityWidget({ hasSidebar = false }: AccessibilityWidgetP
                 id="a11y-dyslexia"
                 checked={dyslexiaFont}
                 onCheckedChange={setDyslexiaFont}
-                aria-label="Toggle Dyslexia-friendly Font"
+                aria-label={t("settings.accessibilityWidget.dyslexia")}
               />
             </div>
 
@@ -141,10 +142,10 @@ export function AccessibilityWidget({ hasSidebar = false }: AccessibilityWidgetP
                 <Underline className="h-4.5 w-4.5 text-muted-foreground mt-0.5 shrink-0" />
                 <div className="space-y-0.5">
                   <Label htmlFor="a11y-underline" className="text-xs font-semibold leading-none cursor-pointer">
-                    Underline Links
+                    {t("settings.accessibilityWidget.underline")}
                   </Label>
                   <p className="text-[10px] text-muted-foreground leading-normal">
-                    Always underline hypertext links
+                    {t("settings.accessibilityWidget.underlineDesc")}
                   </p>
                 </div>
               </div>
@@ -152,7 +153,7 @@ export function AccessibilityWidget({ hasSidebar = false }: AccessibilityWidgetP
                 id="a11y-underline"
                 checked={underlineLinks}
                 onCheckedChange={setUnderlineLinks}
-                aria-label="Toggle Underlined Links"
+                aria-label={t("settings.accessibilityWidget.underline")}
               />
             </div>
 
@@ -162,10 +163,10 @@ export function AccessibilityWidget({ hasSidebar = false }: AccessibilityWidgetP
                 <Activity className="h-4.5 w-4.5 text-muted-foreground mt-0.5 shrink-0" />
                 <div className="space-y-0.5">
                   <Label htmlFor="a11y-reduce-motion" className="text-xs font-semibold leading-none cursor-pointer">
-                    Reduce Motion
+                    {t("settings.accessibilityWidget.reduceMotion")}
                   </Label>
                   <p className="text-[10px] text-muted-foreground leading-normal">
-                    Reduce screen motion and animation
+                    {t("settings.accessibilityWidget.reduceMotionDesc")}
                   </p>
                 </div>
               </div>
@@ -173,7 +174,7 @@ export function AccessibilityWidget({ hasSidebar = false }: AccessibilityWidgetP
                 id="a11y-reduce-motion"
                 checked={reduceMotion}
                 onCheckedChange={setReduceMotion}
-                aria-label="Toggle Reduced Motion"
+                aria-label={t("settings.accessibilityWidget.reduceMotion")}
               />
             </div>
           </div>
@@ -183,8 +184,8 @@ export function AccessibilityWidget({ hasSidebar = false }: AccessibilityWidgetP
             <div className="flex items-center gap-2">
               <Type className="h-4.5 w-4.5 text-muted-foreground shrink-0" />
               <div className="space-y-0.5">
-                <Label className="text-xs font-semibold leading-none">Text Size</Label>
-                <p className="text-[10px] text-muted-foreground leading-none">Adjust body text scale</p>
+                <Label className="text-xs font-semibold leading-none">{t("settings.accessibilityWidget.textSize")}</Label>
+                <p className="text-[10px] text-muted-foreground leading-none">{t("settings.accessibilityWidget.textSizeDesc")}</p>
               </div>
             </div>
             <ToggleGroup
@@ -200,21 +201,21 @@ export function AccessibilityWidget({ hasSidebar = false }: AccessibilityWidgetP
                 className="text-[11px] h-8 font-medium rounded-lg data-[state=on]:bg-background data-[state=on]:shadow-sm"
                 aria-label="Normal text size"
               >
-                Normal
+                {t("settings.textSizeNormal").split(" ")[0]}
               </ToggleGroupItem>
               <ToggleGroupItem
                 value="large"
                 className="text-xs h-8 font-semibold rounded-lg data-[state=on]:bg-background data-[state=on]:shadow-sm"
                 aria-label="Large text size"
               >
-                Large
+                {t("settings.textSizeLarge").split(" ")[0]}
               </ToggleGroupItem>
               <ToggleGroupItem
                 value="xl"
                 className="text-sm h-8 font-bold rounded-lg data-[state=on]:bg-background data-[state=on]:shadow-sm"
                 aria-label="Extra large text size"
               >
-                XL
+                {t("settings.textSizeXL").split(" ")[0] === "Extra" ? "XL" : t("settings.textSizeXL").split(" ")[0]}
               </ToggleGroupItem>
             </ToggleGroup>
           </div>
@@ -227,7 +228,7 @@ export function AccessibilityWidget({ hasSidebar = false }: AccessibilityWidgetP
             className="w-full text-xs gap-1.5 h-9 rounded-xl border-dashed border-muted-foreground/30 hover:border-destructive/40 hover:text-destructive hover:bg-destructive/5 transition-colors"
           >
             <RotateCcw className="h-3.5 w-3.5" />
-            Reset to defaults
+            {t("settings.accessibilityWidget.reset")}
           </Button>
         </div>
       </PopoverContent>

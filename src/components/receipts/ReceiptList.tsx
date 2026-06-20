@@ -21,7 +21,7 @@ type Props = {
 
 export function ReceiptList({ onAddReceipt, onEditReceipt }: Props) {
   const { receipts, vehicles } = useGarageData();
-  const { format: fmtMoney } = useSettings();
+  const { format: fmtMoney, t, language, currency, symbol } = useSettings();
   const [cat, setCat] = useState<Category | "all">("all");
   const [q, setQ] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -38,27 +38,101 @@ export function ReceiptList({ onAddReceipt, onEditReceipt }: Props) {
   const total = filtered.reduce((sum, receipt) => sum + receipt.amount, 0);
   const fuelLiters = filtered.filter((receipt) => receipt.category === "fuel").reduce((sum, receipt) => sum + (receipt.fuelLiters ?? 0), 0);
 
+  const handleExportCSV = () => {
+    const escapeCSV = (val: unknown) => {
+      if (val == null) return "";
+      const str = String(val);
+      if (str.includes(";") || str.includes('"') || str.includes("\n") || str.includes("\r")) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
+    const formatDecimal = (num: number, precision: number) => {
+      const str = num.toFixed(precision);
+      return language === "pl" ? str.replace(".", ",") : str;
+    };
+
+    const headers = [
+      t("csv.vendor"),
+      t("csv.vehicle"),
+      t("csv.plate"),
+      t("csv.category"),
+      t("csv.date"),
+      t("csv.amount", { currency }),
+      t("csv.fuelLiters"),
+    ];
+
+    const rows = filtered.map((receipt) => {
+      const vehicle = vehicles.find((v) => v.id === receipt.vehicleId);
+      const vehicleName = vehicle ? `${vehicle.brand} ${vehicle.model}` : t("photos.unknownVehicle");
+      const vehiclePlate = vehicle ? vehicle.plate : "";
+      const categoryLabel = t(`category.${receipt.category}` as any);
+      return [
+        receipt.vendor,
+        vehicleName,
+        vehiclePlate,
+        categoryLabel,
+        receipt.date,
+        formatDecimal(receipt.amount, 2),
+        receipt.fuelLiters != null ? formatDecimal(receipt.fuelLiters, 1) : "",
+      ].map(escapeCSV).join(";");
+    });
+
+    const summaryLines = [
+      "",
+      "===========================================================;;;;;;",
+      `${t("csv.summaryTitle")};;;;;;`,
+      `${t("csv.txCount")};;;;;${filtered.length};`,
+      `${t("csv.totalAmount")};;;;;${formatDecimal(total, 2)} ${currency};`,
+      cat === "fuel" || fuelLiters > 0 ? `${t("csv.totalFuel")};;;;;;${formatDecimal(fuelLiters, 1)}` : "",
+      "===========================================================;;;;;;",
+    ].filter(Boolean);
+
+    const csvContent = [
+      "sep=;",
+      headers.join(";"),
+      ...rows,
+      ...summaryLines
+    ].join("\n");
+
+    const blob = new Blob(["\ufeff", csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const filePrefix = language === "pl" ? "zestawienie_wydatkow" : "expense_summary";
+    link.setAttribute("href", url);
+    link.setAttribute("download", `${filePrefix}_${format(new Date(), "yyyy-MM-dd")}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="space-y-5">
       <div className="surface-card p-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
         <div>
-          <p className="text-xs uppercase tracking-wider text-muted-foreground">Context</p>
-          <h3 className="font-display text-lg font-semibold mt-1">{cat === "all" ? "All receipts" : `${categoryMeta[cat].label} receipts`}</h3>
+          <p className="text-xs uppercase tracking-wider text-muted-foreground">{t("common.category")}</p>
+          <h3 className="font-display text-lg font-semibold mt-1">
+            {cat === "all" ? t("receipts.allReceipts") : t("receipts.categoryReceipts", { category: t(`category.${cat}` as any) })}
+          </h3>
           <p className="text-sm text-muted-foreground mt-1">
             {cat === "fuel"
-              ? "Log liters, photos, and a vehicle tag for each fuel receipt."
+              ? t("receipts.desc.fuel")
               : cat === "parts"
-                ? "Store parts invoices with a linked vehicle and image proof."
-                : "Filter by category, then add receipts with one or more photos."}
+                ? t("receipts.desc.parts")
+                : t("receipts.desc.default")}
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
+          <Button variant="outline" onClick={handleExportCSV} className="gap-2">
+            <Download className="h-4 w-4" /> {t("receipts.exportCsv")}
+          </Button>
           <Button variant="outline" asChild className="gap-2">
-            <Link to="/receipt-photos"><Camera className="h-4 w-4" /> Receipt photos</Link>
+            <Link to="/receipt-photos"><Camera className="h-4 w-4" /> {t("receipts.receiptPhotos")}</Link>
           </Button>
           {cat !== "all" && onAddReceipt && (
             <Button onClick={() => onAddReceipt(cat)} className="gap-2 bg-gradient-primary text-primary-foreground hover:opacity-90 shadow-glow">
-              Add {categoryMeta[cat].label.toLowerCase()} receipt
+              {t(`receipts.add${cat.charAt(0).toUpperCase() + cat.slice(1)}Receipt` as any)}
             </Button>
           )}
         </div>
@@ -83,29 +157,33 @@ export function ReceiptList({ onAddReceipt, onEditReceipt }: Props) {
                   )}
                 >
                   {meta && <meta.icon className="inline h-3 w-3 mr-1 -mt-0.5" />}
-                  {category}
+                  {category === "all" ? t("common.all") : t(`category.${category}` as any)}
                 </button>
               );
             })}
           </div>
           <div className="relative w-full lg:w-72">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input value={q} onChange={(event) => setQ(event.target.value)} placeholder="Search vendor…" className="pl-9 h-9 bg-secondary/60 border-transparent" />
+            <Input value={q} onChange={(event) => setQ(event.target.value)} placeholder={t("receipts.searchVendor")} className="pl-9 h-9 bg-secondary/60 border-transparent" />
           </div>
         </div>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3 px-1">
-        <p className="text-sm text-muted-foreground"><span className="font-semibold text-foreground">{filtered.length}</span> receipts</p>
+        <p className="text-sm text-muted-foreground">
+          <span className="font-semibold text-foreground">
+            {filtered.length === 1 ? t("nav.results", { count: 1 }) : t("nav.resultsPlural", { count: filtered.length })}
+          </span>
+        </p>
         <div className="flex flex-wrap items-center gap-2 text-sm">
-          <span>Total: <span className="font-display font-bold text-lg">{fmtMoney(total)}</span></span>
-          {cat === "fuel" && <Badge variant="secondary" className="rounded-full">{fuelLiters.toFixed(1)} L logged</Badge>}
+          <span>{t("vehicles.totalSpend")}: <span className="font-display font-bold text-lg">{fmtMoney(total)}</span></span>
+          {cat === "fuel" && <Badge variant="secondary" className="rounded-full">{fuelLiters.toFixed(1)} L</Badge>}
         </div>
       </div>
 
       <div className="surface-card overflow-hidden">
         <div className="hidden md:grid grid-cols-[1fr_140px_140px_120px_100px] gap-4 px-5 py-3 text-[11px] uppercase tracking-wider text-muted-foreground font-semibold border-b border-border bg-secondary/40">
-          <span>Vendor</span><span>Vehicle</span><span>Category</span><span>Date</span><span className="text-right">Amount</span>
+          <span>{t("common.vendor")}</span><span>{t("common.vehicle")}</span><span>{t("common.category")}</span><span>{t("common.date")}</span><span className="text-right">{t("common.amount")}</span>
         </div>
         <ul className="divide-y divide-border">
           {filtered.map((receipt) => {
@@ -139,7 +217,9 @@ export function ReceiptList({ onAddReceipt, onEditReceipt }: Props) {
                       <span>{vehicle.brand} {vehicle.model}</span>
                       <span>·</span>
                       <span>{format(parseISO(receipt.date), "MMM d")}</span>
-                      {receipt.fuelLiters != null && <span>· {receipt.fuelLiters.toFixed(1)} L</span>}
+                      {receipt.fuelLiters != null && (
+                        <span>· {language === "pl" ? receipt.fuelLiters.toFixed(1).replace(".", ",") : receipt.fuelLiters.toFixed(1)} L</span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -148,13 +228,17 @@ export function ReceiptList({ onAddReceipt, onEditReceipt }: Props) {
                 </div>
                 <div className="hidden md:flex items-center self-center">
                   <span className={cn("inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-semibold capitalize", meta.bg)}>
-                    <Icon className="h-3 w-3" /> {meta.label}
+                    <Icon className="h-3 w-3" /> {t(`category.${receipt.category}` as any)}
                   </span>
                 </div>
-                <p className="hidden md:block text-sm self-center tabular-nums">{format(parseISO(receipt.date), "MMM d, yyyy")}</p>
+                <p className="hidden md:block text-sm self-center tabular-nums">{format(parseISO(receipt.date), language === "pl" ? "yyyy-MM-dd" : "MMM d, yyyy")}</p>
                 <div className="md:text-right self-center">
                   <p className="font-display font-bold tabular-nums">{fmtMoney(receipt.amount)}</p>
-                  {receipt.fuelLiters != null && <p className="text-xs text-muted-foreground">{receipt.fuelLiters.toFixed(1)} L</p>}
+                  {receipt.fuelLiters != null && (
+                    <p className="text-xs text-muted-foreground">
+                      {language === "pl" ? receipt.fuelLiters.toFixed(1).replace(".", ",") : receipt.fuelLiters.toFixed(1)} L
+                    </p>
+                  )}
                 </div>
                 </button>
                 <Collapsible open={isOpen}>
@@ -163,16 +247,21 @@ export function ReceiptList({ onAddReceipt, onEditReceipt }: Props) {
                       <div className="rounded-xl border border-border/70 bg-card p-4 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-5">
                       <div className="space-y-3">
                         <div className="grid grid-cols-2 gap-3 text-sm">
-                          <Detail label="Vendor" value={receipt.vendor} />
-                          <Detail label="Category" value={meta.label} />
-                          <Detail label="Vehicle" value={`${vehicle.brand} ${vehicle.model} · ${vehicle.plate}`} />
-                          <Detail label="Date" value={format(parseISO(receipt.date), "MMMM d, yyyy")} />
-                          <Detail label="Amount" value={fmtMoney(receipt.amount)} />
-                          {receipt.fuelLiters != null && <Detail label="Fuel" value={`${receipt.fuelLiters.toFixed(1)} L`} />}
+                          <Detail label={t("common.vendor")} value={receipt.vendor} />
+                          <Detail label={t("common.category")} value={t(`category.${receipt.category}` as any)} />
+                          <Detail label={t("common.vehicle")} value={`${vehicle.brand} ${vehicle.model} · ${vehicle.plate}`} />
+                          <Detail label={t("common.date")} value={format(parseISO(receipt.date), language === "pl" ? "yyyy-MM-dd" : "MMMM d, yyyy")} />
+                          <Detail label={t("common.amount")} value={fmtMoney(receipt.amount)} />
+                          {receipt.fuelLiters != null && (
+                            <Detail
+                              label={t("form.receipt.fuelLiters")}
+                              value={`${language === "pl" ? receipt.fuelLiters.toFixed(1).replace(".", ",") : receipt.fuelLiters.toFixed(1)} L`}
+                            />
+                          )}
                         </div>
                         {onEditReceipt && (
                           <Button type="button" size="sm" variant="outline" className="gap-2" onClick={() => onEditReceipt(receipt.id)}>
-                            <Pencil className="h-3.5 w-3.5" /> Edit receipt
+                            <Pencil className="h-3.5 w-3.5" /> {t("receipts.edit")}
                           </Button>
                         )}
                       </div>
@@ -191,7 +280,7 @@ export function ReceiptList({ onAddReceipt, onEditReceipt }: Props) {
                           ))}
                         </div>
                       ) : (
-                        <div className="self-start text-xs text-muted-foreground italic">No photos attached</div>
+                        <div className="self-start text-xs text-muted-foreground italic">{t("receipts.noPhotos")}</div>
                       )}
                       </div>
                     </div>
@@ -201,7 +290,7 @@ export function ReceiptList({ onAddReceipt, onEditReceipt }: Props) {
             );
           })}
           {filtered.length === 0 && (
-            <li className="p-10 text-center text-muted-foreground text-sm">No receipts match your filters.</li>
+            <li className="p-10 text-center text-muted-foreground text-sm">{t("receipts.noReceiptsMatch")}</li>
           )}
         </ul>
       </div>
@@ -210,7 +299,7 @@ export function ReceiptList({ onAddReceipt, onEditReceipt }: Props) {
         <DialogContent className="max-w-4xl p-0 overflow-hidden">
           <DialogHeader className="px-5 py-3 border-b border-border flex flex-row items-center justify-between gap-2 space-y-0">
             <div className="min-w-0">
-              <DialogTitle className="text-base truncate">Receipt preview</DialogTitle>
+              <DialogTitle className="text-base truncate">{t("receipts.preview")}</DialogTitle>
               <DialogDescription className="truncate">{preview?.name}</DialogDescription>
             </div>
             {preview && (
@@ -221,7 +310,7 @@ export function ReceiptList({ onAddReceipt, onEditReceipt }: Props) {
                 rel="noreferrer"
                 className="inline-flex items-center gap-2 rounded-md bg-gradient-primary text-primary-foreground px-3 py-1.5 text-sm font-medium shadow-glow hover:opacity-90"
               >
-                <Download className="h-4 w-4" /> Download
+                <Download className="h-4 w-4" /> {t("receipts.download")}
               </a>
             )}
           </DialogHeader>

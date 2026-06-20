@@ -9,12 +9,16 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { formatAppError } from "@/lib/errors";
+import { useSettings } from "@/context/settings";
+import { pl, enUS } from "date-fns/locale";
 
 export function UpcomingServices() {
   const { maintenance, vehicles, updateMaintenance, deleteMaintenance } = useGarageData();
   const { toast } = useToast();
   const [selected, setSelected] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const { t, format: fmtMoney, language } = useSettings();
+  const dateLocale = language === "pl" ? pl : enUS;
 
   const items = maintenance
     .filter((m) => m.status !== "completed")
@@ -28,11 +32,11 @@ export function UpcomingServices() {
     if (selectedItem) {
       try {
         await updateMaintenance(selectedItem.id, { status: "completed" });
-        toast({ title: "Service updated", description: "Service marked as completed." });
+        toast({ title: t("ocr.scanComplete"), description: t("activity.serviceToastDeleted") });
         setSelected(null);
       } catch (error) {
-        const message = formatAppError(error, "Could not update service.");
-        toast({ title: "Update failed", description: message, variant: "destructive" });
+        const message = formatAppError(error, t("ocr.scanFailedDesc"));
+        toast({ title: t("ocr.scanFailed"), description: message, variant: "destructive" });
       }
     }
   };
@@ -41,12 +45,12 @@ export function UpcomingServices() {
     if (selected) {
       try {
         await deleteMaintenance(selected);
-        toast({ title: "Service deleted", description: "Service entry was removed." });
+        toast({ title: t("common.delete"), description: t("activity.serviceToastDeleted") });
         setSelected(null);
         setDeleteConfirm(false);
       } catch (error) {
-        const message = formatAppError(error, "Could not delete service.");
-        toast({ title: "Delete failed", description: message, variant: "destructive" });
+        const message = formatAppError(error, t("ocr.scanFailedDesc"));
+        toast({ title: t("ocr.scanFailed"), description: message, variant: "destructive" });
       }
     }
   };
@@ -56,8 +60,8 @@ export function UpcomingServices() {
       <div className="surface-card p-6">
         <div className="flex items-center justify-between mb-5">
           <div>
-            <h3 className="font-display text-lg font-semibold">Upcoming services</h3>
-            <p className="text-sm text-muted-foreground">{totalPending} pending service{totalPending === 1 ? "" : "s"}</p>
+            <h3 className="font-display text-lg font-semibold">{t("dashboard.upcomingServices")}</h3>
+            <p className="text-sm text-muted-foreground">{t("notify.pending", { count: totalPending })}</p>
           </div>
           <div className="flex items-center gap-2 text-muted-foreground">
             <CalendarClock className="h-5 w-5" />
@@ -84,7 +88,7 @@ export function UpcomingServices() {
                   overdue ? "bg-destructive text-destructive-foreground" : "bg-primary/10 text-primary"
                 )}>
                   {format(parseISO(m.date), "dd")}
-                  <span className="sr-only">{format(parseISO(m.date), "MMMM yyyy")}</span>
+                  <span className="sr-only">{format(parseISO(m.date), "MMMM yyyy", { locale: dateLocale })}</span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium truncate">{m.type}</p>
@@ -93,12 +97,12 @@ export function UpcomingServices() {
                 <div className="text-right">
                   {overdue ? (
                     <span className="inline-flex items-center gap-1 text-xs font-semibold text-destructive">
-                      <AlertTriangle className="h-3 w-3" /> Overdue
+                      <AlertTriangle className="h-3 w-3" /> {t("status.overdue")}
                     </span>
                   ) : (
-                    <span className="text-xs font-medium text-primary">in {days}d</span>
+                    <span className="text-xs font-medium text-primary">{t("notify.days", { days })}</span>
                   )}
-                  <p className="text-[11px] text-muted-foreground tabular-nums">${m.cost.toFixed(0)}</p>
+                  <p className="text-[11px] text-muted-foreground tabular-nums">{fmtMoney(m.cost, { decimals: 0 })}</p>
                 </div>
               </li>
             );
@@ -107,7 +111,7 @@ export function UpcomingServices() {
         {totalPending > previewItems.length && (
           <Button variant="ghost" asChild className="mt-4 w-full justify-between px-0 text-primary hover:bg-transparent">
             <Link to="/maintenance">
-              View all services
+              {t("maintenance.title")}
               <ArrowRight className="h-4 w-4" />
             </Link>
           </Button>
@@ -118,17 +122,17 @@ export function UpcomingServices() {
       <Dialog open={selected !== null && !deleteConfirm} onOpenChange={(open) => !open && setSelected(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Service Details</DialogTitle>
-            <DialogDescription>Information about this maintenance entry</DialogDescription>
+            <DialogTitle>{t("maintenance.serviceDetails")}</DialogTitle>
+            <DialogDescription>{t("maintenance.infoEntry")}</DialogDescription>
           </DialogHeader>
           {selectedItem && (
             <div className="space-y-4">
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Service Type</label>
+                <label className="text-xs font-semibold text-muted-foreground uppercase">{t("maintenance.serviceType")}</label>
                 <p className="text-base font-medium">{selectedItem.type}</p>
               </div>
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Vehicle</label>
+                <label className="text-xs font-semibold text-muted-foreground uppercase">{t("activity.vehicle")}</label>
                 <p className="text-base font-medium">
                   {vehicles.find((v) => v.id === selectedItem.vehicleId)?.brand}{" "}
                   {vehicles.find((v) => v.id === selectedItem.vehicleId)?.model} (
@@ -137,30 +141,30 @@ export function UpcomingServices() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-semibold text-muted-foreground uppercase">Scheduled Date</label>
-                  <p className="text-base font-medium">{format(parseISO(selectedItem.date), "MMM d, yyyy")}</p>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase">{t("maintenance.scheduledDate")}</label>
+                  <p className="text-base font-medium">{format(parseISO(selectedItem.date), "MMM d, yyyy", { locale: dateLocale })}</p>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-muted-foreground uppercase">Cost</label>
-                  <p className="text-base font-medium">${selectedItem.cost.toFixed(2)}</p>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase">{t("activity.cost")}</label>
+                  <p className="text-base font-medium">{fmtMoney(selectedItem.cost)}</p>
                 </div>
               </div>
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Status</label>
-                <p className="text-base font-medium capitalize">{selectedItem.status}</p>
+                <label className="text-xs font-semibold text-muted-foreground uppercase">{t("activity.status")}</label>
+                <p className="text-base font-medium capitalize">{t(`status.${selectedItem.status}` as any)}</p>
               </div>
               <div>
-                <label className="text-xs font-semibold text-muted-foreground uppercase">Notes</label>
+                <label className="text-xs font-semibold text-muted-foreground uppercase">{t("maintenance.notes")}</label>
                 <p className="text-sm text-foreground/80">{selectedItem.notes || "—"}</p>
               </div>
               <div className="flex gap-3">
                 {selectedItem.status !== "completed" && (
                   <Button onClick={handleMarkCompleted} className="flex-1 gap-2">
-                    <CheckCircle className="h-4 w-4" /> Mark Completed
+                    <CheckCircle className="h-4 w-4" /> {t("maintenance.markCompleted")}
                   </Button>
                 )}
                 <Button variant="destructive" className="flex-1 gap-2" onClick={() => setDeleteConfirm(true)}>
-                  <Trash2 className="h-4 w-4" /> Delete
+                  <Trash2 className="h-4 w-4" /> {t("common.delete")}
                 </Button>
               </div>
             </div>
@@ -172,12 +176,12 @@ export function UpcomingServices() {
       <AlertDialog open={deleteConfirm} onOpenChange={setDeleteConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete service entry?</AlertDialogTitle>
-            <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+            <AlertDialogTitle>{t("maintenance.delete.title")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("activity.deleteConfirmDesc")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{t("common.delete")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

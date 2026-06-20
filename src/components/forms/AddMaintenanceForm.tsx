@@ -8,10 +8,12 @@ import { type ServiceStatus } from "@/data/mockData";
 import { useGarageData } from "@/context/garage-data";
 import { useToast } from "@/hooks/use-toast";
 import { formatAppError } from "@/lib/errors";
+import { useSettings } from "@/context/settings";
 
 export function AddMaintenanceForm({ onClose }: { onClose: () => void }) {
   const { vehicles, addMaintenance } = useGarageData();
   const { toast } = useToast();
+  const { t, symbol } = useSettings();
   const [vehicleId, setVehicleId] = useState(vehicles[0]?.id ?? "");
   const [type, setType] = useState("");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
@@ -39,41 +41,41 @@ export function AddMaintenanceForm({ onClose }: { onClose: () => void }) {
             status,
             notes: notes.trim(),
           });
-          toast({ title: "Maintenance added", description: "Maintenance entry was added successfully." });
+          toast({ title: t("maintenance.toast.added"), description: t("maintenance.toast.addedDesc") });
           onClose();
         } catch (error) {
           const message = formatAppError(error, "Could not save maintenance.");
-          toast({ title: "Save failed", description: message, variant: "destructive" });
+          toast({ title: t("maintenance.toast.saveFailed"), description: message, variant: "destructive" });
         } finally {
           setBusy(false);
         }
       }}
     >
       <div className="grid grid-cols-2 gap-4">
-        <Field id="vehicle" label="Vehicle">
-          <Select value={vehicleId} onValueChange={setVehicleId}><SelectTrigger id="vehicle"><SelectValue placeholder="Select vehicle" /></SelectTrigger>
+        <Field id="vehicle" label={t("common.vehicle")}>
+          <Select value={vehicleId} onValueChange={setVehicleId}><SelectTrigger id="vehicle"><SelectValue placeholder={t("vehicles.selectVehicle")} /></SelectTrigger>
             <SelectContent>{vehicles.map((v) => <SelectItem key={v.id} value={v.id}>{v.brand} {v.model}</SelectItem>)}</SelectContent>
           </Select>
         </Field>
-        <Field id="type" label="Service type"><Input id="type" maxLength={120} value={type} onChange={(e) => setType(e.target.value)} placeholder="Oil change" /></Field>
-        <Field id="date" label="Date"><Input id="date" value={date} onChange={(e) => setDate(e.target.value)} type="date" /></Field>
-        <Field id="cost" label="Cost ($)"><Input id="cost" value={cost} onChange={(e) => setCost(e.target.value)} type="number" step="0.01" placeholder="89.50" /></Field>
-        <Field id="status" label="Status">
+        <Field id="type" label={t("form.service.type")}><Input id="type" maxLength={120} value={type} onChange={(e) => setType(e.target.value)} placeholder={t("form.service.typePlaceholder")} /></Field>
+        <Field id="date" label={t("common.date")}><Input id="date" value={date} onChange={(e) => setDate(e.target.value)} type="date" /></Field>
+        <Field id="cost" label={`${t("form.service.cost")} (${symbol})`}><Input id="cost" value={cost} onChange={(e) => setCost(e.target.value)} type="number" step="0.01" placeholder="89.50" /></Field>
+        <Field id="status" label={t("common.status")}>
           <Select value={status} onValueChange={(value) => setStatus(value as ServiceStatus)}>
-            <SelectTrigger id="status"><SelectValue placeholder="Select status" /></SelectTrigger>
+            <SelectTrigger id="status"><SelectValue placeholder={t("maintenance.selectStatus")} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="upcoming">Upcoming</SelectItem>
-              <SelectItem value="overdue">Overdue</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
+              <SelectItem value="upcoming">{t("status.upcoming")}</SelectItem>
+              <SelectItem value="overdue">{t("status.overdue")}</SelectItem>
+              <SelectItem value="completed">{t("status.completed")}</SelectItem>
             </SelectContent>
           </Select>
         </Field>
       </div>
-      <Field id="notes" label="Notes"><Textarea id="notes" maxLength={2000} value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder="Synthetic 5W-30, check brakes…" /></Field>
+      <Field id="notes" label={t("form.service.notes")}><Textarea id="notes" maxLength={2000} value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder={t("form.service.notesPlaceholder")} /></Field>
       <div className="flex justify-end gap-2">
-        <Button type="button" variant="ghost" onClick={onClose} disabled={busy}>Cancel</Button>
+        <Button type="button" variant="ghost" onClick={onClose} disabled={busy}>{t("common.cancel")}</Button>
         <Button type="submit" disabled={busy} className="bg-gradient-primary text-primary-foreground hover:opacity-90 shadow-glow">
-          {busy ? "Saving..." : "Add entry"}
+          {busy ? t("common.saving") : t("form.service.addEntry")}
         </Button>
       </div>
     </form>
