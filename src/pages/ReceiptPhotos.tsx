@@ -10,6 +10,7 @@ import { useGarageData } from "@/context/garage-data";
 import { categoryMeta, type Category, type Receipt } from "@/data/mockData";
 import { Link } from "react-router-dom";
 import { useSettings } from "@/context/settings";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ReceiptPhotos() {
   const [open, setOpen] = useState(false);
@@ -17,8 +18,33 @@ export default function ReceiptPhotos() {
   const [filterVehicle, setFilterVehicle] = useState<string>("all");
   const [activeReceipt, setActiveReceipt] = useState<Receipt | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState(0);
-  const { receipts, vehicles } = useGarageData();
+  const { receipts, vehicles, deleteReceipt } = useGarageData();
   const { t, format: fmtMoney, language } = useSettings();
+
+  const { toast } = useToast();
+  const [selectedReceiptForEdit, setSelectedReceiptForEdit] = useState<Receipt | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+
+  const handleDeleteReceipt = async (id: string) => {
+    const confirmMsg = t("activity.deleteConfirmTitle", {
+      item: t("nav.receipts").toLowerCase(),
+    });
+    if (window.confirm(confirmMsg)) {
+      try {
+        await deleteReceipt(id);
+        toast({
+          title: t("common.delete"),
+          description: t("activity.receiptToastDeleted"),
+        });
+      } catch (error) {
+        toast({
+          title: t("receipt.toast.saveFailed"),
+          description: "Could not delete receipt.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
 
   const albums = useMemo(() => receipts.filter((receipt) => receipt.photos.length > 0), [receipts]);
   
@@ -154,18 +180,41 @@ export default function ReceiptPhotos() {
                 ))}
               </div>
 
-              <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                <Badge variant="outline" className="rounded-full">{fmtMoney(receipt.amount)}</Badge>
-                <Badge variant="outline" className="rounded-full">
-                  {receipt.photos.length === 1
-                    ? t("photos.countSingle", { count: 1 })
-                    : t("photos.countPlural", { count: receipt.photos.length })}
-                </Badge>
-                {receipt.fuelLiters != null && (
+              <div className="flex items-center justify-between flex-wrap gap-2 pt-2 border-t border-border/40">
+                <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                  <Badge variant="outline" className="rounded-full">{fmtMoney(receipt.amount)}</Badge>
                   <Badge variant="outline" className="rounded-full">
-                    {language === "pl" ? receipt.fuelLiters.toFixed(1).replace(".", ",") : receipt.fuelLiters.toFixed(1)} L
+                    {receipt.photos.length === 1
+                      ? t("photos.countSingle", { count: 1 })
+                      : t("photos.countPlural", { count: receipt.photos.length })}
                   </Badge>
-                )}
+                  {receipt.fuelLiters != null && (
+                    <Badge variant="outline" className="rounded-full">
+                      {language === "pl" ? receipt.fuelLiters.toFixed(1).replace(".", ",") : receipt.fuelLiters.toFixed(1)} L
+                    </Badge>
+                  )}
+                </div>
+                <div className="flex gap-1.5 ml-auto">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 text-xs gap-1"
+                    onClick={() => {
+                      setSelectedReceiptForEdit(receipt);
+                      setEditDialogOpen(true);
+                    }}
+                  >
+                    ✏️ {t("common.edit")}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 text-xs text-destructive hover:text-destructive hover:bg-destructive/10 gap-1"
+                    onClick={() => handleDeleteReceipt(receipt.id)}
+                  >
+                    🗑️ {t("common.delete")}
+                  </Button>
+                </div>
               </div>
             </article>
           );
@@ -229,9 +278,57 @@ export default function ReceiptPhotos() {
                 {t("photos.next")} <ChevronRight className="h-4 w-4 ml-2" />
               </Button>
             </div>
+            <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-border/40">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  if (activeReceipt) {
+                    setSelectedReceiptForEdit(activeReceipt);
+                    setActiveReceipt(null);
+                    setEditDialogOpen(true);
+                  }
+                }}
+                className="gap-1.5"
+              >
+                ✏️ {t("common.edit")}
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => {
+                  if (activeReceipt) {
+                    const id = activeReceipt.id;
+                    setActiveReceipt(null);
+                    handleDeleteReceipt(id);
+                  }
+                }}
+                className="gap-1.5"
+              >
+                🗑️ {t("common.delete")}
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
       )}
+
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl">{t("form.receipt.editTitle")}</DialogTitle>
+            <DialogDescription>{t("form.receipt.editDesc")}</DialogDescription>
+          </DialogHeader>
+          {selectedReceiptForEdit && (
+            <AddReceiptForm
+              initialReceipt={selectedReceiptForEdit}
+              onClose={() => {
+                setEditDialogOpen(false);
+                setSelectedReceiptForEdit(null);
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 }
