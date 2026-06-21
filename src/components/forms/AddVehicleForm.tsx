@@ -77,8 +77,8 @@ export function AddVehicleForm({ onClose, initialVehicle }: Props) {
       <div className="grid grid-cols-2 gap-4">
         <Field id="brand" label={t("form.brand")}><Input id="brand" maxLength={80} value={brand} onChange={(e) => setBrand(e.target.value)} placeholder="Tesla" /></Field>
         <Field id="model" label={t("form.model")}><Input id="model" maxLength={120} value={model} onChange={(e) => setModel(e.target.value)} placeholder="Model 3" /></Field>
-        <Field id="year" label={t("form.year")}><Input id="year" value={year} onChange={(e) => setYear(e.target.value)} type="number" placeholder="2024" /></Field>
-        <Field id="mileage" label={`${t("form.mileage")} (${distanceUnit})`}><Input id="mileage" value={mileage} onChange={(e) => setMileage(e.target.value)} type="number" placeholder="12000" /></Field>
+        <Field id="year" label={t("form.year")}><Input id="year" value={year} onChange={(e) => setYear(e.target.value)} type="number" /></Field>
+        <Field id="mileage" label={`${t("form.mileage")} (${distanceUnit})`}><Input id="mileage" value={mileage} onChange={(e) => setMileage(e.target.value)} type="number" /></Field>
         <Field id="plate" label={t("form.licensePlate")}><Input id="plate" maxLength={24} value={plate} onChange={(e) => setPlate(e.target.value)} placeholder="ABC-1234" /></Field>
         <Field id="color" label={t("form.color")}>
           <Select value={color} onValueChange={setColor}><SelectTrigger id="color"><SelectValue placeholder={t("common.select")} /></SelectTrigger>

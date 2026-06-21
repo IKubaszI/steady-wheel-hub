@@ -39,6 +39,7 @@ export const receiptInputSchema = z.object({
   date: z.string().date(),
   fuelLiters: z.number().gt(0).max(500).optional(),
   photos: z.array(z.string()).max(12),
+  description: z.string().max(2000).optional(),
 });
 
 export const MAX_RECEIPT_FILES = 12;

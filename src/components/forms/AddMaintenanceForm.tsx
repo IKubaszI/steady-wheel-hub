@@ -59,7 +59,7 @@ export function AddMaintenanceForm({ onClose }: { onClose: () => void }) {
         </Field>
         <Field id="type" label={t("form.service.type")}><Input id="type" maxLength={120} value={type} onChange={(e) => setType(e.target.value)} placeholder={t("form.service.typePlaceholder")} /></Field>
         <Field id="date" label={t("common.date")}><Input id="date" value={date} onChange={(e) => setDate(e.target.value)} type="date" /></Field>
-        <Field id="cost" label={`${t("form.service.cost")} (${symbol})`}><Input id="cost" value={cost} onChange={(e) => setCost(e.target.value)} type="number" step="0.01" placeholder="89.50" /></Field>
+        <Field id="cost" label={`${t("form.service.cost")} (${symbol})`}><Input id="cost" value={cost} onChange={(e) => setCost(e.target.value)} type="number" step="0.01" /></Field>
         <Field id="status" label={t("common.status")}>
           <Select value={status} onValueChange={(value) => setStatus(value as ServiceStatus)}>
             <SelectTrigger id="status"><SelectValue placeholder={t("maintenance.selectStatus")} /></SelectTrigger>

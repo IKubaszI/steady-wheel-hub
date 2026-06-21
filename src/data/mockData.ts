@@ -63,6 +63,7 @@ export type Receipt = {
   date: string;
   fuelLiters?: number;
   photos: string[];
+  description?: string;
 };
 
 export const receipts: Receipt[] = [

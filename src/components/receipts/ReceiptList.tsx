@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { categoryMeta, type Category } from "@/data/mockData";
 import { useGarageData } from "@/context/garage-data";
 import { useSettings } from "@/context/settings";
+import { type TranslationKey } from "@/lib/translations";
 
 const categories: (Category | "all")[] = ["all", "fuel", "parts", "service", "insurance", "other"];
 
@@ -70,7 +71,7 @@ export function ReceiptList({ onAddReceipt, onEditReceipt }: Props) {
       const vehicle = vehicles.find((v) => v.id === receipt.vehicleId);
       const vehicleName = vehicle ? `${vehicle.brand} ${vehicle.model}` : t("photos.unknownVehicle");
       const vehiclePlate = vehicle ? vehicle.plate : "";
-      const categoryLabel = t(`category.${receipt.category}` as any);
+      const categoryLabel = t(`category.${receipt.category}` as TranslationKey);
       return [
         receipt.vendor,
         vehicleName,
@@ -116,7 +117,7 @@ export function ReceiptList({ onAddReceipt, onEditReceipt }: Props) {
         <div>
           <p className="text-xs uppercase tracking-wider text-muted-foreground">{t("common.category")}</p>
           <h3 className="font-display text-lg font-semibold mt-1">
-            {cat === "all" ? t("receipts.allReceipts") : t("receipts.categoryReceipts", { category: t(`category.${cat}` as any) })}
+            {cat === "all" ? t("receipts.allReceipts") : t("receipts.categoryReceipts", { category: t(`category.${cat}` as TranslationKey) })}
           </h3>
           <p className="text-sm text-muted-foreground mt-1">
             {cat === "fuel"
@@ -135,7 +136,7 @@ export function ReceiptList({ onAddReceipt, onEditReceipt }: Props) {
           </Button>
           {cat !== "all" && onAddReceipt && (
             <Button onClick={() => onAddReceipt(cat)} className="gap-2 bg-gradient-primary text-primary-foreground hover:opacity-90 shadow-glow">
-              {t(`receipts.add${cat.charAt(0).toUpperCase() + cat.slice(1)}Receipt` as any)}
+              {t(`receipts.add${cat.charAt(0).toUpperCase() + cat.slice(1)}Receipt` as TranslationKey)}
             </Button>
           )}
         </div>
@@ -180,7 +181,7 @@ export function ReceiptList({ onAddReceipt, onEditReceipt }: Props) {
                       onClick={() => setCat(category as Category)}
                     >
                       {meta && <meta.icon className="inline h-3 w-3 mr-1 -mt-0.5" />}
-                      {t(`category.${category}` as any)}
+                      {t(`category.${category}` as TranslationKey)}
                     </Badge>
                   );
                 })}
@@ -278,7 +279,7 @@ export function ReceiptList({ onAddReceipt, onEditReceipt }: Props) {
                 </div>
                 <div className="hidden md:flex items-center self-center">
                   <span className={cn("inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-semibold capitalize", meta.bg)}>
-                    <Icon className="h-3 w-3" /> {t(`category.${receipt.category}` as any)}
+                    <Icon className="h-3 w-3" /> {t(`category.${receipt.category}` as TranslationKey)}
                   </span>
                 </div>
                 <p className="hidden md:block text-sm self-center tabular-nums">{format(parseISO(receipt.date), language === "pl" ? "yyyy-MM-dd" : "MMM d, yyyy")}</p>
@@ -298,7 +299,7 @@ export function ReceiptList({ onAddReceipt, onEditReceipt }: Props) {
                       <div className="space-y-3">
                         <div className="grid grid-cols-2 gap-3 text-sm">
                           <Detail label={t("common.vendor")} value={receipt.vendor} />
-                          <Detail label={t("common.category")} value={t(`category.${receipt.category}` as any)} />
+                          <Detail label={t("common.category")} value={t(`category.${receipt.category}` as TranslationKey)} />
                           <Detail label={t("common.vehicle")} value={`${vehicle.brand} ${vehicle.model} · ${vehicle.plate}`} />
                           <Detail label={t("common.date")} value={format(parseISO(receipt.date), language === "pl" ? "yyyy-MM-dd" : "MMMM d, yyyy")} />
                           <Detail label={t("common.amount")} value={fmtMoney(receipt.amount)} />
@@ -307,6 +308,11 @@ export function ReceiptList({ onAddReceipt, onEditReceipt }: Props) {
                               label={t("form.receipt.fuelLiters")}
                               value={`${language === "pl" ? receipt.fuelLiters.toFixed(1).replace(".", ",") : receipt.fuelLiters.toFixed(1)} L`}
                             />
+                          )}
+                          {receipt.description && (
+                            <div className="col-span-2 mt-1 border-t border-border/40 pt-2">
+                              <Detail label={t("form.receipt.description") || "Krótki opis"} value={receipt.description} />
+                            </div>
                           )}
                         </div>
                         {onEditReceipt && (

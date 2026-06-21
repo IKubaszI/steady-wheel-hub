@@ -16,6 +16,7 @@ import { z } from "zod";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useSettings } from "@/context/settings";
+import { type TranslationKey } from "@/lib/translations";
 
 type Props = {
   onClose: () => void;
@@ -47,6 +48,7 @@ export function AddReceiptForm({ onClose, defaultCategory = "fuel", defaultVehic
     category: z.enum(["fuel", "parts", "service", "insurance", "other"]).default("fuel"),
     date: z.string().trim().min(1, t("validate.dateRequired")),
     fuelLiters: z.string().optional(),
+    description: z.string().optional(),
   });
 
   type FormValues = z.infer<typeof schema>;
@@ -60,6 +62,7 @@ export function AddReceiptForm({ onClose, defaultCategory = "fuel", defaultVehic
       category: initialReceipt?.category ?? defaultCategory,
       date: initialReceipt?.date ?? new Date().toISOString().slice(0, 10),
       fuelLiters: initialReceipt?.fuelLiters != null ? String(initialReceipt.fuelLiters) : "",
+      description: initialReceipt?.description ?? "",
     },
   });
 
@@ -116,8 +119,8 @@ export function AddReceiptForm({ onClose, defaultCategory = "fuel", defaultVehic
         const parsed = await recognizeReceiptGemini(file, geminiApiKey);
         
         let vendor = parsed.vendor || "";
-        let date = normalizeDateToYYYYMMDD(parsed.date || "");
-        let amount = parsed.amount != null ? String(parsed.amount) : "";
+        const date = normalizeDateToYYYYMMDD(parsed.date || "");
+        const amount = parsed.amount != null ? String(parsed.amount) : "";
 
         if (vendor) {
           vendor = vendor.replace(/^["'\s,]+|["'\s,]+$/g, "").trim();
@@ -205,7 +208,7 @@ export function AddReceiptForm({ onClose, defaultCategory = "fuel", defaultVehic
 
         // 3. Amount: find all prices (with optional space as thousands separator) and pick the maximum
         let amount = "";
-        const priceRegex = /\b\d+(?:\s?\d{3})*[\.,]\d{2}\b/g;
+        const priceRegex = /\b\d+(?:\s?\d{3})*[.,]\d{2}\b/g;
         const priceMatches: number[] = [];
         
         for (const line of lines) {
@@ -315,6 +318,7 @@ export function AddReceiptForm({ onClose, defaultCategory = "fuel", defaultVehic
         category: values.category,
         date: values.date,
         fuelLiters: values.category === "fuel" ? (values.fuelLiters ? Number(values.fuelLiters) : undefined) : undefined,
+        description: values.description?.trim() || undefined,
         photos: existingPhotoUrls,
       };
 
@@ -338,7 +342,7 @@ export function AddReceiptForm({ onClose, defaultCategory = "fuel", defaultVehic
       <div className="grid grid-cols-2 gap-4">
         <Field id="vendor" label={t("form.receipt.vendor")}>
           <Controller control={control} name="vendor" render={({ field }) => (
-            <Input id="vendor" maxLength={160} value={field.value} onChange={field.onChange} placeholder="Shell Premium" />
+            <Input id="vendor" maxLength={160} value={field.value} onChange={field.onChange} />
           )} />
           {formState.errors.vendor && (
             <p className="text-xs text-destructive mt-1">{formState.errors.vendor.message}</p>
@@ -346,7 +350,7 @@ export function AddReceiptForm({ onClose, defaultCategory = "fuel", defaultVehic
         </Field>
         <Field id="amount" label={`${t("form.receipt.amount")} (${symbol})`}>
           <Controller control={control} name="amount" render={({ field }) => (
-            <Input id="amount" value={field.value} onChange={field.onChange} type="number" step="0.01" placeholder={language === "pl" ? "62,80" : "62.80"} />
+            <Input id="amount" value={field.value} onChange={field.onChange} type="number" step="0.01" />
           )} />
           {formState.errors.amount && (
             <p className="text-xs text-destructive mt-1">{formState.errors.amount.message}</p>
@@ -363,7 +367,7 @@ export function AddReceiptForm({ onClose, defaultCategory = "fuel", defaultVehic
           <Controller control={control} name="category" render={({ field }) => (
             <Select value={field.value} onValueChange={field.onChange}><SelectTrigger id="category"><SelectValue placeholder={t("common.select")} /></SelectTrigger>
               <SelectContent>
-                {Object.entries(categoryMeta).map(([k, m]) => <SelectItem key={k} value={k}>{t(`category.${k}` as any)}</SelectItem>)}
+                {Object.entries(categoryMeta).map(([k]) => <SelectItem key={k} value={k}>{t(`category.${k}` as TranslationKey)}</SelectItem>)}
               </SelectContent>
             </Select>
           )} />
@@ -376,13 +380,20 @@ export function AddReceiptForm({ onClose, defaultCategory = "fuel", defaultVehic
         {categoryValue === "fuel" && (
           <Field id="fuelLiters" label={`${t("form.receipt.fuelLiters")} (l)`}>
             <Controller control={control} name="fuelLiters" render={({ field }) => (
-              <Input id="fuelLiters" value={field.value} onChange={field.onChange} type="number" step="0.1" placeholder="31.4" />
+              <Input id="fuelLiters" value={field.value} onChange={field.onChange} type="number" step="0.1" />
             )} />
             {formState.errors.fuelLiters && (
               <p className="text-xs text-destructive mt-1">{formState.errors.fuelLiters.message}</p>
             )}
           </Field>
         )}
+        <div className="col-span-2">
+          <Field id="description" label={t("form.receipt.description") || "Krótki opis"}>
+            <Controller control={control} name="description" render={({ field }) => (
+              <Input id="description" maxLength={500} value={field.value} onChange={field.onChange} />
+            )} />
+          </Field>
+        </div>
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="photos" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("form.receipt.photos")}</Label>

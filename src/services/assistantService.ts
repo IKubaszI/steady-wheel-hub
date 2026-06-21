@@ -10,6 +10,7 @@ export interface ParsedAssistantCommand {
     amount?: number;
     date?: string;
     fuelLiters?: number;
+    description?: string;
     // For maintenance
     type?: string;
     cost?: number;
@@ -54,6 +55,7 @@ If the type is "receipt":
 - 'amount': total cost/payment amount. Number.
 - 'date': YYYY-MM-DD format. Default to current date if not specified or unclear.
 - 'fuelLiters': number of liters (e.g. 30 litrów, 30l). Fill only if category is "fuel" and liters were mentioned, otherwise omit or set to null.
+- 'description': any other details, short description, notes, or comments about the receipt/invoice. String.
 
 If the type is "maintenance":
 - 'type': type of maintenance service (e.g. Przegląd techniczny, Wymiana oleju, Wymiana opon, Serwis). String.
