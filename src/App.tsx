@@ -16,6 +16,7 @@ import ReceiptPhotos from "./pages/ReceiptPhotos.tsx";
 import Analytics from "./pages/Analytics.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import AuthPage from "./pages/Auth.tsx";
+import ProTips from "./pages/ProTips.tsx";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,7 @@ const App = () => (
                 <Route path="/receipts" element={<ProtectedRoute><Receipts /></ProtectedRoute>} />
                 <Route path="/receipt-photos" element={<ProtectedRoute><ReceiptPhotos /></ProtectedRoute>} />
                 <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+                <Route path="/pro-tips" element={<ProtectedRoute><ProTips /></ProtectedRoute>} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

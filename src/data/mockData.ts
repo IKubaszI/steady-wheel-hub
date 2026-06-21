@@ -90,3 +90,39 @@ export const monthlyExpenses = [
   { month: "Apr", value: 1342 },
   { month: "May", value: 86 },
 ];
+
+export interface ChecklistItem {
+  id: string;
+  titleKey?: string;
+  text?: string;
+  category: string; // "documents" | "bodywork" | "engine" | "suspension" | "testdrive" | "interior"
+  checked: number; // 0 | 1
+  createdAt: number;
+}
+
+export const defaultChecklist: Omit<ChecklistItem, "id">[] = [
+  // documents
+  { titleKey: "checklist.documents.vin", category: "documents", checked: 0, createdAt: 1 },
+  { titleKey: "checklist.documents.cepik", category: "documents", checked: 0, createdAt: 2 },
+  { titleKey: "checklist.documents.insurance", category: "documents", checked: 0, createdAt: 3 },
+  // bodywork
+  { titleKey: "checklist.bodywork.paint", category: "bodywork", checked: 0, createdAt: 4 },
+  { titleKey: "checklist.bodywork.gaps", category: "bodywork", checked: 0, createdAt: 5 },
+  { titleKey: "checklist.bodywork.rust", category: "bodywork", checked: 0, createdAt: 6 },
+  // engine
+  { titleKey: "checklist.engine.leaks", category: "engine", checked: 0, createdAt: 7 },
+  { titleKey: "checklist.engine.smoke", category: "engine", checked: 0, createdAt: 8 },
+  { titleKey: "checklist.engine.fluids", category: "engine", checked: 0, createdAt: 9 },
+  // suspension
+  { titleKey: "checklist.suspension.knocks", category: "suspension", checked: 0, createdAt: 10 },
+  { titleKey: "checklist.suspension.shocks", category: "suspension", checked: 0, createdAt: 11 },
+  { titleKey: "checklist.suspension.brakes", category: "suspension", checked: 0, createdAt: 12 },
+  // testdrive
+  { titleKey: "checklist.testdrive.alignment", category: "testdrive", checked: 0, createdAt: 13 },
+  { titleKey: "checklist.testdrive.clutch", category: "testdrive", checked: 0, createdAt: 14 },
+  { titleKey: "checklist.testdrive.brakes", category: "testdrive", checked: 0, createdAt: 15 },
+  // interior
+  { titleKey: "checklist.interior.wear", category: "interior", checked: 0, createdAt: 16 },
+  { titleKey: "checklist.interior.electronics", category: "interior", checked: 0, createdAt: 17 },
+  { titleKey: "checklist.interior.lights", category: "interior", checked: 0, createdAt: 18 },
+];

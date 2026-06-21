@@ -27,17 +27,6 @@ export default function Vehicles() {
   const { t, format: fmtMoney, language } = useSettings();
   const dateLocale = language === "pl" ? pl : enUS;
 
-  useEffect(() => {
-    const onboardingFlag = sessionStorage.getItem("steadywheelhub.onboarding");
-    if (onboardingFlag === "1") {
-      setOpen(true);
-      toast({
-        title: t("dashboard.onboarding.title"),
-        description: t("auth.toast.onboarding"),
-      });
-      sessionStorage.removeItem("steadywheelhub.onboarding");
-    }
-  }, [toast, t]);
 
   const vehicleToEdit = editingVehicle ? vehicles.find((vehicle) => vehicle.id === editingVehicle) ?? null : null;
   const vehicleToDelete = deletingVehicle ? vehicles.find((vehicle) => vehicle.id === deletingVehicle) ?? null : null;

@@ -13,9 +13,11 @@ import {
   maintenance as initialMaintenance,
   receipts as initialReceipts,
   vehicles as initialVehicles,
+  defaultChecklist,
   type Maintenance,
   type Receipt,
   type Vehicle,
+  type ChecklistItem,
 } from "@/data/mockData";
 import { useAuth } from "@/context/auth";
 import { db, isFirebaseConfigured } from "@/lib/firebase";
@@ -42,6 +44,11 @@ type GarageDataValue = {
   deleteReceipt: (id: string) => Promise<void>;
   updateMaintenance: (id: string, updates: Partial<Maintenance>) => Promise<void>;
   deleteMaintenance: (id: string) => Promise<void>;
+  checklist: ChecklistItem[];
+  toggleChecklistItem: (id: string, checked: number) => Promise<void>;
+  addChecklistItem: (category: string, text: string) => Promise<void>;
+  deleteChecklistItem: (id: string) => Promise<void>;
+  resetChecklist: () => Promise<void>;
 };
 
 const GarageDataContext = createContext<GarageDataValue | null>(null);
@@ -78,11 +85,33 @@ function fileToDataUrl(file: File) {
   });
 }
 
+function readLocalChecklist(): ChecklistItem[] {
+  try {
+    const stored = window.localStorage.getItem("steadywheelhub.checklist");
+    if (stored) {
+      return JSON.parse(stored) as ChecklistItem[];
+    }
+  } catch {
+    window.localStorage.removeItem("steadywheelhub.checklist");
+  }
+  const initial = defaultChecklist.map((item, idx) => ({
+    id: `local-c-${idx}-${crypto.randomUUID()}`,
+    ...item,
+  }));
+  window.localStorage.setItem("steadywheelhub.checklist", JSON.stringify(initial));
+  return initial;
+}
+
+function saveLocalChecklist(list: ChecklistItem[]) {
+  window.localStorage.setItem("steadywheelhub.checklist", JSON.stringify(list));
+}
+
 export function GarageDataProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [vehicles, setVehicles] = useState<Vehicle[]>(initialVehicles);
   const [receipts, setReceipts] = useState<Receipt[]>(initialReceipts);
   const [maintenance, setMaintenance] = useState<Maintenance[]>(initialMaintenance);
+  const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
 
   function assertFiles(files: File[]) {
     if (files.length > MAX_RECEIPT_FILES) {
@@ -101,6 +130,7 @@ export function GarageDataProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     let cleanup: (() => void) | undefined;
+    let checklistSeeding = false;
 
     if (!isFirebaseConfigured) {
       if (!user) {
@@ -116,6 +146,7 @@ export function GarageDataProvider({ children }: { children: ReactNode }) {
       setVehicles(demoData.vehicles);
       setReceipts(demoData.receipts);
       setMaintenance(demoData.maintenance);
+      setChecklist(readLocalChecklist());
       return () => {
         cancelled = true;
       };
@@ -125,6 +156,7 @@ export function GarageDataProvider({ children }: { children: ReactNode }) {
       setVehicles([]);
       setReceipts([]);
       setMaintenance([]);
+      setChecklist([]);
       return () => {
         cancelled = true;
       };
@@ -149,6 +181,43 @@ export function GarageDataProvider({ children }: { children: ReactNode }) {
         const maintenanceQuery = query(
           collection(db, "users", user.uid, "maintenance"),
           orderBy("date", "desc")
+        );
+
+        const checklistQuery = query(
+          collection(db, "users", user.uid, "checklist"),
+          orderBy("createdAt", "asc")
+        );
+
+        const unsubChecklist = onSnapshot(
+          checklistQuery,
+          async (snapshot) => {
+            const items = snapshot.docs.map((docItem) => ({
+              id: docItem.id,
+              ...(docItem.data() as Omit<ChecklistItem, "id">),
+            }));
+            if (items.length === 0 && !checklistSeeding) {
+              checklistSeeding = true;
+              try {
+                const collRef = collection(db, "users", user.uid, "checklist");
+                for (const item of defaultChecklist) {
+                  await addDoc(collRef, item);
+                }
+              } catch (err) {
+                console.error("Error seeding checklist:", err);
+                // Fallback to local storage on seeding failure (e.g. permission denied)
+                setChecklist(readLocalChecklist());
+              } finally {
+                checklistSeeding = false;
+              }
+            } else {
+              setChecklist(items);
+            }
+          },
+          (error) => {
+            console.error("Checklist listener error:", error);
+            // Fallback to local storage on listener failure
+            setChecklist(readLocalChecklist());
+          }
         );
 
         const unsubs = [
@@ -194,6 +263,7 @@ export function GarageDataProvider({ children }: { children: ReactNode }) {
           console.error("Maintenance listener error:", error);
             }
           ),
+          unsubChecklist,
         ];
 
         cleanup = () => {
@@ -426,7 +496,87 @@ export function GarageDataProvider({ children }: { children: ReactNode }) {
       }
       await deleteDoc(doc(db, "users", user.uid, "maintenance", id));
     },
-  }), [maintenance, receipts, user, vehicles]);
+    checklist,
+    toggleChecklistItem: async (id, checked) => {
+      try {
+        if (!isFirebaseConfigured || id.startsWith("local-")) {
+          throw new Error("use-local");
+        }
+        if (!user) {
+          throw new Error("You must be logged in to update checklist.");
+        }
+        await updateDoc(doc(db, "users", user.uid, "checklist", id), { checked });
+      } catch (err) {
+        const nextList = checklist.map((item) => item.id === id ? { ...item, checked } : item);
+        setChecklist(nextList);
+        saveLocalChecklist(nextList);
+      }
+    },
+    addChecklistItem: async (category, text) => {
+      try {
+        if (!isFirebaseConfigured) {
+          throw new Error("use-local");
+        }
+        if (!user) {
+          throw new Error("You must be logged in to add checklist item.");
+        }
+        await addDoc(collection(db, "users", user.uid, "checklist"), {
+          text,
+          category,
+          checked: 0,
+          createdAt: Date.now(),
+        });
+      } catch (err) {
+        const newItem: ChecklistItem = {
+          id: `local-c-${crypto.randomUUID()}`,
+          text,
+          category,
+          checked: 0,
+          createdAt: Date.now(),
+        };
+        const nextList = [...checklist, newItem];
+        setChecklist(nextList);
+        saveLocalChecklist(nextList);
+      }
+    },
+    deleteChecklistItem: async (id) => {
+      try {
+        if (!isFirebaseConfigured || id.startsWith("local-")) {
+          throw new Error("use-local");
+        }
+        if (!user) {
+          throw new Error("You must be logged in to delete checklist item.");
+        }
+        await deleteDoc(doc(db, "users", user.uid, "checklist", id));
+      } catch (err) {
+        const nextList = checklist.filter((item) => item.id !== id);
+        setChecklist(nextList);
+        saveLocalChecklist(nextList);
+      }
+    },
+    resetChecklist: async () => {
+      try {
+        if (!isFirebaseConfigured) {
+          throw new Error("use-local");
+        }
+        if (!user) {
+          throw new Error("You must be logged in to reset checklist.");
+        }
+        const promises = checklist.map((item) => {
+          if (item.id.startsWith("local-")) return Promise.resolve();
+          return updateDoc(doc(db, "users", user.uid, "checklist", item.id), { checked: 0 });
+        });
+        await Promise.all(promises);
+        const nextList = checklist.map((item) => ({ ...item, checked: 0 }));
+        setChecklist(nextList);
+        saveLocalChecklist(nextList);
+      } catch (err) {
+        const nextList = checklist.map((item) => ({ ...item, checked: 0 }));
+        setChecklist(nextList);
+        saveLocalChecklist(nextList);
+      }
+    },
+  }), [maintenance, receipts, user, vehicles, checklist]);
 
   return <GarageDataContext.Provider value={value}>{children}</GarageDataContext.Provider>;
 }

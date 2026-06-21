@@ -57,12 +57,6 @@ export default function Dashboard() {
     .filter((entry) => isSameMonth(parseISO(entry.date), previousMonthDate))
     .reduce((sum, entry) => sum + entry.cost, 0);
 
-  useEffect(() => {
-    const onboardingFlag = sessionStorage.getItem("steadywheelhub.onboarding");
-    if (onboardingFlag === "1") {
-      navigate("/vehicles");
-    }
-  }, [navigate]);
 
   const getGreetingKey = () => {
     const hours = new Date().getHours();

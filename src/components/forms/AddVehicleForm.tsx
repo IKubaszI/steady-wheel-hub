@@ -12,9 +12,10 @@ import { useSettings } from "@/context/settings";
 type Props = {
   onClose: () => void;
   initialVehicle?: Vehicle;
+  hideCancel?: boolean;
 };
 
-export function AddVehicleForm({ onClose, initialVehicle }: Props) {
+export function AddVehicleForm({ onClose, initialVehicle, hideCancel = false }: Props) {
   const { addVehicle, updateVehicle } = useGarageData();
   const { toast } = useToast();
   const { t, distanceUnit } = useSettings();
@@ -101,7 +102,7 @@ export function AddVehicleForm({ onClose, initialVehicle }: Props) {
         </Field>
       </div>
       <div className="flex justify-end gap-2 pt-2">
-        <Button type="button" variant="ghost" onClick={onClose} disabled={busy}>{t("common.cancel")}</Button>
+        {!hideCancel && <Button type="button" variant="ghost" onClick={onClose} disabled={busy}>{t("common.cancel")}</Button>}
         <Button type="submit" disabled={busy} className="bg-gradient-primary text-primary-foreground hover:opacity-90 shadow-glow">
           {busy ? t("common.saving") : isEditing ? t("form.saveChanges") : t("form.addVehicle")}
         </Button>

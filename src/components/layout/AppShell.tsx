@@ -1,12 +1,15 @@
 import { useMemo, useState, useEffect, type MouseEventHandler } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard, Car, Wrench, Receipt, BarChart3, Search, Menu, X, Plus, Settings, Sparkles, Camera, LogOut, User
+  LayoutDashboard, Car, Wrench, Receipt, BarChart3, Search, Menu, X, Plus, Settings, Sparkles, Camera, LogOut, User, Download, Share2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import {
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle
+} from "@/components/ui/dialog";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
@@ -114,6 +117,7 @@ export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; 
             <SidebarLink key={item.to} {...item} />
           ))}
         </nav>
+        <PWAInstallCard />
         <UpsellCard />
       </aside>
 
@@ -133,6 +137,7 @@ export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; 
                 <SidebarLink key={item.to} {...item} onClick={() => setMobileOpen(false)} />
               ))}
             </nav>
+            <PWAInstallCard />
             <UpsellCard />
           </aside>
         </div>
@@ -371,3 +376,157 @@ function UpsellCard() {
     </div>
   );
 }
+
+function PWAInstallCard() {
+  const { language } = useSettings();
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isStandalone, setIsStandalone] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(false);
+  const [isIOSDevice, setIsIOSDevice] = useState(false);
+  const [showIOSInstructions, setShowIOSInstructions] = useState(false);
+  const [showGenericInstructions, setShowGenericInstructions] = useState(false);
+
+  useEffect(() => {
+    // Check if standalone
+    const standalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone;
+    setIsStandalone(!!standalone);
+
+    // Check if dismissed
+    const dismissed = window.localStorage.getItem('steadywheelhub.pwaDismissed') === '1';
+    setIsDismissed(dismissed);
+
+    const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    setIsIOSDevice(ios);
+
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (isIOSDevice) {
+      setShowIOSInstructions(true);
+      return;
+    }
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setDeferredPrompt(null);
+      }
+    } else {
+      setShowGenericInstructions(true);
+    }
+  };
+
+  const handleDismiss = () => {
+    window.localStorage.setItem('steadywheelhub.pwaDismissed', '1');
+    setIsDismissed(true);
+  };
+
+  if (isStandalone || isDismissed) return null;
+
+  return (
+    <>
+      <div className="relative m-3 p-4 rounded-xl bg-sidebar-accent/60 border border-sidebar-border/80 shadow-md flex flex-col gap-3 animate-scale-in">
+        <button 
+          onClick={handleDismiss} 
+          className="absolute top-3 right-3 text-sidebar-foreground/40 hover:text-sidebar-foreground transition-colors p-0.5 rounded-md hover:bg-sidebar-accent"
+          aria-label={language === "pl" ? "Zamknij" : "Dismiss"}
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+        <div className="flex items-center gap-2.5 text-sidebar-primary pr-6">
+          <Download className="h-4 w-4" />
+          <span className="text-xs font-semibold uppercase tracking-wider">
+            {language === "pl" ? "Aplikacja Mobilna" : "Mobile App"}
+          </span>
+        </div>
+        <p className="text-xs text-sidebar-foreground/80 leading-relaxed pr-2">
+          {language === "pl" 
+            ? "Zainstaluj GarageOS na pulpicie telefonu lub komputera, aby mieć szybki dostęp offline."
+            : "Install GarageOS on your phone or computer screen for quick, offline-ready access."}
+        </p>
+        <Button 
+          size="sm" 
+          onClick={handleInstallClick} 
+          className="w-full text-xs font-semibold py-2 bg-gradient-primary hover:opacity-90 transition-all text-primary-foreground shadow-glow gap-1.5"
+        >
+          <Download className="h-3.5 w-3.5" />
+          {language === "pl" ? "Zainstaluj aplikację" : "Install App"}
+        </Button>
+      </div>
+
+      <Dialog open={showIOSInstructions} onOpenChange={setShowIOSInstructions}>
+        <DialogContent className="max-w-sm rounded-2xl p-6 text-center space-y-4">
+          <DialogHeader className="space-y-2">
+            <div className="mx-auto h-12 w-12 rounded-xl bg-primary/10 text-primary grid place-items-center mb-1">
+              <Share2 className="h-6 w-6 animate-pulse" />
+            </div>
+            <DialogTitle className="font-display font-bold text-lg text-foreground">
+              {language === "pl" ? "Zainstaluj na iPhone" : "Install on iPhone"}
+            </DialogTitle>
+            <DialogDescription className="text-xs leading-relaxed text-muted-foreground">
+              {language === "pl" ? (
+                <>
+                  Aby dodać aplikację do ekranu głównego:<br />
+                  1. Kliknij ikonę <strong>Udostępnij</strong> na dolnym pasku przeglądarki Safari.<br />
+                  2. Przewiń w dół i wybierz <strong>Dodaj do ekranu początkowego</strong>.
+                </>
+              ) : (
+                <>
+                  To add the app to your home screen:<br />
+                  1. Tap the <strong>Share</strong> button in Safari's bottom toolbar.<br />
+                  2. Scroll down and select <strong>Add to Home Screen</strong>.
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <Button onClick={() => setShowIOSInstructions(false)} className="w-full bg-secondary hover:bg-secondary/80 text-foreground">
+            {language === "pl" ? "Rozumiem" : "Got it"}
+          </Button>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showGenericInstructions} onOpenChange={setShowGenericInstructions}>
+        <DialogContent className="max-w-sm rounded-2xl p-6 text-center space-y-4">
+          <DialogHeader className="space-y-2">
+            <div className="mx-auto h-12 w-12 rounded-xl bg-primary/10 text-primary grid place-items-center mb-1">
+              <Download className="h-6 w-6 animate-pulse" />
+            </div>
+            <DialogTitle className="font-display font-bold text-lg text-foreground">
+              {language === "pl" ? "Jak zainstalować aplikację?" : "How to install?"}
+            </DialogTitle>
+            <DialogDescription className="text-xs leading-relaxed text-muted-foreground">
+              {language === "pl" ? (
+                <>
+                  Jeśli używasz przeglądarki Chrome/Edge na komputerze:<br />
+                  1. Spójrz na <strong>pasek adresu</strong> u góry przeglądarki.<br />
+                  2. Kliknij ikonę <strong>Zainstaluj</strong> (monitor ze strzałką w dół) po prawej stronie paska adresu, lub rozwiń menu i wybierz <strong>Zainstaluj aplikację GarageOS</strong>.<br /><br />
+                  Na telefonie:<br />
+                  Rozwiń menu przeglądarki i wybierz <strong>Dodaj do ekranu głównego / Zainstaluj</strong>.
+                </>
+              ) : (
+                <>
+                  If you are using Chrome/Edge on desktop:<br />
+                  1. Look at the <strong>address bar</strong> at the top right.<br />
+                  2. Click the <strong>Install icon</strong> (monitor with down arrow) or open the browser menu and select <strong>Install GarageOS App</strong>.<br /><br />
+                  On mobile:<br />
+                  Open your browser's menu and tap <strong>Add to Home Screen / Install</strong>.
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <Button onClick={() => setShowGenericInstructions(false)} className="w-full bg-secondary hover:bg-secondary/80 text-foreground">
+            {language === "pl" ? "Rozumiem" : "Got it"}
+          </Button>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+

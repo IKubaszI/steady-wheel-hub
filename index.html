@@ -4,23 +4,17 @@
     <meta charset="UTF-8" />
     <script>
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(function(registrations) {
-          for(var r of registrations) {
-            r.unregister();
-          }
-        });
-      }
-      if ('caches' in window) {
-        caches.keys().then(function(keys) {
-          keys.forEach(function(key) {
-            caches.delete(key);
-          });
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/steady-wheel-hub/sw.js')
+            .then((reg) => console.log('Service Worker registered successfully:', reg.scope))
+            .catch((err) => console.error('Service Worker registration failed:', err));
         });
       }
     </script>
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="alternate icon" href="/favicon.ico" />
-    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" type="image/svg+xml" href="/steady-wheel-hub/favicon.svg" />
+    <link rel="alternate icon" href="/steady-wheel-hub/favicon.ico" />
+    <link rel="apple-touch-icon" href="/steady-wheel-hub/icon-192.png" />
+    <link rel="manifest" href="/steady-wheel-hub/manifest.json" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#09090b" />
     <title>GarageOS — Car Maintenance & Expense Tracker</title>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
+import { Car } from "lucide-react";
 import { useAuth } from "@/context/auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -77,6 +78,8 @@ export default function AuthPage() {
         await register(DEMO_USER.name, DEMO_USER.email, DEMO_USER.password);
       }
 
+      sessionStorage.setItem("steadywheelhub.demoOnboarding", "1");
+
       const uid = auth.currentUser?.uid;
       if (uid) {
         const seeded = await seedDemoDataIfEmpty(uid);
@@ -101,7 +104,18 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen grid place-items-center p-4 bg-muted/30">
+    <div className="min-h-screen flex flex-col justify-center items-center p-4 bg-muted/30">
+      {/* Logo and Brand */}
+      <div className="flex items-center gap-3 mb-6 animate-fade-in">
+        <div className="h-12 w-12 rounded-2xl bg-gradient-primary grid place-items-center shadow-glow">
+          <Car className="h-6 w-6 text-primary-foreground" />
+        </div>
+        <div className="leading-tight">
+          <div className="font-display font-bold text-2xl tracking-tight">GarageOS</div>
+          <div className="text-xs text-muted-foreground">{t("brand.subtitle")}</div>
+        </div>
+      </div>
+
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>{mode === "login" ? t("auth.signIn") : t("auth.createAccount")}</CardTitle>

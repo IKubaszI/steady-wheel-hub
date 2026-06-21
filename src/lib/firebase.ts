@@ -1,6 +1,10 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+} from "firebase/firestore";
 
 // Fallback placeholder values prevent Firebase from throwing at module init
 // when env vars are not configured (e.g. preview/demo). Real auth calls will
@@ -18,4 +22,8 @@ export const isFirebaseConfigured = Boolean(import.meta.env.VITE_FIREBASE_API_KE
 const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({
+    tabManager: persistentMultipleTabManager(),
+  }),
+});
