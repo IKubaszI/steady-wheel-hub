@@ -1,7 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { format, parseISO } from "date-fns";
-import { Car, Gauge, Calendar, Palette, Fuel, Wrench, ReceiptText, Pencil, ImagePlus, X, Check, type LucideIcon } from "lucide-react";
+import { Car, Gauge, Calendar, Palette, Fuel, Wrench, ReceiptText, Pencil, ImagePlus, X, Check, Trash2, type LucideIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,15 +29,29 @@ import { pl, enUS } from "date-fns/locale";
 import { translations, type TranslationKey } from "@/lib/translations";
 
 export function VehicleDetailsDialog({ vehicle, open, onOpenChange }: { vehicle: Vehicle | null; open: boolean; onOpenChange: (o: boolean) => void }) {
-  const { receipts, maintenance, updateVehicle } = useGarageData();
+  const { receipts, maintenance, updateVehicle, deleteVehicle } = useGarageData();
   const { format: fmtMoney, t, distanceUnit, language } = useSettings();
   const { toast } = useToast();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<Vehicle | null>(vehicle);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [editMileage, setEditMileage] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const dateLocale = language === "pl" ? pl : enUS;
 
-  useEffect(() => { setDraft(vehicle); setEditing(false); }, [vehicle, open]);
+  useEffect(() => {
+    setDraft(vehicle);
+    setEditing(false);
+    if (vehicle) {
+      if (distanceUnit === "km") {
+        setEditMileage(String(Math.round(vehicle.mileage * 1.609344)));
+      } else {
+        setEditMileage(String(vehicle.mileage));
+      }
+    } else {
+      setEditMileage("");
+    }
+  }, [vehicle, open, distanceUnit]);
 
   if (!vehicle || !draft) return null;
 
@@ -71,6 +95,7 @@ export function VehicleDetailsDialog({ vehicle, open, onOpenChange }: { vehicle:
   const translatedColor = colorKey in translations.en ? t(colorKey as TranslationKey) : draft.color;
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto p-0">
         {/* Hero with blurred bg */}
@@ -106,7 +131,13 @@ export function VehicleDetailsDialog({ vehicle, open, onOpenChange }: { vehicle:
                 </Button>
               ) : (
                 <div className="flex gap-2">
-                  <Button size="sm" variant="outline" onClick={() => { setDraft(vehicle); setEditing(false); }}>
+                  <Button size="sm" variant="outline" onClick={() => {
+                    setDraft(vehicle);
+                    setEditing(false);
+                    if (vehicle) {
+                      setEditMileage(distanceUnit === "km" ? String(Math.round(vehicle.mileage * 1.609344)) : String(vehicle.mileage));
+                    }
+                  }}>
                     <X className="h-4 w-4" />
                   </Button>
                   <Button size="sm" className="bg-gradient-primary text-primary-foreground gap-1" onClick={save}>
@@ -117,7 +148,7 @@ export function VehicleDetailsDialog({ vehicle, open, onOpenChange }: { vehicle:
             </div>
 
             {editing && (
-              <div className="mt-4 flex items-center gap-2">
+              <div className="mt-4 flex items-center gap-2 w-full">
                 <input
                   ref={fileRef}
                   type="file"
@@ -133,6 +164,9 @@ export function VehicleDetailsDialog({ vehicle, open, onOpenChange }: { vehicle:
                     {t("vehicles.photo.remove")}
                   </Button>
                 )}
+                <Button size="sm" variant="destructive" className="gap-2 ml-auto" onClick={() => setShowDeleteConfirm(true)}>
+                  <Trash2 className="h-4 w-4" /> {t("vehicles.deleteVehicle")}
+                </Button>
               </div>
             )}
           </DialogHeader>
@@ -166,7 +200,17 @@ export function VehicleDetailsDialog({ vehicle, open, onOpenChange }: { vehicle:
                 <Input type="number" value={draft.year} onChange={(e) => setDraft((d) => d ? { ...d, year: Number(e.target.value) || d.year } : d)} />
               </FieldEditor>
               <FieldEditor label={`${t("form.mileage")} (${distanceUnit})`}>
-                <Input type="number" value={draft.mileage} onChange={(e) => setDraft((d) => d ? { ...d, mileage: Number(e.target.value) || 0 } : d)} />
+                <Input
+                  type="number"
+                  value={editMileage}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setEditMileage(val);
+                    const numVal = Number(val) || 0;
+                    const dbVal = distanceUnit === "km" ? Math.round(numVal / 1.609344) : numVal;
+                    setDraft((d) => d ? { ...d, mileage: dbVal } : d);
+                  }}
+                />
               </FieldEditor>
               <FieldEditor label={t("form.licensePlate")}>
                 <Input value={draft.plate} onChange={(e) => setDraft((d) => d ? { ...d, plate: e.target.value } : d)} />
@@ -272,6 +316,38 @@ export function VehicleDetailsDialog({ vehicle, open, onOpenChange }: { vehicle:
         </div>
       </DialogContent>
     </Dialog>
+
+    <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{t("vehicles.delete.title")}</AlertDialogTitle>
+          <AlertDialogDescription>
+            {t("vehicles.delete.confirm", { receipts: vReceipts.length, services: vServices.length, brand: vehicle.brand, model: vehicle.model })}
+            {" "}{t("vehicles.delete.undone")}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={async () => {
+              try {
+                await deleteVehicle(vehicle.id);
+                toast({ title: t("common.delete"), description: t("activity.receiptToastDeleted") });
+                setShowDeleteConfirm(false);
+                onOpenChange(false);
+              } catch (error) {
+                const message = formatAppError(error, t("validate.brandDesc"));
+                toast({ title: t("ocr.scanFailed"), description: message, variant: "destructive" });
+              }
+            }}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            {t("common.delete")}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
 

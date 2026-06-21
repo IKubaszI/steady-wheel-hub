@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { VehicleCard } from "@/components/vehicles/VehicleCard";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,18 @@ export default function Vehicles() {
   const { t, format: fmtMoney, language } = useSettings();
   const dateLocale = language === "pl" ? pl : enUS;
 
+  useEffect(() => {
+    const onboardingFlag = sessionStorage.getItem("steadywheelhub.onboarding");
+    if (onboardingFlag === "1") {
+      setOpen(true);
+      toast({
+        title: t("dashboard.onboarding.title"),
+        description: t("auth.toast.onboarding"),
+      });
+      sessionStorage.removeItem("steadywheelhub.onboarding");
+    }
+  }, [toast, t]);
+
   const vehicleToEdit = editingVehicle ? vehicles.find((vehicle) => vehicle.id === editingVehicle) ?? null : null;
   const vehicleToDelete = deletingVehicle ? vehicles.find((vehicle) => vehicle.id === deletingVehicle) ?? null : null;
   const deleteSummary = vehicleToDelete
@@ -37,7 +49,7 @@ export default function Vehicles() {
     : null;
 
   return (
-    <AppShell onQuickAdd={() => setOpen(true)}>
+    <AppShell onQuickAdd={() => setReceiptVehicleId("general")}>
       <PageHeader
         title={t("vehicles.title")}
         subtitle={t("vehicles.subtitle")}
@@ -154,10 +166,17 @@ export default function Vehicles() {
       <Dialog open={receiptVehicleId !== null} onOpenChange={(isOpen) => !isOpen && setReceiptVehicleId(null)}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle className="font-display text-xl">{t("form.receipt.addVehicleTitle")}</DialogTitle>
-            <DialogDescription>{t("form.receipt.addVehicleDesc")}</DialogDescription>
+            <DialogTitle className="font-display text-xl">
+              {receiptVehicleId === "general" ? t("form.receipt.addTitle") : t("form.receipt.addVehicleTitle")}
+            </DialogTitle>
+            <DialogDescription>
+              {receiptVehicleId === "general" ? t("form.receipt.addDesc") : t("form.receipt.addVehicleDesc")}
+            </DialogDescription>
           </DialogHeader>
-          <AddReceiptForm onClose={() => setReceiptVehicleId(null)} defaultVehicleId={receiptVehicleId ?? undefined} />
+          <AddReceiptForm
+            onClose={() => setReceiptVehicleId(null)}
+            defaultVehicleId={receiptVehicleId && receiptVehicleId !== "general" ? receiptVehicleId : undefined}
+          />
         </DialogContent>
       </Dialog>
 

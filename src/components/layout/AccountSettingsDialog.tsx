@@ -24,7 +24,6 @@ export function AccountSettingsDialog({ open, onOpenChange }: { open: boolean; o
     fontScale, setFontScale,
     dyslexiaFont, setDyslexiaFont,
     underlineLinks, setUnderlineLinks,
-    geminiApiKey, setGeminiApiKey, activeGeminiApiKey,
   } = useSettings();
   const { user, updateUserProfile } = useAuth();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -33,9 +32,38 @@ export function AccountSettingsDialog({ open, onOpenChange }: { open: boolean; o
   const [photoUrl, setPhotoUrl] = useState(user?.photoURL ?? "");
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const [notifyOverdue, setNotifyOverdue] = useState(true);
-  const [notifyUpcoming, setNotifyUpcoming] = useState(true);
-  const [notifyEmail, setNotifyEmail] = useState(false);
+  const [notifyOverdue, setNotifyOverdue] = useState(() => {
+    try {
+      const stored = localStorage.getItem("garageos.notifications.overdue");
+      return stored !== null ? JSON.parse(stored) : true;
+    } catch {
+      return true;
+    }
+  });
+  const [notifyUpcoming, setNotifyUpcoming] = useState(() => {
+    try {
+      const stored = localStorage.getItem("garageos.notifications.upcoming");
+      return stored !== null ? JSON.parse(stored) : true;
+    } catch {
+      return true;
+    }
+  });
+  const [notifyEmail, setNotifyEmail] = useState(() => {
+    try {
+      const stored = localStorage.getItem("garageos.notifications.email");
+      return stored !== null ? JSON.parse(stored) : false;
+    } catch {
+      return false;
+    }
+  });
+  const [notifyEmailMonthly, setNotifyEmailMonthly] = useState(() => {
+    try {
+      const stored = localStorage.getItem("garageos.notifications.emailMonthly");
+      return stored !== null ? JSON.parse(stored) : false;
+    } catch {
+      return false;
+    }
+  });
 
   const save = async () => {
     try {
@@ -45,6 +73,16 @@ export function AccountSettingsDialog({ open, onOpenChange }: { open: boolean; o
         throw parsedName.error;
       }
       await updateUserProfile({ displayName: parsedName.data, photoURL: photoUrl || undefined });
+      
+      try {
+        localStorage.setItem("garageos.notifications.overdue", JSON.stringify(notifyOverdue));
+        localStorage.setItem("garageos.notifications.upcoming", JSON.stringify(notifyUpcoming));
+        localStorage.setItem("garageos.notifications.email", JSON.stringify(notifyEmail));
+        localStorage.setItem("garageos.notifications.emailMonthly", JSON.stringify(notifyEmailMonthly));
+      } catch (e) {
+        console.error("Failed to save notification preferences", e);
+      }
+
       toast({ title: t("auth.toast.loggedIn"), description: t("settings.accountSettingsDesc") });
       onOpenChange(false);
     } catch (error) {
@@ -165,23 +203,14 @@ export function AccountSettingsDialog({ open, onOpenChange }: { open: boolean; o
                 </Select>
                 <p className="text-xs text-muted-foreground">{t("settings.colorDesc")}</p>
               </div>
-              <div className="space-y-2 rounded-xl border border-border p-3">
-                <Label htmlFor="gemini-key">{t("settings.geminiApiKey")}</Label>
-                <Input
-                  id="gemini-key"
-                  type="password"
-                  placeholder={activeGeminiApiKey ? t("settings.geminiApiKeySystemActive") : t("settings.geminiApiKeyPlaceholder")}
-                  value={geminiApiKey}
-                  onChange={(e) => setGeminiApiKey(e.target.value)}
-                />
-                <p className="text-xs text-muted-foreground">{t("settings.geminiApiKeyDesc")}</p>
-              </div>
+
             </TabsContent>
 
             <TabsContent value="notify" className="space-y-4 mt-0 pt-0">
               <Row label={t("settings.overdueServices")} description={t("settings.overdueServicesDesc")} checked={notifyOverdue} onChange={setNotifyOverdue} />
               <Row label={t("settings.upcomingReminders")} description={t("settings.upcomingRemindersDesc")} checked={notifyUpcoming} onChange={setNotifyUpcoming} />
               <Row label={t("settings.emailDigests")} description={t("settings.emailDigestsDesc")} checked={notifyEmail} onChange={setNotifyEmail} />
+              <Row label={t("settings.emailDigestsMonthly")} description={t("settings.emailDigestsMonthlyDesc")} checked={notifyEmailMonthly} onChange={setNotifyEmailMonthly} />
             </TabsContent>
 
             <TabsContent value="a11y" className="space-y-4 mt-0 pt-0">

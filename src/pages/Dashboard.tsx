@@ -14,8 +14,10 @@ import { useSettings } from "@/context/settings";
 import { useAuth } from "@/context/auth";
 import { useToast } from "@/hooks/use-toast";
 import { isSameMonth, parseISO, subMonths } from "date-fns";
+import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [open, setOpen] = useState<null | "service" | "receipt">(null);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
@@ -58,13 +60,9 @@ export default function Dashboard() {
   useEffect(() => {
     const onboardingFlag = sessionStorage.getItem("steadywheelhub.onboarding");
     if (onboardingFlag === "1") {
-      toast({
-        title: t("dashboard.onboarding.title"),
-        description: t("dashboard.onboarding.desc"),
-      });
-      sessionStorage.removeItem("steadywheelhub.onboarding");
+      navigate("/vehicles");
     }
-  }, [toast, t]);
+  }, [navigate]);
 
   const getGreetingKey = () => {
     const hours = new Date().getHours();

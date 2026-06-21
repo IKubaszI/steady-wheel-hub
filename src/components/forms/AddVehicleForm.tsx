@@ -21,7 +21,15 @@ export function AddVehicleForm({ onClose, initialVehicle }: Props) {
   const [brand, setBrand] = useState(initialVehicle?.brand ?? "");
   const [model, setModel] = useState(initialVehicle?.model ?? "");
   const [year, setYear] = useState(String(initialVehicle?.year ?? ""));
-  const [mileage, setMileage] = useState(String(initialVehicle?.mileage ?? ""));
+  const getInitialMileage = () => {
+    if (!initialVehicle) return "";
+    const rawMileage = initialVehicle.mileage;
+    if (distanceUnit === "km") {
+      return String(Math.round(rawMileage * 1.609344));
+    }
+    return String(rawMileage);
+  };
+  const [mileage, setMileage] = useState(getInitialMileage());
   const [plate, setPlate] = useState(initialVehicle?.plate ?? "");
   const [color, setColor] = useState(initialVehicle?.color ?? "white");
   const [busy, setBusy] = useState(false);
@@ -51,7 +59,7 @@ export function AddVehicleForm({ onClose, initialVehicle }: Props) {
         brand: brand.trim(),
         model: model.trim(),
         year: parsedYear,
-        mileage: Number(mileage) || 0,
+        mileage: distanceUnit === "km" ? Math.round((Number(mileage) || 0) / 1.609344) : (Number(mileage) || 0),
         plate: plate.trim().toUpperCase(),
         color,
         nextService: initialVehicle?.nextService ?? new Date().toISOString().slice(0, 10),
