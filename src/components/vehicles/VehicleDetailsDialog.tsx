@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { formatAppError } from "@/lib/errors";
 import { pl, enUS } from "date-fns/locale";
+import { translations, type TranslationKey } from "@/lib/translations";
 
 export function VehicleDetailsDialog({ vehicle, open, onOpenChange }: { vehicle: Vehicle | null; open: boolean; onOpenChange: (o: boolean) => void }) {
   const { receipts, maintenance, updateVehicle } = useGarageData();
@@ -58,15 +59,16 @@ export function VehicleDetailsDialog({ vehicle, open, onOpenChange }: { vehicle:
     const { id, ...rest } = draft;
     try {
       await updateVehicle(id, rest);
-      toast({ title: t("ocr.scanComplete"), description: t("common.saveChanges") });
+      toast({ title: t("vehicles.toast.updated"), description: t("vehicles.toast.updatedDesc") });
       setEditing(false);
     } catch (error) {
       const message = formatAppError(error, t("validate.brandDesc"));
-      toast({ title: t("ocr.scanFailed"), description: message, variant: "destructive" });
+      toast({ title: t("vehicles.toast.saveFailed"), description: message, variant: "destructive" });
     }
   };
 
-  const translatedColor = t(`color.${draft.color.toLowerCase()}` as any) || draft.color;
+  const colorKey = `color.${draft.color.toLowerCase()}`;
+  const translatedColor = colorKey in translations.en ? t(colorKey as TranslationKey) : draft.color;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -240,9 +242,12 @@ export function VehicleDetailsDialog({ vehicle, open, onOpenChange }: { vehicle:
               <li key={m.id} className="flex items-center justify-between rounded-lg border border-border/70 bg-secondary/30 px-3 py-2">
                 <div>
                   <p className="text-sm font-medium">{m.type}</p>
-                  <p className="text-xs text-muted-foreground">{format(parseISO(m.date), "MMM d, yyyy", { locale: dateLocale })}</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <p className="text-xs text-muted-foreground">{format(parseISO(m.date), "MMM d, yyyy", { locale: dateLocale })}</p>
+                    <Badge variant="secondary" className="text-[10px] h-4 px-1.5 capitalize rounded-full">{t(`status.${m.status}` as TranslationKey)}</Badge>
+                  </div>
                 </div>
-                <Badge variant="secondary" className="capitalize rounded-full">{t(`status.${m.status}` as any)}</Badge>
+                <p className="text-sm font-bold tabular-nums">{fmtMoney(m.cost)}</p>
               </li>
             ))}
             {vServices.length === 0 && <li className="text-sm text-muted-foreground italic">{t("vehicles.noServicesYet")}</li>}
@@ -256,7 +261,7 @@ export function VehicleDetailsDialog({ vehicle, open, onOpenChange }: { vehicle:
               <li key={r.id} className="flex items-center justify-between rounded-lg border border-border/70 bg-secondary/30 px-3 py-2">
                 <div>
                   <p className="text-sm font-medium">{r.vendor}</p>
-                  <p className="text-xs text-muted-foreground capitalize">{t(`category.${r.category}` as any)} · {format(parseISO(r.date), "MMM d, yyyy", { locale: dateLocale })}</p>
+                  <p className="text-xs text-muted-foreground capitalize">{t(`category.${r.category}` as TranslationKey) || r.category} · {format(parseISO(r.date), "MMM d, yyyy", { locale: dateLocale })}</p>
                 </div>
                 <p className="text-sm font-bold tabular-nums">{fmtMoney(r.amount)}</p>
               </li>

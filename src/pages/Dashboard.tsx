@@ -91,33 +91,45 @@ export default function Dashboard() {
 
       {loading ? <DashboardSkeleton /> : (<>
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-5">
-        <StatCard label={t("dashboard.totalExpenses")} value={totalExpenses} prefix={moneyPrefix} suffix={moneySuffix} delta={{ value: t("dashboard.totalExpensesTime"), positive: true }} deltaLabel={t("dashboard.totalExpensesDelta")} icon={DollarSign} tone="primary" hint={t("dashboard.totalExpensesHint")} />
-        <StatCard
-          label={t("dashboard.upcomingServices")}
-          value={upcoming}
-          delta={{ value: String(previousMonthUpcomingCount), positive: upcomingThisMonthCount <= previousMonthUpcomingCount }}
-          deltaLabel={t("dashboard.upcomingServicesDelta")}
-          icon={CalendarClock}
-          tone="warning"
-          hint={t("dashboard.upcomingServicesHint")}
-        />
-        <StatCard label={t("dashboard.spendThisMonth")} value={thisMonthSpend} prefix={moneyPrefix} suffix={moneySuffix} delta={{ value: "live", positive: true }} deltaLabel={t("dashboard.spendThisMonthDelta")} icon={ReceiptIcon} tone="success" hint={t("dashboard.spendThisMonthHint")} />
-        <StatCard
-          label={t("dashboard.upcomingSpend")}
-          value={upcomingThisMonthSpend}
-          prefix={moneyPrefix}
-          suffix={moneySuffix}
-          delta={{ value: `${moneyPrefix}${previousMonthSpend.toFixed(0)}${moneySuffix}`, positive: upcomingThisMonthSpend <= previousMonthSpend }}
-          deltaLabel={t("dashboard.upcomingSpendDelta")}
-          icon={Wallet}
-          tone="accent"
-          hint={t("dashboard.upcomingSpendHint")}
-        />
+        <div className="animate-fade-in" style={{ animationFillMode: "backwards" }}>
+          <StatCard label={t("dashboard.totalExpenses")} value={totalExpenses} prefix={moneyPrefix} suffix={moneySuffix} delta={{ value: t("dashboard.totalExpensesTime"), positive: true }} deltaLabel={t("dashboard.totalExpensesDelta")} icon={DollarSign} tone="primary" hint={t("dashboard.totalExpensesHint")} />
+        </div>
+        <div className="animate-fade-in" style={{ animationDelay: "100ms", animationFillMode: "backwards" }}>
+          <StatCard
+            label={t("dashboard.upcomingServices")}
+            value={upcoming}
+            delta={{ value: String(previousMonthUpcomingCount), positive: upcomingThisMonthCount <= previousMonthUpcomingCount }}
+            deltaLabel={t("dashboard.upcomingServicesDelta")}
+            icon={CalendarClock}
+            tone="warning"
+            hint={t("dashboard.upcomingServicesHint")}
+          />
+        </div>
+        <div className="animate-fade-in" style={{ animationDelay: "200ms", animationFillMode: "backwards" }}>
+          <StatCard label={t("dashboard.spendThisMonth")} value={thisMonthSpend} prefix={moneyPrefix} suffix={moneySuffix} delta={{ value: "live", positive: true }} deltaLabel={t("dashboard.spendThisMonthDelta")} icon={ReceiptIcon} tone="success" hint={t("dashboard.spendThisMonthHint")} />
+        </div>
+        <div className="animate-fade-in" style={{ animationDelay: "300ms", animationFillMode: "backwards" }}>
+          <StatCard
+            label={t("dashboard.upcomingSpend")}
+            value={upcomingThisMonthSpend}
+            prefix={moneyPrefix}
+            suffix={moneySuffix}
+            delta={{ value: `${moneyPrefix}${previousMonthSpend.toFixed(0)}${moneySuffix}`, positive: upcomingThisMonthSpend <= previousMonthSpend }}
+            deltaLabel={t("dashboard.upcomingSpendDelta")}
+            icon={Wallet}
+            tone="accent"
+            hint={t("dashboard.upcomingSpendHint")}
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mt-6">
-        <div className="lg:col-span-2"><RecentActivity /></div>
-        <UpcomingServices />
+        <div className="lg:col-span-2 animate-fade-in" style={{ animationDelay: "400ms", animationFillMode: "backwards" }}>
+          <RecentActivity />
+        </div>
+        <div className="animate-fade-in" style={{ animationDelay: "500ms", animationFillMode: "backwards" }}>
+          <UpcomingServices />
+        </div>
       </div>
       </>)}
 

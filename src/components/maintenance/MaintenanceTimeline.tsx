@@ -10,11 +10,13 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { EditMaintenanceForm } from "@/components/forms/EditMaintenanceForm";
 import { useToast } from "@/hooks/use-toast";
 import { formatAppError } from "@/lib/errors";
+import { useSettings } from "@/context/settings";
+import { type TranslationKey } from "@/lib/translations";
 
-const statusMap: Record<ServiceStatus, { label: string; cls: string; icon: LucideIcon }> = {
-  completed: { label: "Completed", cls: "bg-success/10 text-success border-success/30", icon: CheckCircle2 },
-  upcoming:  { label: "Upcoming",  cls: "bg-primary/10 text-primary border-primary/30",  icon: Clock },
-  overdue:   { label: "Overdue",   cls: "bg-destructive/10 text-destructive border-destructive/30", icon: AlertTriangle },
+const statusMap: Record<ServiceStatus, { labelKey: TranslationKey; cls: string; icon: LucideIcon }> = {
+  completed: { labelKey: "status.completed", cls: "bg-success/10 text-success border-success/30", icon: CheckCircle2 },
+  upcoming:  { labelKey: "status.upcoming",  cls: "bg-primary/10 text-primary border-primary/30",  icon: Clock },
+  overdue:   { labelKey: "status.overdue",   cls: "bg-destructive/10 text-destructive border-destructive/30", icon: AlertTriangle },
 };
 
 type Props = {
@@ -24,11 +26,14 @@ type Props = {
 export function MaintenanceTimeline({ status = "all" }: Props) {
   const { maintenance, vehicles, deleteMaintenance } = useGarageData();
   const { toast } = useToast();
+  const { format: fmtMoney, t, language } = useSettings();
   const [editing, setEditing] = useState<Maintenance | null>(null);
   const [deleting, setDeleting] = useState<Maintenance | null>(null);
+  
   const sorted = [...maintenance]
     .filter((entry) => status === "all" || entry.status === status)
     .sort((a, b) => +parseISO(b.date) - +parseISO(a.date));
+
   return (
     <>
     <ol className="relative border-l-2 border-dashed border-border ml-4 space-y-6">
@@ -47,7 +52,7 @@ export function MaintenanceTimeline({ status = "all" }: Props) {
                   <div className="flex items-center gap-2">
                     <h4 className="font-display text-base font-semibold">{m.type}</h4>
                     <span className={cn("inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border", s.cls)}>
-                      <SIcon className="h-3 w-3" /> {s.label}
+                      <SIcon className="h-3 w-3" /> {t(s.labelKey)}
                     </span>
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">
@@ -55,7 +60,7 @@ export function MaintenanceTimeline({ status = "all" }: Props) {
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <p className="font-display text-lg font-bold tabular-nums">${m.cost.toFixed(2)}</p>
+                  <p className="font-display text-lg font-bold tabular-nums">{fmtMoney(m.cost)}</p>
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
                     <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setEditing(m)} aria-label="Edit">
                       <Pencil className="h-4 w-4" />
@@ -72,15 +77,15 @@ export function MaintenanceTimeline({ status = "all" }: Props) {
         );
       })}
       {sorted.length === 0 && (
-        <li className="ml-6 text-sm text-muted-foreground italic">No services in this view.</li>
+        <li className="ml-6 text-sm text-muted-foreground italic">{t("maintenance.noServices")}</li>
       )}
     </ol>
 
     <Dialog open={editing !== null} onOpenChange={(o) => !o && setEditing(null)}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="font-display text-xl">Edit maintenance entry</DialogTitle>
-          <DialogDescription>Update the details of this service.</DialogDescription>
+          <DialogTitle className="font-display text-xl">{t("form.service.editTitle")}</DialogTitle>
+          <DialogDescription>{t("form.service.editDesc")}</DialogDescription>
         </DialogHeader>
         {editing && <EditMaintenanceForm entry={editing} onClose={() => setEditing(null)} />}
       </DialogContent>
@@ -89,29 +94,29 @@ export function MaintenanceTimeline({ status = "all" }: Props) {
     <AlertDialog open={deleting !== null} onOpenChange={(o) => !o && setDeleting(null)}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete this maintenance entry?</AlertDialogTitle>
+          <AlertDialogTitle>{t("maintenance.delete.title")}</AlertDialogTitle>
           <AlertDialogDescription>
-            {deleting ? `${deleting.type} on ${format(parseISO(deleting.date), "MMM d, yyyy")} will be removed permanently.` : ""}
+            {deleting ? t("maintenance.delete.confirm", { type: deleting.type, date: format(parseISO(deleting.date), language === "pl" ? "yyyy-MM-dd" : "MMM d, yyyy") }) : ""}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
           <AlertDialogAction
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             onClick={async () => {
               if (deleting) {
                 try {
                   await deleteMaintenance(deleting.id);
-                  toast({ title: "Maintenance deleted", description: "Maintenance entry was removed." });
+                  toast({ title: t("common.delete"), description: t("activity.serviceToastDeleted") });
                 } catch (error) {
                   const message = formatAppError(error, "Could not delete maintenance entry.");
-                  toast({ title: "Delete failed", description: message, variant: "destructive" });
+                  toast({ title: t("maintenance.toast.saveFailed"), description: message, variant: "destructive" });
                 }
               }
               setDeleting(null);
             }}
           >
-            Delete
+            {t("common.delete")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

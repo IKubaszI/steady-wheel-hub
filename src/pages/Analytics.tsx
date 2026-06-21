@@ -50,22 +50,28 @@ export default function Analytics() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-5 mb-6">
-        <SummaryCard icon={Wallet} label="Total spend" value={<CountUp value={total} prefix={moneyPrefix} suffix={moneySuffix} decimals={2} />} hint={`${filteredReceipts.length} receipts`} tone="primary" />
-        <SummaryCard
-          icon={TopIcon}
-          label="Top category"
-          value={categoryMeta[top[0]].label}
-          hint={`${moneyPrefix}${top[1].toFixed(2)}${moneySuffix} spent`}
-          tone="accent"
-        />
-        <SummaryCard icon={Award} label="Avg. receipt" value={<CountUp value={avg} prefix={moneyPrefix} suffix={moneySuffix} decimals={2} />} hint="Across all categories" tone="success" />
+        <div className="animate-fade-in" style={{ animationFillMode: "backwards" }}>
+          <SummaryCard icon={Wallet} label="Total spend" value={<CountUp value={total} prefix={moneyPrefix} suffix={moneySuffix} decimals={2} />} hint={`${filteredReceipts.length} receipts`} tone="primary" />
+        </div>
+        <div className="animate-fade-in" style={{ animationDelay: "100ms", animationFillMode: "backwards" }}>
+          <SummaryCard
+            icon={TopIcon}
+            label="Top category"
+            value={categoryMeta[top[0]].label}
+            hint={`${moneyPrefix}${top[1].toFixed(2)}${moneySuffix} spent`}
+            tone="accent"
+          />
+        </div>
+        <div className="animate-fade-in" style={{ animationDelay: "200ms", animationFillMode: "backwards" }}>
+          <SummaryCard icon={Award} label="Avg. receipt" value={<CountUp value={avg} prefix={moneyPrefix} suffix={moneySuffix} decimals={2} />} hint="Across all categories" tone="success" />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <div className="animate-fade-in" style={{ animationDelay: "120ms", animationFillMode: "backwards" }}>
+        <div className="animate-fade-in" style={{ animationDelay: "300ms", animationFillMode: "backwards" }}>
           <CategoryPie receipts={filteredReceipts} />
         </div>
-        <div className="animate-fade-in" style={{ animationDelay: "240ms", animationFillMode: "backwards" }}>
+        <div className="animate-fade-in" style={{ animationDelay: "400ms", animationFillMode: "backwards" }}>
           <MonthlyBars receipts={filteredReceipts} />
         </div>
       </div>

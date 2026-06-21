@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
 import { useSettings } from "@/context/settings";
 import { pl, enUS } from "date-fns/locale";
+import { translations, type TranslationKey } from "@/lib/translations";
 
 export function VehicleCard({ v }: { v: Vehicle }) {
   const [open, setOpen] = useState(false);
@@ -28,7 +29,8 @@ export function VehicleCard({ v }: { v: Vehicle }) {
     return `${formatted}k ${suffix}`;
   };
 
-  const translatedColor = t(`color.${v.color.toLowerCase()}` as any) || v.color;
+  const colorKey = `color.${v.color.toLowerCase()}`;
+  const translatedColor = colorKey in translations.en ? t(colorKey as TranslationKey) : v.color;
 
   return (
     <>
