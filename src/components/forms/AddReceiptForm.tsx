@@ -34,7 +34,7 @@ type PhotoItem = {
 export function AddReceiptForm({ onClose, defaultCategory = "fuel", defaultVehicleId, initialReceipt }: Props) {
   const { vehicles, addReceipt, updateReceipt, deleteReceipt } = useGarageData();
   const { toast } = useToast();
-  const { t, symbol, language } = useSettings();
+  const { t, symbol, language, activeGeminiApiKey } = useSettings();
   const [photoItems, setPhotoItems] = useState<PhotoItem[]>(
     (initialReceipt?.photos ?? []).map((url, index) => ({ id: `existing-${index}`, url }))
   );
@@ -113,7 +113,7 @@ export function AddReceiptForm({ onClose, defaultCategory = "fuel", defaultVehic
         description: t("ocr.scanningDesc"),
       });
 
-      const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      const geminiApiKey = activeGeminiApiKey;
       if (geminiApiKey) {
         console.log("Using Google Gemini API for OCR");
         const parsed = await recognizeReceiptGemini(file, geminiApiKey);

@@ -19,6 +19,7 @@ interface Message {
   sender: "user" | "assistant";
   text: string;
   options?: { label: string; action: string }[];
+  isMissingKey?: boolean;
 }
 
 interface SpeechRecognitionErrorEvent extends Event {
@@ -67,7 +68,7 @@ export function AssistantChatWidget({
   onClose,
   onParseComplete,
 }: AssistantChatWidgetProps) {
-  const { language, t } = useSettings();
+  const { language, t, activeGeminiApiKey } = useSettings();
   const { vehicles } = useGarageData();
   const { toast } = useToast();
   
@@ -90,7 +91,7 @@ export function AssistantChatWidget({
     setIsProcessing(true);
 
     try {
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      const apiKey = activeGeminiApiKey;
       if (!apiKey) {
         throw new Error("Missing Gemini API Key in configurations.");
       }
@@ -111,19 +112,21 @@ export function AssistantChatWidget({
           text: t("assistant.processing") + " Complete. Verification popup shown.",
         },
       ]);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
       setIsProcessing(false);
+      const isMissingKey = error?.message?.includes("Missing Gemini API Key");
       setMessages((prev) => [
         ...prev,
         {
           id: `assistant-err-${Date.now()}`,
           sender: "assistant",
-          text: t("assistant.error"),
+          text: isMissingKey ? t("assistant.missingKey") : t("assistant.error"),
+          isMissingKey,
         },
       ]);
     }
-  }, [vehicles, onParseComplete, t]);
+  }, [vehicles, onParseComplete, t, activeGeminiApiKey]);
 
   // Initialize Speech Recognition
   useEffect(() => {
@@ -165,19 +168,31 @@ export function AssistantChatWidget({
   // Set initial welcome message
   useEffect(() => {
     if (open && messages.length === 0) {
-      setMessages([
-        {
-          id: "welcome",
-          sender: "assistant",
-          text: t("assistant.welcome"),
-          options: [
-            { label: t("assistant.btn.receipt"), action: "receipt_hint" },
-            { label: t("assistant.btn.maintenance"), action: "maintenance_hint" },
-          ],
-        },
-      ]);
+      const welcomeMsg: Message = {
+        id: "welcome",
+        sender: "assistant",
+        text: t("assistant.welcome"),
+        options: [
+          { label: t("assistant.btn.receipt"), action: "receipt_hint" },
+          { label: t("assistant.btn.maintenance"), action: "maintenance_hint" },
+        ],
+      };
+      
+      if (!activeGeminiApiKey) {
+        setMessages([
+          welcomeMsg,
+          {
+            id: "missing-key-alert",
+            sender: "assistant",
+            text: t("assistant.missingKey"),
+            isMissingKey: true,
+          }
+        ]);
+      } else {
+        setMessages([welcomeMsg]);
+      }
     }
-  }, [open, messages.length, t]);
+  }, [open, messages.length, t, activeGeminiApiKey]);
 
   // Auto scroll to bottom when messages list changes
   useEffect(() => {
@@ -310,6 +325,23 @@ export function AssistantChatWidget({
                     {opt.label}
                   </Button>
                 ))}
+              </div>
+            )}
+
+            {/* Missing API key setup button */}
+            {msg.sender === "assistant" && msg.isMissingKey && (
+              <div className="flex flex-wrap gap-2 pl-9">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 rounded-full text-xs bg-primary text-primary-foreground hover:bg-primary/95 border-primary shadow-elev-sm gap-1.5"
+                  onClick={() => {
+                    onClose();
+                    window.dispatchEvent(new CustomEvent("open-settings"));
+                  }}
+                >
+                  ⚙️ {t("nav.accountSettings")}
+                </Button>
               </div>
             )}
           </div>

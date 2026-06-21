@@ -24,6 +24,7 @@ export function AccountSettingsDialog({ open, onOpenChange }: { open: boolean; o
     fontScale, setFontScale,
     dyslexiaFont, setDyslexiaFont,
     underlineLinks, setUnderlineLinks,
+    geminiApiKey, setGeminiApiKey,
   } = useSettings();
   const { user, updateUserProfile } = useAuth();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -83,113 +84,126 @@ export function AccountSettingsDialog({ open, onOpenChange }: { open: boolean; o
           <DialogDescription>{t("settings.accountSettingsDesc")}</DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="profile" className="mt-2">
-          <TabsList className="grid w-full grid-cols-4">
+        <Tabs defaultValue="profile" className="mt-2 flex flex-col">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1 h-auto bg-muted p-1">
             <TabsTrigger value="profile">{t("settings.profile")}</TabsTrigger>
             <TabsTrigger value="prefs">{t("settings.preferences")}</TabsTrigger>
             <TabsTrigger value="notify">{t("settings.notifications")}</TabsTrigger>
             <TabsTrigger value="a11y">{t("settings.accessibility")}</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="profile" className="space-y-4 pt-4">
-            <div className="flex items-center gap-4">
-              <Avatar className="h-16 w-16 ring-2 ring-background shadow-elev-sm">
-                {photoUrl ? <AvatarImage src={photoUrl} alt={name || "Profile photo"} /> : null}
-                <AvatarFallback className="bg-gradient-primary text-primary-foreground font-bold text-lg">
-                  {name.slice(0, 2).toUpperCase() || "U"}
-                </AvatarFallback>
-              </Avatar>
-              <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={onPhotoSelect} />
-              <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploadingPhoto}>
-                {uploadingPhoto ? t("common.loading") : t("settings.changePhoto")}
-              </Button>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="acc-name">{t("settings.fullName")}</Label>
-              <Input id="acc-name" maxLength={80} value={name} onChange={(e) => setName(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="acc-email">{t("settings.email")}</Label>
-              <Input id="acc-email" maxLength={254} type="email" value={email} readOnly disabled />
-              <p className="text-xs text-muted-foreground">{t("settings.emailWarning")}</p>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="prefs" className="space-y-4 pt-4">
-            <div className="space-y-2">
-              <Label>{t("settings.distanceUnits")}</Label>
-              <div className="grid grid-cols-2 gap-2">
-                <Button variant={distanceUnit === "mi" ? "default" : "outline"} onClick={() => setDistanceUnit("mi")}>{t("settings.imperial")}</Button>
-                <Button variant={distanceUnit === "km" ? "default" : "outline"} onClick={() => setDistanceUnit("km")}>{t("settings.metric")}</Button>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>{t("settings.currency")}</Label>
-                <Select value={currency} onValueChange={(v) => setCurrency(v as Currency)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="USD">USD — US Dollar ($)</SelectItem>
-                    <SelectItem value="EUR">EUR — Euro (€)</SelectItem>
-                    <SelectItem value="GBP">GBP — British Pound (£)</SelectItem>
-                    <SelectItem value="PLN">PLN — Polish Zloty (zł)</SelectItem>
-                    <SelectItem value="JPY">JPY — Japanese Yen (¥)</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">{t("settings.currencyPreview", { val: fmtMoney(1234.5) })}</p>
+          <div className="h-[320px] sm:h-[385px] overflow-y-auto pr-1 mt-4">
+            <TabsContent value="profile" className="space-y-4 mt-0 pt-0">
+              <div className="flex items-center gap-4">
+                <Avatar className="h-16 w-16 ring-2 ring-background shadow-elev-sm">
+                  {photoUrl ? <AvatarImage src={photoUrl} alt={name || "Profile photo"} /> : null}
+                  <AvatarFallback className="bg-gradient-primary text-primary-foreground font-bold text-lg">
+                    {name.slice(0, 2).toUpperCase() || "U"}
+                  </AvatarFallback>
+                </Avatar>
+                <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={onPhotoSelect} />
+                <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploadingPhoto}>
+                  {uploadingPhoto ? t("common.loading") : t("settings.changePhoto")}
+                </Button>
               </div>
               <div className="space-y-2">
-                <Label>{t("settings.language")}</Label>
-                <Select value={language} onValueChange={(v) => setLanguage(v as Language)}>
+                <Label htmlFor="acc-name">{t("settings.fullName")}</Label>
+                <Input id="acc-name" maxLength={80} value={name} onChange={(e) => setName(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="acc-email">{t("settings.email")}</Label>
+                <Input id="acc-email" maxLength={254} type="email" value={email} readOnly disabled />
+                <p className="text-xs text-muted-foreground">{t("settings.emailWarning")}</p>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="prefs" className="space-y-4 mt-0 pt-0">
+              <div className="space-y-2">
+                <Label>{t("settings.distanceUnits")}</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button variant={distanceUnit === "mi" ? "default" : "outline"} onClick={() => setDistanceUnit("mi")}>{t("settings.imperial")}</Button>
+                  <Button variant={distanceUnit === "km" ? "default" : "outline"} onClick={() => setDistanceUnit("km")}>{t("settings.metric")}</Button>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>{t("settings.currency")}</Label>
+                  <Select value={currency} onValueChange={(v) => setCurrency(v as Currency)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="USD">USD — US Dollar ($)</SelectItem>
+                      <SelectItem value="EUR">EUR — Euro (€)</SelectItem>
+                      <SelectItem value="GBP">GBP — British Pound (£)</SelectItem>
+                      <SelectItem value="PLN">PLN — Polish Zloty (zł)</SelectItem>
+                      <SelectItem value="JPY">JPY — Japanese Yen (¥)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">{t("settings.currencyPreview", { val: fmtMoney(1234.5) })}</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>{t("settings.language")}</Label>
+                  <Select value={language} onValueChange={(v) => setLanguage(v as Language)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pl">{t("settings.languagePL")}</SelectItem>
+                      <SelectItem value="en">{t("settings.languageEN")}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>{t("settings.primaryColor")}</Label>
+                <Select value={primaryColor} onValueChange={(v) => setPrimaryColor(v as PrimaryColor)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="pl">{t("settings.languagePL")}</SelectItem>
-                    <SelectItem value="en">{t("settings.languageEN")}</SelectItem>
+                    <SelectItem value="ocean">{t("color.ocean")}</SelectItem>
+                    <SelectItem value="violet">{t("color.violet")}</SelectItem>
+                    <SelectItem value="emerald">{t("color.emerald")}</SelectItem>
+                    <SelectItem value="rose">{t("color.rose")}</SelectItem>
+                    <SelectItem value="amber">{t("color.amber")}</SelectItem>
                   </SelectContent>
                 </Select>
+                <p className="text-xs text-muted-foreground">{t("settings.colorDesc")}</p>
               </div>
-            </div>
-            <div className="space-y-2">
-              <Label>{t("settings.primaryColor")}</Label>
-              <Select value={primaryColor} onValueChange={(v) => setPrimaryColor(v as PrimaryColor)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ocean">{t("color.ocean")}</SelectItem>
-                  <SelectItem value="violet">{t("color.violet")}</SelectItem>
-                  <SelectItem value="emerald">{t("color.emerald")}</SelectItem>
-                  <SelectItem value="rose">{t("color.rose")}</SelectItem>
-                  <SelectItem value="amber">{t("color.amber")}</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">{t("settings.colorDesc")}</p>
-            </div>
-          </TabsContent>
+              <div className="space-y-2 rounded-xl border border-border p-3">
+                <Label htmlFor="gemini-key">{t("settings.geminiApiKey")}</Label>
+                <Input
+                  id="gemini-key"
+                  type="password"
+                  placeholder={import.meta.env.VITE_GEMINI_API_KEY ? t("settings.geminiApiKeySystemActive") : t("settings.geminiApiKeyPlaceholder")}
+                  value={geminiApiKey}
+                  onChange={(e) => setGeminiApiKey(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">{t("settings.geminiApiKeyDesc")}</p>
+              </div>
+            </TabsContent>
 
-          <TabsContent value="notify" className="space-y-4 pt-4">
-            <Row label={t("settings.overdueServices")} description={t("settings.overdueServicesDesc")} checked={notifyOverdue} onChange={setNotifyOverdue} />
-            <Row label={t("settings.upcomingReminders")} description={t("settings.upcomingRemindersDesc")} checked={notifyUpcoming} onChange={setNotifyUpcoming} />
-            <Row label={t("settings.emailDigests")} description={t("settings.emailDigestsDesc")} checked={notifyEmail} onChange={setNotifyEmail} />
-          </TabsContent>
+            <TabsContent value="notify" className="space-y-4 mt-0 pt-0">
+              <Row label={t("settings.overdueServices")} description={t("settings.overdueServicesDesc")} checked={notifyOverdue} onChange={setNotifyOverdue} />
+              <Row label={t("settings.upcomingReminders")} description={t("settings.upcomingRemindersDesc")} checked={notifyUpcoming} onChange={setNotifyUpcoming} />
+              <Row label={t("settings.emailDigests")} description={t("settings.emailDigestsDesc")} checked={notifyEmail} onChange={setNotifyEmail} />
+            </TabsContent>
 
-          <TabsContent value="a11y" className="space-y-4 pt-4">
-            <p className="text-xs text-muted-foreground">{t("settings.wcagCompliance")}</p>
-            <Row label={t("settings.highContrast")} description={t("settings.highContrastDesc")} checked={highContrast} onChange={setHighContrast} />
-            <Row label={t("settings.reduceMotion")} description={t("settings.reduceMotionDesc")} checked={reduceMotion} onChange={setReduceMotion} />
-            <Row label={t("settings.dyslexia")} description={t("settings.dyslexiaDesc")} checked={dyslexiaFont} onChange={setDyslexiaFont} />
-            <Row label={t("settings.underlineLinks")} description={t("settings.underlineLinksDesc")} checked={underlineLinks} onChange={setUnderlineLinks} />
-            <div className="space-y-2 rounded-xl border border-border p-3">
-              <Label htmlFor="font-scale">{t("settings.textSize")}</Label>
-              <Select value={fontScale} onValueChange={(v) => setFontScale(v as FontScale)}>
-                <SelectTrigger id="font-scale"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="normal">{t("settings.textSizeNormal")}</SelectItem>
-                  <SelectItem value="large">{t("settings.textSizeLarge")}</SelectItem>
-                  <SelectItem value="xl">{t("settings.textSizeXL")}</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">{t("settings.textSizeDesc")}</p>
-            </div>
-          </TabsContent>
+            <TabsContent value="a11y" className="space-y-4 mt-0 pt-0">
+              <p className="text-xs text-muted-foreground">{t("settings.wcagCompliance")}</p>
+              <Row label={t("settings.highContrast")} description={t("settings.highContrastDesc")} checked={highContrast} onChange={setHighContrast} />
+              <Row label={t("settings.reduceMotion")} description={t("settings.reduceMotionDesc")} checked={reduceMotion} onChange={setReduceMotion} />
+              <Row label={t("settings.dyslexia")} description={t("settings.dyslexiaDesc")} checked={dyslexiaFont} onChange={setDyslexiaFont} />
+              <Row label={t("settings.underlineLinks")} description={t("settings.underlineLinksDesc")} checked={underlineLinks} onChange={setUnderlineLinks} />
+              <div className="space-y-2 rounded-xl border border-border p-3">
+                <Label htmlFor="font-scale">{t("settings.textSize")}</Label>
+                <Select value={fontScale} onValueChange={(v) => setFontScale(v as FontScale)}>
+                  <SelectTrigger id="font-scale"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="normal">{t("settings.textSizeNormal")}</SelectItem>
+                    <SelectItem value="large">{t("settings.textSizeLarge")}</SelectItem>
+                    <SelectItem value="xl">{t("settings.textSizeXL")}</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">{t("settings.textSizeDesc")}</p>
+              </div>
+            </TabsContent>
+          </div>
         </Tabs>
 
         <div className="flex justify-end gap-2 pt-4 border-t border-border">

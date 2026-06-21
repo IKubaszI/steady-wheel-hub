@@ -38,6 +38,9 @@ type SettingsValue = {
   setFontScale: (v: FontScale) => void;
   setDyslexiaFont: (v: boolean) => void;
   setUnderlineLinks: (v: boolean) => void;
+  geminiApiKey: string;
+  setGeminiApiKey: (k: string) => void;
+  activeGeminiApiKey: string;
 };
 
 const SettingsContext = createContext<SettingsValue | null>(null);
@@ -82,7 +85,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         reduceMotion: false,
         fontScale: "normal" as FontScale,
         dyslexiaFont: false,
-        underlineLinks: false
+        underlineLinks: false,
+        geminiApiKey: ""
       };
     }
     try {
@@ -106,6 +110,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
           fontScale: fs,
           dyslexiaFont: !!parsed?.dyslexiaFont,
           underlineLinks: !!parsed?.underlineLinks,
+          geminiApiKey: parsed?.geminiApiKey || "",
         };
       }
     } catch {
@@ -120,7 +125,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       reduceMotion: false,
       fontScale: "normal" as FontScale,
       dyslexiaFont: false,
-      underlineLinks: false
+      underlineLinks: false,
+      geminiApiKey: ""
     };
   }, []);
 
@@ -134,6 +140,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [dyslexiaFont, setDyslexiaFont] = useState<boolean>(initialSettings.dyslexiaFont);
   const [underlineLinks, setUnderlineLinks] = useState<boolean>(initialSettings.underlineLinks);
 
+  const [geminiApiKey, setGeminiApiKey] = useState<string>(initialSettings.geminiApiKey);
+
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify({
       currency,
@@ -144,9 +152,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       reduceMotion,
       fontScale,
       dyslexiaFont,
-      underlineLinks
+      underlineLinks,
+      geminiApiKey
     }));
-  }, [currency, primaryColor, language, distanceUnit, highContrast, reduceMotion, fontScale, dyslexiaFont, underlineLinks]);
+  }, [currency, primaryColor, language, distanceUnit, highContrast, reduceMotion, fontScale, dyslexiaFont, underlineLinks, geminiApiKey]);
 
   useEffect(() => {
     applyPrimaryColorTokens(primaryColor);
@@ -163,6 +172,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<SettingsValue>(() => {
     const symbol = SYMBOLS[currency];
+    const activeGeminiApiKey = geminiApiKey.trim() || import.meta.env.VITE_GEMINI_API_KEY || "";
     
     const t = (key: TranslationKey, params?: Record<string, string | number>): string => {
       const translationSet = translations[language] || translations["en"];
@@ -205,8 +215,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       setFontScale,
       setDyslexiaFont,
       setUnderlineLinks,
+      geminiApiKey,
+      setGeminiApiKey,
+      activeGeminiApiKey,
     };
-  }, [currency, primaryColor, language, distanceUnit, highContrast, reduceMotion, fontScale, dyslexiaFont, underlineLinks]);
+  }, [currency, primaryColor, language, distanceUnit, highContrast, reduceMotion, fontScale, dyslexiaFont, underlineLinks, geminiApiKey]);
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
 }

@@ -64,7 +64,7 @@ export function AssistantConfirmDialog({
   onSaveSuccess,
 }: AssistantConfirmDialogProps) {
   const { vehicles, addReceipt, addMaintenance } = useGarageData();
-  const { t, symbol } = useSettings();
+  const { t, symbol, activeGeminiApiKey } = useSettings();
   const { toast } = useToast();
 
   const [busy, setBusy] = useState(false);
@@ -164,7 +164,7 @@ export function AssistantConfirmDialog({
         description: t("ocr.scanningDesc"),
       });
 
-      const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      const geminiApiKey = activeGeminiApiKey;
       if (geminiApiKey) {
         console.log("Using Google Gemini API for OCR");
         const parsed = await recognizeReceiptGemini(file, geminiApiKey);

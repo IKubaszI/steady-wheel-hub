@@ -1,4 +1,4 @@
-import { useMemo, useState, type MouseEventHandler } from "react";
+import { useMemo, useState, useEffect, type MouseEventHandler } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Car, Wrench, Receipt, BarChart3, Search, Menu, X, Plus, Settings, Sparkles, Camera, LogOut, User
@@ -35,6 +35,12 @@ export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; 
   const { vehicles, receipts, maintenance } = useGarageData();
   const { user, logout } = useAuth();
   const { t, format: fmtMoney } = useSettings();
+
+  useEffect(() => {
+    const handleOpenSettings = () => setSettingsOpen(true);
+    window.addEventListener("open-settings", handleOpenSettings);
+    return () => window.removeEventListener("open-settings", handleOpenSettings);
+  }, []);
 
   const navItems = useMemo(() => [
     { to: "/", label: t("nav.dashboard"), icon: LayoutDashboard, end: true },
