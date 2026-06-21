@@ -24,7 +24,7 @@ export function AccountSettingsDialog({ open, onOpenChange }: { open: boolean; o
     fontScale, setFontScale,
     dyslexiaFont, setDyslexiaFont,
     underlineLinks, setUnderlineLinks,
-    geminiApiKey, setGeminiApiKey,
+    geminiApiKey, setGeminiApiKey, activeGeminiApiKey,
   } = useSettings();
   const { user, updateUserProfile } = useAuth();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -170,7 +170,7 @@ export function AccountSettingsDialog({ open, onOpenChange }: { open: boolean; o
                 <Input
                   id="gemini-key"
                   type="password"
-                  placeholder={import.meta.env.VITE_GEMINI_API_KEY ? t("settings.geminiApiKeySystemActive") : t("settings.geminiApiKeyPlaceholder")}
+                  placeholder={activeGeminiApiKey ? t("settings.geminiApiKeySystemActive") : t("settings.geminiApiKeyPlaceholder")}
                   value={geminiApiKey}
                   onChange={(e) => setGeminiApiKey(e.target.value)}
                 />
