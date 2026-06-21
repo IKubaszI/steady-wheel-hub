@@ -32,11 +32,11 @@ function toBase64(buffer: ArrayBuffer): string {
   return btoa(String.fromCharCode(...new Uint8Array(buffer)));
 }
 
-function fromBase64(b64: string): ArrayBuffer {
+function fromBase64(b64: string): Uint8Array {
   const bin = atob(b64);
   const out = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
-  return out.buffer;
+  return out;
 }
 
 // ---------------------------------------------------------------------------
@@ -112,8 +112,8 @@ export async function encryptField(plaintext: string, key: CryptoKey): Promise<s
 export async function decryptField(cipherBase64: string, key: CryptoKey): Promise<string | null> {
   try {
     const buf = fromBase64(cipherBase64);
-    const iv = buf.slice(0, IV_BYTES);
-    const ciphertext = buf.slice(IV_BYTES);
+    const iv = buf.subarray(0, IV_BYTES);
+    const ciphertext = buf.subarray(IV_BYTES);
 
     const plainBuffer = await crypto.subtle.decrypt(
       { name: "AES-GCM", iv },
