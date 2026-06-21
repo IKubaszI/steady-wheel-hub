@@ -115,14 +115,27 @@ export function AssistantChatWidget({
     } catch (error: any) {
       console.error(error);
       setIsProcessing(false);
-      const isMissingKey = error?.message?.includes("Missing Gemini API Key");
+      const errorMessage = String(error?.message || "");
+      const isMissingKey = errorMessage.includes("Missing Gemini API Key");
+      const isQuotaError = errorMessage.toLowerCase().includes("quota") || 
+                           errorMessage.includes("429") || 
+                           errorMessage.includes("RESOURCE_EXHAUSTED") ||
+                           errorMessage.toLowerCase().includes("limit exceeded");
+      
+      let errorText = t("assistant.error");
+      if (isMissingKey) {
+        errorText = t("assistant.missingKey");
+      } else if (isQuotaError) {
+        errorText = t("assistant.quotaExceeded");
+      }
+
       setMessages((prev) => [
         ...prev,
         {
           id: `assistant-err-${Date.now()}`,
           sender: "assistant",
-          text: isMissingKey ? t("assistant.missingKey") : t("assistant.error"),
-          isMissingKey,
+          text: errorText,
+          isMissingKey: isMissingKey || isQuotaError,
         },
       ]);
     }
