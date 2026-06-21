@@ -91,7 +91,7 @@ export function AccountSettingsDialog({ open, onOpenChange }: { open: boolean; o
             <TabsTrigger value="a11y">{t("settings.accessibility")}</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="profile" className="space-y-4 pt-4 animate-fade-in">
+          <TabsContent value="profile" className="space-y-4 pt-4">
             <div className="flex items-center gap-4">
               <Avatar className="h-16 w-16 ring-2 ring-background shadow-elev-sm">
                 {photoUrl ? <AvatarImage src={photoUrl} alt={name || "Profile photo"} /> : null}
@@ -115,7 +115,7 @@ export function AccountSettingsDialog({ open, onOpenChange }: { open: boolean; o
             </div>
           </TabsContent>
 
-          <TabsContent value="prefs" className="space-y-4 pt-4 animate-fade-in">
+          <TabsContent value="prefs" className="space-y-4 pt-4">
             <div className="space-y-2">
               <Label>{t("settings.distanceUnits")}</Label>
               <div className="grid grid-cols-2 gap-2">
@@ -165,13 +165,13 @@ export function AccountSettingsDialog({ open, onOpenChange }: { open: boolean; o
             </div>
           </TabsContent>
 
-          <TabsContent value="notify" className="space-y-4 pt-4 animate-fade-in">
+          <TabsContent value="notify" className="space-y-4 pt-4">
             <Row label={t("settings.overdueServices")} description={t("settings.overdueServicesDesc")} checked={notifyOverdue} onChange={setNotifyOverdue} />
             <Row label={t("settings.upcomingReminders")} description={t("settings.upcomingRemindersDesc")} checked={notifyUpcoming} onChange={setNotifyUpcoming} />
             <Row label={t("settings.emailDigests")} description={t("settings.emailDigestsDesc")} checked={notifyEmail} onChange={setNotifyEmail} />
           </TabsContent>
 
-          <TabsContent value="a11y" className="space-y-4 pt-4 animate-fade-in">
+          <TabsContent value="a11y" className="space-y-4 pt-4">
             <p className="text-xs text-muted-foreground">{t("settings.wcagCompliance")}</p>
             <Row label={t("settings.highContrast")} description={t("settings.highContrastDesc")} checked={highContrast} onChange={setHighContrast} />
             <Row label={t("settings.reduceMotion")} description={t("settings.reduceMotionDesc")} checked={reduceMotion} onChange={setReduceMotion} />

@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { categoryMeta, type Category, type Receipt } from "@/data/mockData";
 import { useGarageData } from "@/context/garage-data";
-import { X } from "lucide-react";
+import { X, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { MAX_RECEIPT_FILES, MAX_RECEIPT_FILE_SIZE_BYTES } from "@/lib/schemas";
 import { formatAppError } from "@/lib/errors";
@@ -32,7 +32,7 @@ type PhotoItem = {
 };
 
 export function AddReceiptForm({ onClose, defaultCategory = "fuel", defaultVehicleId, initialReceipt }: Props) {
-  const { vehicles, addReceipt, updateReceipt } = useGarageData();
+  const { vehicles, addReceipt, updateReceipt, deleteReceipt } = useGarageData();
   const { toast } = useToast();
   const { t, symbol, language } = useSettings();
   const [photoItems, setPhotoItems] = useState<PhotoItem[]>(
@@ -298,6 +298,26 @@ export function AddReceiptForm({ onClose, defaultCategory = "fuel", defaultVehic
     triggerAutoOCR(firstNewPhoto.file);
   };
 
+  const handleDeleteReceipt = async () => {
+    if (!initialReceipt) return;
+    const confirmMsg = t("activity.deleteConfirmTitle", {
+      item: t("nav.receipts").toLowerCase(),
+    });
+    if (window.confirm(confirmMsg)) {
+      try {
+        setBusy(true);
+        await deleteReceipt(initialReceipt.id);
+        toast({ title: t("common.delete"), description: t("activity.receiptToastDeleted") });
+        onClose();
+      } catch (error) {
+        const message = formatAppError(error, "Could not delete receipt.");
+        toast({ title: t("receipt.toast.saveFailed"), description: message, variant: "destructive" });
+      } finally {
+        setBusy(false);
+      }
+    }
+  };
+
   return (
     <form className="space-y-4" onSubmit={handleSubmit(async (values) => {
       const existingPhotoUrls = photoItems.filter((item) => !item.file).map((item) => item.url);
@@ -420,9 +440,10 @@ export function AddReceiptForm({ onClose, defaultCategory = "fuel", defaultVehic
               <button
                 type="button"
                 onClick={() => removePhoto(item.id)}
-                className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full p-1 shadow-md hover:bg-destructive/90 transition-colors"
+                aria-label="Remove photo"
               >
-                <X className="h-4 w-4" />
+                <X className="h-3.5 w-3.5" />
               </button>
             </div>
           ))}
@@ -433,11 +454,26 @@ export function AddReceiptForm({ onClose, defaultCategory = "fuel", defaultVehic
           </span>
         )}
       </div>
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="ghost" onClick={onClose} disabled={busy}>{t("common.cancel")}</Button>
-        <Button type="submit" disabled={vehicles.length === 0 || busy || formState.isSubmitting} className="bg-gradient-primary text-primary-foreground hover:opacity-90 shadow-glow">
-          {busy || formState.isSubmitting ? t("common.saving") : isEditing ? t("form.saveChanges") : t("dashboard.addReceipt")}
-        </Button>
+      <div className="flex justify-between items-center gap-2 pt-2 border-t border-border/40">
+        {isEditing ? (
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={handleDeleteReceipt}
+            disabled={busy}
+            className="gap-2"
+          >
+            <Trash2 className="h-4 w-4" /> {t("activity.deleteReceipt")}
+          </Button>
+        ) : (
+          <div />
+        )}
+        <div className="flex gap-2">
+          <Button type="button" variant="ghost" onClick={onClose} disabled={busy}>{t("common.cancel")}</Button>
+          <Button type="submit" disabled={vehicles.length === 0 || busy || formState.isSubmitting} className="bg-gradient-primary text-primary-foreground hover:opacity-90 shadow-glow">
+            {busy || formState.isSubmitting ? t("common.saving") : isEditing ? t("form.saveChanges") : t("dashboard.addReceipt")}
+          </Button>
+        </div>
       </div>
       {vehicles.length === 0 && (
         <p className="text-xs text-muted-foreground">

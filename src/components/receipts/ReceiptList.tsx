@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { format, parseISO } from "date-fns";
-import { Filter, Search, Camera, Pencil, ChevronDown, Image as ImageIcon, Download, X } from "lucide-react";
+import { Filter, Search, Camera, Pencil, ChevronDown, Image as ImageIcon, Download, X, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -21,8 +22,27 @@ type Props = {
 };
 
 export function ReceiptList({ onAddReceipt, onEditReceipt }: Props) {
-  const { receipts, vehicles } = useGarageData();
+  const { receipts, vehicles, deleteReceipt } = useGarageData();
+  const { toast } = useToast();
   const { format: fmtMoney, t, language, currency, symbol } = useSettings();
+
+  const handleDeleteReceipt = async (id: string) => {
+    const confirmMsg = t("activity.deleteConfirmTitle", {
+      item: t("nav.receipts").toLowerCase(),
+    });
+    if (window.confirm(confirmMsg)) {
+      try {
+        await deleteReceipt(id);
+        toast({ title: t("common.delete"), description: t("activity.receiptToastDeleted") });
+      } catch (error) {
+        toast({
+          title: t("common.error"),
+          description: t("ocr.scanFailedDesc"),
+          variant: "destructive",
+        });
+      }
+    }
+  };
   const [cat, setCat] = useState<Category | "all">("all");
   const [filterVehicle, setFilterVehicle] = useState<string>("all");
   const [q, setQ] = useState("");
@@ -315,11 +335,22 @@ export function ReceiptList({ onAddReceipt, onEditReceipt }: Props) {
                             </div>
                           )}
                         </div>
-                        {onEditReceipt && (
-                          <Button type="button" size="sm" variant="outline" className="gap-2" onClick={() => onEditReceipt(receipt.id)}>
-                            <Pencil className="h-3.5 w-3.5" /> {t("receipts.edit")}
+                        <div className="flex gap-2 flex-wrap">
+                          {onEditReceipt && (
+                            <Button type="button" size="sm" variant="outline" className="gap-2" onClick={() => onEditReceipt(receipt.id)}>
+                              <Pencil className="h-3.5 w-3.5" /> {t("receipts.edit")}
+                            </Button>
+                          )}
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="destructive"
+                            className="gap-2"
+                            onClick={() => handleDeleteReceipt(receipt.id)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" /> {t("common.delete")}
                           </Button>
-                        )}
+                        </div>
                       </div>
                       {receipt.photos.length > 0 ? (
                         <div className="flex gap-2 flex-wrap md:flex-nowrap md:max-w-xs">
