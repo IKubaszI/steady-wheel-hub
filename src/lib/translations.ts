@@ -343,6 +343,8 @@ export const translations = {
     "activity.deleteConfirmDesc": "This action cannot be undone.",
 
     // Analytics Page
+    "analytics.title": "Analytics",
+    "analytics.subtitle": "Understand where your money goes",
     "analytics.filterVehicle": "Filter by vehicle",
     "analytics.allVehicles": "All vehicles",
     "analytics.totalSpend": "Total spend",
@@ -798,6 +800,8 @@ export const translations = {
     "activity.deleteConfirmDesc": "Tej operacji nie można cofnąć.",
 
     // Analytics Page
+    "analytics.title": "Statystyki",
+    "analytics.subtitle": "Dowiedz się, na co wydajesz pieniądze",
     "analytics.filterVehicle": "Filtruj według pojazdu",
     "analytics.allVehicles": "Wszystkie pojazdy",
     "analytics.totalSpend": "Łączne wydatki",

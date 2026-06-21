@@ -2,18 +2,22 @@ import { AppShell } from "@/components/layout/AppShell";
 import { PageHeader } from "./Vehicles";
 import { CategoryPie, MonthlyBars } from "@/components/analytics/Charts";
 import { categoryMeta, type Category, type Receipt } from "@/data/mockData";
-import { Wallet, Award } from "lucide-react";
+import { Wallet, Award, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useGarageData } from "@/context/garage-data";
 import { useSettings } from "@/context/settings";
 import { CountUp } from "@/components/ui/count-up";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { LucideIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AddReceiptForm } from "@/components/forms/AddReceiptForm";
 
 export default function Analytics() {
   const { receipts, vehicles } = useGarageData();
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>("all");
-  const { symbol, currency } = useSettings();
+  const { symbol, currency, t } = useSettings();
+  const [open, setOpen] = useState(false);
   const moneyPrefix = currency === "PLN" ? "" : symbol;
   const moneySuffix = currency === "PLN" ? ` ${symbol}` : "";
   const filteredReceipts = useMemo<Receipt[]>(
@@ -31,8 +35,16 @@ export default function Analytics() {
   const TopIcon = categoryMeta[top[0]].icon;
 
   return (
-    <AppShell>
-      <PageHeader title="Analytics" subtitle="Understand where your money goes" />
+    <AppShell onQuickAdd={() => setOpen(true)}>
+      <PageHeader
+        title={t("analytics.title")}
+        subtitle={t("analytics.subtitle")}
+        action={
+          <Button onClick={() => setOpen(true)} className="gap-2 bg-gradient-primary text-primary-foreground hover:opacity-90 shadow-glow">
+            <Plus className="h-4 w-4" /> {t("dashboard.addReceipt")}
+          </Button>
+        }
+      />
       <div className="mb-6 flex items-center justify-end">
         <Select value={selectedVehicleId} onValueChange={setSelectedVehicleId}>
           <SelectTrigger className="w-full max-w-sm">
@@ -75,6 +87,16 @@ export default function Analytics() {
           <MonthlyBars receipts={filteredReceipts} />
         </div>
       </div>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl">{t("form.receipt.addTitle")}</DialogTitle>
+            <DialogDescription>{t("form.receipt.addDesc")}</DialogDescription>
+          </DialogHeader>
+          <AddReceiptForm onClose={() => setOpen(false)} />
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 }

@@ -79,14 +79,14 @@ export function VehicleCard({ v }: { v: Vehicle }) {
             />
           </div>
           <div>
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{v.year}</p>
+            <p className="text-xs font-medium uppercase tracking-wider text-current opacity-70">{v.year}</p>
             <h3 className="font-display text-lg font-semibold leading-tight">{v.brand}</h3>
           </div>
         </div>
         <span className="text-xs font-mono px-2 py-1 rounded-md bg-secondary text-secondary-foreground">{v.plate}</span>
       </div>
 
-      <p className="relative mt-4 text-sm text-muted-foreground">{v.model}</p>
+      <p className="relative mt-4 text-sm text-current opacity-70">{v.model}</p>
 
       <dl className="relative mt-5 grid grid-cols-3 gap-3 text-sm">
         <Stat icon={Gauge} label={t("vehicles.mileageLabel")} value={getMileageString(v.mileage)} />
@@ -110,7 +110,7 @@ export function VehicleCard({ v }: { v: Vehicle }) {
 function Stat({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
   return (
     <div className="rounded-lg bg-secondary/60 p-2.5">
-      <div className="flex items-center gap-1 text-muted-foreground"><Icon className="h-3 w-3" /><dt className="text-[10px] uppercase tracking-wider">{label}</dt></div>
+      <div className="flex items-center gap-1 text-current opacity-70"><Icon className="h-3 w-3" /><dt className="text-[10px] uppercase tracking-wider">{label}</dt></div>
       <dd className="font-semibold text-foreground text-sm mt-0.5 truncate">{value}</dd>
     </div>
   );

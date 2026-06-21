@@ -319,7 +319,7 @@ export function AssistantChatWidget({
                     key={i}
                     variant="outline"
                     size="sm"
-                    className="h-8 rounded-full text-xs hover:bg-primary/5 hover:border-primary border-border bg-card/60"
+                    className="h-8 rounded-full text-xs hover:bg-primary/5 hover:text-primary hover:border-primary border-border bg-card/60"
                     onClick={() => handleOptionClick(opt.action)}
                   >
                     {opt.label}
