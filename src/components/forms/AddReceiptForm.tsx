@@ -17,6 +17,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useSettings } from "@/context/settings";
 import { type TranslationKey } from "@/lib/translations";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 type Props = {
   onClose: () => void;
@@ -39,6 +40,7 @@ export function AddReceiptForm({ onClose, defaultCategory = "fuel", defaultVehic
     (initialReceipt?.photos ?? []).map((url, index) => ({ id: `existing-${index}`, url }))
   );
   const [busy, setBusy] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
   const isEditing = Boolean(initialReceipt);
 
   const schema = z.object({
@@ -298,23 +300,23 @@ export function AddReceiptForm({ onClose, defaultCategory = "fuel", defaultVehic
     triggerAutoOCR(firstNewPhoto.file);
   };
 
-  const handleDeleteReceipt = async () => {
+  const handleDeleteReceipt = () => {
+    setDeleteConfirm(true);
+  };
+
+  const confirmDeleteReceipt = async () => {
     if (!initialReceipt) return;
-    const confirmMsg = t("activity.deleteConfirmTitle", {
-      item: t("nav.receipts").toLowerCase(),
-    });
-    if (window.confirm(confirmMsg)) {
-      try {
-        setBusy(true);
-        await deleteReceipt(initialReceipt.id);
-        toast({ title: t("common.delete"), description: t("activity.receiptToastDeleted") });
-        onClose();
-      } catch (error) {
-        const message = formatAppError(error, "Could not delete receipt.");
-        toast({ title: t("receipt.toast.saveFailed"), description: message, variant: "destructive" });
-      } finally {
-        setBusy(false);
-      }
+    try {
+      setBusy(true);
+      await deleteReceipt(initialReceipt.id);
+      toast({ title: t("common.delete"), description: t("activity.receiptToastDeleted") });
+      onClose();
+    } catch (error) {
+      const message = formatAppError(error, "Could not delete receipt.");
+      toast({ title: t("receipt.toast.saveFailed"), description: message, variant: "destructive" });
+    } finally {
+      setBusy(false);
+      setDeleteConfirm(false);
     }
   };
 
@@ -480,6 +482,22 @@ export function AddReceiptForm({ onClose, defaultCategory = "fuel", defaultVehic
           {t("form.receipt.addFirstVehicle")}
         </p>
       )}
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={deleteConfirm} onOpenChange={setDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t("activity.deleteConfirmTitle", { item: t("nav.receipts").toLowerCase() })}
+            </AlertDialogTitle>
+            <AlertDialogDescription>{t("activity.deleteConfirmDesc")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteReceipt} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{t("common.delete")}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </form>
   );
 }

@@ -5,12 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AddReceiptForm } from "@/components/forms/AddReceiptForm";
 import { Badge } from "@/components/ui/badge";
-import { Camera, Images, Upload, ChevronLeft, ChevronRight, Download } from "lucide-react";
+import { Camera, Images, Upload, ChevronLeft, ChevronRight, Download, Pencil, Trash2 } from "lucide-react";
 import { useGarageData } from "@/context/garage-data";
 import { categoryMeta, type Category, type Receipt } from "@/data/mockData";
 import { Link } from "react-router-dom";
 import { useSettings } from "@/context/settings";
 import { useToast } from "@/hooks/use-toast";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 export default function ReceiptPhotos() {
   const [open, setOpen] = useState(false);
@@ -20,29 +21,32 @@ export default function ReceiptPhotos() {
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const { receipts, vehicles, deleteReceipt } = useGarageData();
   const { t, format: fmtMoney, language } = useSettings();
-
   const { toast } = useToast();
+
   const [selectedReceiptForEdit, setSelectedReceiptForEdit] = useState<Receipt | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [receiptToDelete, setReceiptToDelete] = useState<string | null>(null);
 
-  const handleDeleteReceipt = async (id: string) => {
-    const confirmMsg = t("activity.deleteConfirmTitle", {
-      item: t("nav.receipts").toLowerCase(),
-    });
-    if (window.confirm(confirmMsg)) {
-      try {
-        await deleteReceipt(id);
-        toast({
-          title: t("common.delete"),
-          description: t("activity.receiptToastDeleted"),
-        });
-      } catch (error) {
-        toast({
-          title: t("receipt.toast.saveFailed"),
-          description: "Could not delete receipt.",
-          variant: "destructive",
-        });
-      }
+  const handleDeleteReceipt = (id: string) => {
+    setReceiptToDelete(id);
+  };
+
+  const confirmDeleteReceipt = async () => {
+    if (!receiptToDelete) return;
+    try {
+      await deleteReceipt(receiptToDelete);
+      toast({
+        title: t("common.delete"),
+        description: t("activity.receiptToastDeleted"),
+      });
+    } catch (error) {
+      toast({
+        title: t("receipt.toast.saveFailed"),
+        description: "Could not delete receipt.",
+        variant: "destructive",
+      });
+    } finally {
+      setReceiptToDelete(null);
     }
   };
 
@@ -198,21 +202,21 @@ export default function ReceiptPhotos() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-8 text-xs gap-1"
+                    className="h-8 text-xs gap-1.5"
                     onClick={() => {
                       setSelectedReceiptForEdit(receipt);
                       setEditDialogOpen(true);
                     }}
                   >
-                    ✏️ {t("common.edit")}
+                    <Pencil className="h-3.5 w-3.5" /> {t("common.edit")}
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-8 text-xs text-destructive hover:text-destructive hover:bg-destructive/10 gap-1"
+                    className="h-8 text-xs text-destructive hover:text-destructive hover:bg-destructive/10 gap-1.5"
                     onClick={() => handleDeleteReceipt(receipt.id)}
                   >
-                    🗑️ {t("common.delete")}
+                    <Trash2 className="h-3.5 w-3.5" /> {t("common.delete")}
                   </Button>
                 </div>
               </div>
@@ -291,7 +295,7 @@ export default function ReceiptPhotos() {
                 }}
                 className="gap-1.5"
               >
-                ✏️ {t("common.edit")}
+                <Pencil className="h-3.5 w-3.5" /> {t("common.edit")}
               </Button>
               <Button
                 variant="destructive"
@@ -305,7 +309,7 @@ export default function ReceiptPhotos() {
                 }}
                 className="gap-1.5"
               >
-                🗑️ {t("common.delete")}
+                <Trash2 className="h-3.5 w-3.5" /> {t("common.delete")}
               </Button>
             </div>
           </DialogContent>
@@ -329,6 +333,22 @@ export default function ReceiptPhotos() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={receiptToDelete !== null} onOpenChange={(open) => !open && setReceiptToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t("activity.deleteConfirmTitle", { item: t("nav.receipts").toLowerCase() })}
+            </AlertDialogTitle>
+            <AlertDialogDescription>{t("activity.deleteConfirmDesc")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteReceipt} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{t("common.delete")}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppShell>
   );
 }

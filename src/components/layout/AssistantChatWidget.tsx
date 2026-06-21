@@ -340,7 +340,7 @@ export function AssistantChatWidget({
                     window.dispatchEvent(new CustomEvent("open-settings"));
                   }}
                 >
-                  ⚙️ {t("nav.accountSettings")}
+                  {t("nav.accountSettings")}
                 </Button>
               </div>
             )}

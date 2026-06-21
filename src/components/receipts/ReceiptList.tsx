@@ -13,6 +13,7 @@ import { categoryMeta, type Category } from "@/data/mockData";
 import { useGarageData } from "@/context/garage-data";
 import { useSettings } from "@/context/settings";
 import { type TranslationKey } from "@/lib/translations";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 const categories: (Category | "all")[] = ["all", "fuel", "parts", "service", "insurance", "other"];
 
@@ -25,22 +26,25 @@ export function ReceiptList({ onAddReceipt, onEditReceipt }: Props) {
   const { receipts, vehicles, deleteReceipt } = useGarageData();
   const { toast } = useToast();
   const { format: fmtMoney, t, language, currency, symbol } = useSettings();
+  const [receiptToDelete, setReceiptToDelete] = useState<string | null>(null);
 
-  const handleDeleteReceipt = async (id: string) => {
-    const confirmMsg = t("activity.deleteConfirmTitle", {
-      item: t("nav.receipts").toLowerCase(),
-    });
-    if (window.confirm(confirmMsg)) {
-      try {
-        await deleteReceipt(id);
-        toast({ title: t("common.delete"), description: t("activity.receiptToastDeleted") });
-      } catch (error) {
-        toast({
-          title: t("common.error"),
-          description: t("ocr.scanFailedDesc"),
-          variant: "destructive",
-        });
-      }
+  const handleDeleteReceipt = (id: string) => {
+    setReceiptToDelete(id);
+  };
+
+  const confirmDeleteReceipt = async () => {
+    if (!receiptToDelete) return;
+    try {
+      await deleteReceipt(receiptToDelete);
+      toast({ title: t("common.delete"), description: t("activity.receiptToastDeleted") });
+    } catch (error) {
+      toast({
+        title: t("common.error"),
+        description: t("ocr.scanFailedDesc"),
+        variant: "destructive",
+      });
+    } finally {
+      setReceiptToDelete(null);
     }
   };
   const [cat, setCat] = useState<Category | "all">("all");
@@ -408,6 +412,22 @@ export function ReceiptList({ onAddReceipt, onEditReceipt }: Props) {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={receiptToDelete !== null} onOpenChange={(open) => !open && setReceiptToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t("activity.deleteConfirmTitle", { item: t("nav.receipts").toLowerCase() })}
+            </AlertDialogTitle>
+            <AlertDialogDescription>{t("activity.deleteConfirmDesc")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteReceipt} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{t("common.delete")}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
