@@ -64,7 +64,10 @@ function applyPrimaryColorTokens(color: PrimaryColor) {
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const initialSettings = useMemo(() => {
-    const isPolish = typeof navigator !== "undefined" && navigator.language?.startsWith("pl");
+    const navLang = typeof navigator !== "undefined"
+      ? (navigator.languages && navigator.languages[0]) || navigator.language || ""
+      : "";
+    const isPolish = typeof navLang === "string" && navLang.toLowerCase().startsWith("pl");
     const defaultLang = (isPolish ? "pl" : "en") as Language;
     const defaultUnit = (isPolish ? "km" : "mi") as DistanceUnit;
     const defaultCurrency = (isPolish ? "PLN" : "USD") as Currency;
