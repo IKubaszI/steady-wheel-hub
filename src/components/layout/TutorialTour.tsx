@@ -11,6 +11,7 @@ import {
   ChevronRight,
   Sparkles,
   CheckCircle,
+  User,
 } from "lucide-react";
 import { useGarageData } from "@/context/garage-data";
 import { useSettings } from "@/context/settings";
@@ -66,6 +67,13 @@ const steps = [
     titleKey: "tutorial.step.proTips.title" as const,
     descKey: "tutorial.step.proTips.desc" as const,
     icon: Sparkles,
+    to: "/pro-tips",
+  },
+  {
+    id: "header-profile-menu",
+    titleKey: "tutorial.step.profile.title" as const,
+    descKey: "tutorial.step.profile.desc" as const,
+    icon: User,
     to: "/pro-tips",
   },
 ];

@@ -520,7 +520,9 @@ export const translations = {
     "checklist.interior.electronics": "Verify air conditioning, windows, and all controls function.",
     "checklist.interior.lights": "Check all dashboard warning lights turn off after starting.",
     "tutorial.step.proTips.title": "Pro Tips & Checklist",
-    "tutorial.step.proTips.desc": "Your buyer's guide. Access interactive checklists for car inspections and expert advice."
+    "tutorial.step.proTips.desc": "Your buyer's guide. Access interactive checklists for car inspections and expert advice.",
+    "tutorial.step.profile.title": "Profile & Settings",
+    "tutorial.step.profile.desc": "Customize your experience. Change the app theme, metrics, currency, language, and manage your account details here."
   },
   pl: {
     // Navigation
@@ -1043,7 +1045,9 @@ export const translations = {
     "checklist.interior.electronics": "Weryfikacja działania klimatyzacji, ogrzewania, szyb i wszelkich przełączników.",
     "checklist.interior.lights": "Kontrola czy wszystkie kontrolki ostrzegawcze gasną po uruchomieniu silnika.",
     "tutorial.step.proTips.title": "Pro tipy i poradniki",
-    "tutorial.step.proTips.desc": "Twój poradnik kupującego. Zyskaj dostęp do interaktywnej checklisty kontroli auta oraz eksperckich porad."
+    "tutorial.step.proTips.desc": "Twój poradnik kupującego. Zyskaj dostęp do interaktywnej checklisty kontroli auta oraz eksperckich porad.",
+    "tutorial.step.profile.title": "Profil i Ustawienia",
+    "tutorial.step.profile.desc": "Dostosuj aplikację do siebie. W tym miejscu możesz zmienić motyw, jednostki, walutę, język oraz zarządzać swoim kontem."
   }
 } as const;
 

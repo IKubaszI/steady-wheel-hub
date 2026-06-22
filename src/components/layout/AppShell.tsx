@@ -206,7 +206,7 @@ export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; 
             <ThemeToggle />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-2 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <button id="header-profile-menu" className="flex items-center gap-2 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                   <Avatar className="h-9 w-9 ring-2 ring-background shadow-elev-sm">
                     {user?.photoURL ? <AvatarImage src={user.photoURL} alt={displayName} /> : null}
                     <AvatarFallback className="bg-gradient-primary text-primary-foreground font-semibold">{initials}</AvatarFallback>
