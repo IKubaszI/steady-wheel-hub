@@ -101,7 +101,8 @@ export function TutorialTour() {
     if (authLoading) return;
 
     // Auto-start tutorial on entering/refreshing for the demo user
-    if (user?.email === "testowy@test.pl") {
+    const isDemoUser = user?.email?.toLowerCase().includes("testowy") || user?.email?.toLowerCase().includes("demo") || user?.uid === "demo-user";
+    if (isDemoUser) {
       const dismissed = sessionStorage.getItem("steadywheelhub.tutorialDismissed");
       const storedStep = sessionStorage.getItem("steadywheelhub.tutorialStep");
       if (dismissed !== "1" && storedStep === null) {

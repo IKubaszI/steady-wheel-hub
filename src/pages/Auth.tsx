@@ -40,9 +40,9 @@ export default function AuthPage() {
         if (!parsedName.success) {
           throw parsedName.error;
         }
-        await register(parsedName.data, email.trim(), password);
         sessionStorage.setItem("steadywheelhub.onboarding", "1");
         localStorage.removeItem("steadywheelhub.pwaDismissed");
+        await register(parsedName.data, email.trim(), password);
         toast({
           title: t("auth.toast.created"),
           description: t("auth.toast.onboarding"),
@@ -73,13 +73,13 @@ export default function AuthPage() {
   const onDemoLogin = async () => {
     setBusy(true);
     try {
+      sessionStorage.setItem("steadywheelhub.demoOnboarding", "1");
+      localStorage.removeItem("steadywheelhub.pwaDismissed");
       try {
         await login(DEMO_USER.email, DEMO_USER.password);
       } catch {
         await register(DEMO_USER.name, DEMO_USER.email, DEMO_USER.password);
       }
-
-      sessionStorage.setItem("steadywheelhub.demoOnboarding", "1");
 
       const uid = auth.currentUser?.uid;
       if (uid) {

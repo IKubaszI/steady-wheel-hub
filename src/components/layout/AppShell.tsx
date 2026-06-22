@@ -228,6 +228,7 @@ export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; 
                     sessionStorage.removeItem("steadywheelhub.tutorialStep");
                     sessionStorage.removeItem("steadywheelhub.onboarding");
                     sessionStorage.removeItem("steadywheelhub.demoOnboarding");
+                    sessionStorage.removeItem("steadywheelhub.tutorialDismissed");
                     await logout();
                     navigate("/auth");
                   }}
@@ -436,7 +437,7 @@ function PWAInstallCard() {
     setIsDismissed(true);
   };
 
-  const isDemo = user?.email === "testowy@test.pl";
+  const isDemo = user?.email?.toLowerCase().includes("testowy") || user?.email?.toLowerCase().includes("demo") || user?.uid === "demo-user";
   if (isStandalone || (isDismissed && !isDemo)) return null;
 
   return (

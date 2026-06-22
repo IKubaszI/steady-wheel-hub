@@ -11,7 +11,7 @@ export const vehicleInputSchema = z.object({
   brand: z.string().trim().min(1).max(80),
   model: z.string().trim().min(1).max(120),
   year: z.number().int().gte(1900).lte(2100),
-  mileage: z.number().int().gte(0).lte(2_000_000),
+  mileage: z.number().int().gte(0).lte(99_999_999),
   plate: z.string().trim().min(1).max(24),
   color: z.string().trim().min(1).max(40),
   nextService: z.string().date(),
