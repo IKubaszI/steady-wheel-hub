@@ -16,6 +16,7 @@ import { useGarageData } from "@/context/garage-data";
 import { useSettings } from "@/context/settings";
 import { AddVehicleForm } from "@/components/forms/AddVehicleForm";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/auth";
 
 const steps = [
   {
@@ -73,6 +74,7 @@ export function TutorialTour() {
   const navigate = useNavigate();
   const { vehicles } = useGarageData();
   const { t } = useSettings();
+  const { user, loading: authLoading } = useAuth();
   const [forceCreate, setForceCreate] = useState(false);
   const [stepIndex, setStepIndex] = useState<number | "finish" | null>(null);
   const [rect, setRect] = useState<DOMRect | null>(null);
@@ -96,6 +98,19 @@ export function TutorialTour() {
   }, [vehicles.length]);
 
   useEffect(() => {
+    if (authLoading) return;
+
+    // Auto-start tutorial on entering/refreshing for the demo user
+    if (user?.email === "testowy@test.pl") {
+      const dismissed = sessionStorage.getItem("steadywheelhub.tutorialDismissed");
+      const storedStep = sessionStorage.getItem("steadywheelhub.tutorialStep");
+      if (dismissed !== "1" && storedStep === null) {
+        sessionStorage.setItem("steadywheelhub.tutorialStep", "0");
+        setStepIndex(0);
+        return;
+      }
+    }
+
     const demoOnboarding = sessionStorage.getItem("steadywheelhub.demoOnboarding");
     if (demoOnboarding === "1") {
       sessionStorage.removeItem("steadywheelhub.demoOnboarding");
@@ -113,7 +128,7 @@ export function TutorialTour() {
         setStepIndex(idx);
       }
     }
-  }, []);
+  }, [user, authLoading]);
 
   // Monitor screen width
   useEffect(() => {
@@ -183,11 +198,13 @@ export function TutorialTour() {
   };
 
   const handleSkip = () => {
+    sessionStorage.setItem("steadywheelhub.tutorialDismissed", "1");
     sessionStorage.removeItem("steadywheelhub.tutorialStep");
     setStepIndex(null);
   };
 
   const handleFinish = () => {
+    sessionStorage.setItem("steadywheelhub.tutorialDismissed", "1");
     sessionStorage.removeItem("steadywheelhub.tutorialStep");
     setStepIndex(null);
   };

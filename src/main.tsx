@@ -2,6 +2,9 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 
+// Clear dismissal flags to guarantee onboarding triggers on every new entry/refresh
+sessionStorage.removeItem("steadywheelhub.tutorialDismissed");
+
 const searchParams = new URLSearchParams(window.location.search);
 const redirectPath = searchParams.get("p");
 if (redirectPath) {
