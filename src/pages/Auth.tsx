@@ -41,6 +41,7 @@ export default function AuthPage() {
           throw parsedName.error;
         }
         sessionStorage.setItem("steadywheelhub.onboarding", "1");
+        sessionStorage.removeItem("steadywheelhub.pwaDismissedSession");
         localStorage.removeItem("steadywheelhub.pwaDismissed");
         await register(parsedName.data, email.trim(), password);
         toast({
@@ -74,6 +75,7 @@ export default function AuthPage() {
     setBusy(true);
     try {
       sessionStorage.setItem("steadywheelhub.demoOnboarding", "1");
+      sessionStorage.removeItem("steadywheelhub.pwaDismissedSession");
       localStorage.removeItem("steadywheelhub.pwaDismissed");
       try {
         await login(DEMO_USER.email, DEMO_USER.password);

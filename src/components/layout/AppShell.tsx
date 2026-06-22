@@ -229,6 +229,7 @@ export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; 
                     sessionStorage.removeItem("steadywheelhub.onboarding");
                     sessionStorage.removeItem("steadywheelhub.demoOnboarding");
                     sessionStorage.removeItem("steadywheelhub.tutorialDismissed");
+                    sessionStorage.removeItem("steadywheelhub.pwaDismissedSession");
                     await logout();
                     navigate("/auth");
                   }}
@@ -402,8 +403,13 @@ function PWAInstallCard() {
     const standalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone;
     setIsStandalone(!!standalone);
 
-    // Check if dismissed (only for non-demo users)
-    const dismissed = !isDemo && window.localStorage.getItem('steadywheelhub.pwaDismissed') === '1';
+    // Check if dismissed
+    let dismissed = false;
+    if (isDemo) {
+      dismissed = window.sessionStorage.getItem('steadywheelhub.pwaDismissedSession') === '1';
+    } else {
+      dismissed = window.localStorage.getItem('steadywheelhub.pwaDismissed') === '1';
+    }
     setIsDismissed(dismissed);
 
     const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
@@ -435,7 +441,9 @@ function PWAInstallCard() {
   };
 
   const handleDismiss = () => {
-    if (!isDemo) {
+    if (isDemo) {
+      window.sessionStorage.setItem('steadywheelhub.pwaDismissedSession', '1');
+    } else {
       window.localStorage.setItem('steadywheelhub.pwaDismissed', '1');
     }
     setIsDismissed(true);
