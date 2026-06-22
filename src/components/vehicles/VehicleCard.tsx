@@ -23,10 +23,10 @@ export function VehicleCard({ v }: { v: Vehicle }) {
   const getMileageString = (mileage: number) => {
     const isMetric = distanceUnit === "km";
     const factor = isMetric ? 1.609344 : 1;
-    const value = (mileage * factor) / 1000;
+    const value = Math.round(mileage * factor);
     const suffix = isMetric ? "km" : "mi";
-    const formatted = value.toLocaleString(language === "pl" ? "pl-PL" : "en-US", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-    return `${formatted}k ${suffix}`;
+    const formatted = value.toLocaleString(language === "pl" ? "pl-PL" : "en-US");
+    return `${formatted} ${suffix}`;
   };
 
   const colorKey = `color.${v.color.toLowerCase()}`;

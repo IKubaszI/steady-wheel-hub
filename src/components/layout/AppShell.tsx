@@ -395,13 +395,15 @@ function PWAInstallCard() {
   const [showIOSInstructions, setShowIOSInstructions] = useState(false);
   const [showGenericInstructions, setShowGenericInstructions] = useState(false);
 
+  const isDemo = user?.email?.toLowerCase().includes("testowy") || user?.email?.toLowerCase().includes("demo") || user?.uid === "demo-user";
+
   useEffect(() => {
     // Check if standalone
     const standalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone;
     setIsStandalone(!!standalone);
 
-    // Check if dismissed
-    const dismissed = window.localStorage.getItem('steadywheelhub.pwaDismissed') === '1';
+    // Check if dismissed (only for non-demo users)
+    const dismissed = !isDemo && window.localStorage.getItem('steadywheelhub.pwaDismissed') === '1';
     setIsDismissed(dismissed);
 
     const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
@@ -414,7 +416,7 @@ function PWAInstallCard() {
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-  }, []);
+  }, [isDemo]);
 
   const handleInstallClick = async () => {
     if (isIOSDevice) {
@@ -433,12 +435,13 @@ function PWAInstallCard() {
   };
 
   const handleDismiss = () => {
-    window.localStorage.setItem('steadywheelhub.pwaDismissed', '1');
+    if (!isDemo) {
+      window.localStorage.setItem('steadywheelhub.pwaDismissed', '1');
+    }
     setIsDismissed(true);
   };
 
-  const isDemo = user?.email?.toLowerCase().includes("testowy") || user?.email?.toLowerCase().includes("demo") || user?.uid === "demo-user";
-  if (isStandalone || (isDismissed && !isDemo)) return null;
+  if (isStandalone || isDismissed) return null;
 
   return (
     <>
