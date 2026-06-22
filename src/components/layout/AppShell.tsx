@@ -386,6 +386,7 @@ function UpsellCard() {
 
 function PWAInstallCard() {
   const { language } = useSettings();
+  const { user } = useAuth();
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isStandalone, setIsStandalone] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
@@ -435,7 +436,8 @@ function PWAInstallCard() {
     setIsDismissed(true);
   };
 
-  if (isStandalone || isDismissed) return null;
+  const isDemo = user?.email === "testowy@test.pl";
+  if (isStandalone || (isDismissed && !isDemo)) return null;
 
   return (
     <>

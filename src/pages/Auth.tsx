@@ -42,6 +42,7 @@ export default function AuthPage() {
         }
         await register(parsedName.data, email.trim(), password);
         sessionStorage.setItem("steadywheelhub.onboarding", "1");
+        localStorage.removeItem("steadywheelhub.pwaDismissed");
         toast({
           title: t("auth.toast.created"),
           description: t("auth.toast.onboarding"),
