@@ -19,7 +19,7 @@ type Props = {
 
 const toneStyles: Record<NonNullable<Props["tone"]>, string> = {
   primary: "from-primary/15 to-primary/0 text-primary",
-  accent:  "from-accent/20 to-accent/0 text-accent-foreground",
+  accent:  "from-accent/20 to-accent/0 text-accent",
   success: "from-success/15 to-success/0 text-success",
   warning: "from-warning/20 to-warning/0 text-warning",
 };

@@ -104,7 +104,7 @@ export default function Analytics() {
 function SummaryCard({ icon: Icon, label, value, hint, tone }: { icon: LucideIcon; label: string; value: React.ReactNode; hint: string; tone: "primary" | "accent" | "success" }) {
   const tones: Record<string, string> = {
     primary: "bg-primary/10 text-primary",
-    accent:  "bg-accent/15 text-accent-foreground",
+    accent:  "bg-accent/15 text-accent",
     success: "bg-success/10 text-success",
   };
   return (
