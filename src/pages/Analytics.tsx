@@ -75,7 +75,7 @@ export default function Analytics() {
           />
         </div>
         <div className="animate-fade-in" style={{ animationDelay: "200ms", animationFillMode: "backwards" }}>
-          <SummaryCard icon={Award} label="Avg. receipt" value={<CountUp value={avg} prefix={moneyPrefix} suffix={moneySuffix} decimals={2} />} hint="Across all categories" tone="accent" />
+          <SummaryCard icon={Award} label="Avg. receipt" value={<CountUp value={avg} prefix={moneyPrefix} suffix={moneySuffix} decimals={2} />} hint="Across all categories" tone="violet" />
         </div>
       </div>
 
@@ -101,11 +101,12 @@ export default function Analytics() {
   );
 }
 
-function SummaryCard({ icon: Icon, label, value, hint, tone }: { icon: LucideIcon; label: string; value: React.ReactNode; hint: string; tone: "primary" | "accent" | "success" }) {
+function SummaryCard({ icon: Icon, label, value, hint, tone }: { icon: LucideIcon; label: string; value: React.ReactNode; hint: string; tone: "primary" | "accent" | "success" | "violet" }) {
   const tones: Record<string, string> = {
     primary: "bg-primary/10 text-primary",
     accent:  "bg-accent/15 text-accent",
     success: "bg-success/10 text-success",
+    violet: "bg-violet-500/10 text-violet-500",
   };
   return (
     <div className="surface-card p-5 flex items-center gap-4">
