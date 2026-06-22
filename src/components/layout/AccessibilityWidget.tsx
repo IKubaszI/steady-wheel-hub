@@ -198,21 +198,21 @@ export function AccessibilityWidget({ hasSidebar = false }: AccessibilityWidgetP
             >
               <ToggleGroupItem
                 value="normal"
-                className="text-[11px] h-8 font-medium rounded-lg data-[state=on]:bg-background data-[state=on]:shadow-sm data-[state=on]:text-foreground"
+                className="text-[11px] h-8 font-medium rounded-lg data-[state=on]:bg-primary data-[state=on]:shadow-sm data-[state=on]:text-primary-foreground"
                 aria-label="Normal text size"
               >
                 {t("settings.textSizeNormal").split(" ")[0]}
               </ToggleGroupItem>
               <ToggleGroupItem
                 value="large"
-                className="text-xs h-8 font-semibold rounded-lg data-[state=on]:bg-background data-[state=on]:shadow-sm data-[state=on]:text-foreground"
+                className="text-xs h-8 font-semibold rounded-lg data-[state=on]:bg-primary data-[state=on]:shadow-sm data-[state=on]:text-primary-foreground"
                 aria-label="Large text size"
               >
                 {t("settings.textSizeLarge").split(" ")[0]}
               </ToggleGroupItem>
               <ToggleGroupItem
                 value="xl"
-                className="text-sm h-8 font-bold rounded-lg data-[state=on]:bg-background data-[state=on]:shadow-sm data-[state=on]:text-foreground"
+                className="text-sm h-8 font-bold rounded-lg data-[state=on]:bg-primary data-[state=on]:shadow-sm data-[state=on]:text-primary-foreground"
                 aria-label="Extra large text size"
               >
                 {t("settings.textSizeXL").split(" ")[0] === "Extra" ? "XL" : t("settings.textSizeXL").split(" ")[0]}

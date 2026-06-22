@@ -109,7 +109,7 @@ export default function Dashboard() {
             delta={{ value: `${moneyPrefix}${previousMonthSpend.toFixed(0)}${moneySuffix}`, positive: upcomingThisMonthSpend <= previousMonthSpend }}
             deltaLabel={t("dashboard.upcomingSpendDelta")}
             icon={Wallet}
-            tone="accent"
+            tone="violet"
             hint={t("dashboard.upcomingSpendHint")}
           />
         </div>

@@ -13,7 +13,7 @@ type Props = {
   delta?: { value: string; positive?: boolean };
   deltaLabel?: string;
   icon: LucideIcon;
-  tone?: "primary" | "accent" | "success" | "warning";
+  tone?: "primary" | "accent" | "success" | "warning" | "violet";
   hint?: string;
 };
 
@@ -22,6 +22,7 @@ const toneStyles: Record<NonNullable<Props["tone"]>, string> = {
   accent:  "from-accent/20 to-accent/0 text-accent",
   success: "from-success/15 to-success/0 text-success",
   warning: "from-warning/20 to-warning/0 text-warning",
+  violet:  "from-violet-500/20 to-violet-500/0 text-violet-500",
 };
 
 export const StatCard = memo(function StatCard({ label, value, prefix, suffix, decimals = 0, delta, deltaLabel = "vs. last month", icon: Icon, tone = "primary", hint }: Props) {

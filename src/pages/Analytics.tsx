@@ -75,7 +75,7 @@ export default function Analytics() {
           />
         </div>
         <div className="animate-fade-in" style={{ animationDelay: "200ms", animationFillMode: "backwards" }}>
-          <SummaryCard icon={Award} label="Avg. receipt" value={<CountUp value={avg} prefix={moneyPrefix} suffix={moneySuffix} decimals={2} />} hint="Across all categories" tone="success" />
+          <SummaryCard icon={Award} label="Avg. receipt" value={<CountUp value={avg} prefix={moneyPrefix} suffix={moneySuffix} decimals={2} />} hint="Across all categories" tone="primary" />
         </div>
       </div>
 
