@@ -204,6 +204,22 @@ export function AccountSettingsDialog({ open, onOpenChange }: { open: boolean; o
                 <p className="text-xs text-muted-foreground">{t("settings.colorDesc")}</p>
               </div>
 
+              <div className="space-y-2 pt-2 border-t border-border">
+                <Label>{t("settings.tutorial") || "Tutorial"}</Label>
+                <div>
+                  <Button variant="outline" onClick={() => {
+                    sessionStorage.removeItem("steadywheelhub.tutorialDismissed");
+                    sessionStorage.setItem("steadywheelhub.tutorialStep", "0");
+                    onOpenChange(false);
+                    window.location.href = "/";
+                  }}>
+                    {t("settings.restartTutorial") || "Restart Tutorial"}
+                  </Button>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {t("settings.restartTutorialDesc") || "Click to view the app tour again from the beginning."}
+                  </p>
+                </div>
+              </div>
             </TabsContent>
 
             <TabsContent value="notify" className="space-y-4 mt-0 pt-0">

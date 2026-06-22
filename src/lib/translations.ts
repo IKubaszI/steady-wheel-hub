@@ -299,6 +299,9 @@ export const translations = {
     "settings.accessibilityWidget.reduceMotionDesc": "Reduce screen motion and animation",
     "settings.accessibilityWidget.textSize": "Text Size",
     "settings.accessibilityWidget.textSizeDesc": "Adjust body text scale",
+    "settings.tutorial": "App Tutorial",
+    "settings.restartTutorial": "Restart Tutorial",
+    "settings.restartTutorialDesc": "Click to view the app tour again from the beginning.",
 
     // Colors
     "color.ocean": "Ocean blue",
@@ -800,6 +803,9 @@ export const translations = {
     "settings.underlineLinksDesc": "Wyróżniaj linki nie tylko za pomocą koloru",
     "settings.textSize": "Rozmiar tekstu",
     "settings.textSizeNormal": "Normalny (100%)",
+    "settings.tutorial": "Samouczek aplikacji",
+    "settings.restartTutorial": "Uruchom samouczek ponownie",
+    "settings.restartTutorialDesc": "Kliknij, aby obejrzeć wycieczkę po aplikacji od początku.",
     "settings.textSizeLarge": "Duży (112%)",
     "settings.textSizeXL": "Bardzo duży (125%)",
     "settings.textSizeDesc": "Skaluje cały interfejs za pomocą jednostek rem.",
