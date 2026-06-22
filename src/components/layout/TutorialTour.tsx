@@ -81,8 +81,15 @@ export function TutorialTour() {
   // Initialize and check onboarding status
   useEffect(() => {
     const onboarding = sessionStorage.getItem("steadywheelhub.onboarding");
-    if (onboarding === "1" && vehicles.length === 0) {
-      setForceCreate(true);
+    if (onboarding === "1") {
+      if (vehicles.length === 0) {
+        setForceCreate(true);
+      } else {
+        sessionStorage.removeItem("steadywheelhub.onboarding");
+        sessionStorage.setItem("steadywheelhub.tutorialStep", "0");
+        setForceCreate(false);
+        setStepIndex(0);
+      }
     } else {
       setForceCreate(false);
     }

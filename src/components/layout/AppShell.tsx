@@ -24,6 +24,7 @@ import { AssistantChatWidget } from "./AssistantChatWidget";
 import { AssistantConfirmDialog } from "./AssistantConfirmDialog";
 import { type ParsedAssistantCommand } from "@/services/assistantService";
 import { type TranslationKey } from "@/lib/translations";
+import { TutorialTour } from "./TutorialTour";
 
 export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; onQuickAdd?: () => void }) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -46,12 +47,13 @@ export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; 
   }, []);
 
   const navItems = useMemo(() => [
-    { to: "/", label: t("nav.dashboard"), icon: LayoutDashboard, end: true },
-    { to: "/vehicles", label: t("nav.vehicles"), icon: Car },
-    { to: "/maintenance", label: t("nav.maintenance"), icon: Wrench },
-    { to: "/receipts", label: t("nav.receipts"), icon: Receipt },
-    { to: "/receipt-photos", label: t("nav.receiptPhotos"), icon: Camera },
-    { to: "/analytics", label: t("nav.analytics"), icon: BarChart3 },
+    { id: "sidebar-link-dashboard", to: "/", label: t("nav.dashboard"), icon: LayoutDashboard, end: true },
+    { id: "sidebar-link-vehicles", to: "/vehicles", label: t("nav.vehicles"), icon: Car },
+    { id: "sidebar-link-maintenance", to: "/maintenance", label: t("nav.maintenance"), icon: Wrench },
+    { id: "sidebar-link-receipts", to: "/receipts", label: t("nav.receipts"), icon: Receipt },
+    { id: "sidebar-link-receipt-photos", to: "/receipt-photos", label: t("nav.receiptPhotos"), icon: Camera },
+    { id: "sidebar-link-analytics", to: "/analytics", label: t("nav.analytics"), icon: BarChart3 },
+    { id: "sidebar-link-pro-tips", to: "/pro-tips", label: t("nav.proTips"), icon: Sparkles },
   ], [t]);
 
   const displayName = user?.displayName?.trim() || user?.email?.split("@")[0] || t("dashboard.driver");
@@ -108,6 +110,7 @@ export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; 
 
   return (
     <div className="min-h-screen bg-background">
+      <TutorialTour />
       <a href="#main-content" className="skip-link">Skip to main content</a>
       {/* Sidebar — desktop */}
       <aside aria-label="Primary navigation" className="hidden lg:flex fixed inset-y-0 left-0 w-64 flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border z-30">
@@ -211,9 +214,9 @@ export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; 
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>
-                  <div className="font-semibold">{displayName}</div>
-                  <div className="text-xs font-normal text-muted-foreground">{user?.email ?? "No email"}</div>
+                <DropdownMenuLabel className="min-w-0">
+                  <div className="font-semibold truncate" title={displayName}>{displayName}</div>
+                  <div className="text-xs font-normal text-muted-foreground truncate" title={user?.email ?? "No email"}>{user?.email ?? "No email"}</div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onSelect={() => setSettingsOpen(true)}><User className="mr-2 h-4 w-4" /> {t("nav.profile")}</DropdownMenuItem>
@@ -222,6 +225,9 @@ export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; 
                 <DropdownMenuItem
                   className="text-destructive focus:text-destructive"
                   onSelect={async () => {
+                    sessionStorage.removeItem("steadywheelhub.tutorialStep");
+                    sessionStorage.removeItem("steadywheelhub.onboarding");
+                    sessionStorage.removeItem("steadywheelhub.demoOnboarding");
                     await logout();
                     navigate("/auth");
                   }}
@@ -340,9 +346,10 @@ function Brand({ compact = false }: { compact?: boolean }) {
   );
 }
 
-function SidebarLink({ to, label, icon: Icon, end, onClick }: { to: string; label: string; icon: typeof LayoutDashboard; end?: boolean; onClick?: MouseEventHandler<HTMLAnchorElement> }) {
+function SidebarLink({ id, to, label, icon: Icon, end, onClick }: { id?: string; to: string; label: string; icon: typeof LayoutDashboard; end?: boolean; onClick?: MouseEventHandler<HTMLAnchorElement> }) {
   return (
     <NavLink
+      id={id}
       to={to}
       end={end}
       onClick={onClick}

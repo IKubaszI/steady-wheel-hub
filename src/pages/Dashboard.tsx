@@ -71,7 +71,7 @@ export default function Dashboard() {
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest text-primary">{t("dashboard.welcomeBack")}</p>
-            <h1 className="font-display text-3xl md:text-4xl font-bold mt-1">{t(getGreetingKey(), { name: firstName })}</h1>
+            <h1 className="font-display text-3xl md:text-4xl font-bold mt-1 break-all md:break-words">{t(getGreetingKey(), { name: firstName })}</h1>
             <p className="text-muted-foreground mt-1.5 max-w-xl">{t("dashboard.quickLook")}</p>
           </div>
           <div className="flex gap-2">

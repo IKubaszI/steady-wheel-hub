@@ -54,9 +54,9 @@ export const translations = {
 
     // Dashboard
     "dashboard.welcomeBack": "Welcome back",
-    "dashboard.goodMorning": "Good morning, {name} 👋",
-    "dashboard.goodAfternoon": "Good afternoon, {name} 👋",
-    "dashboard.goodEvening": "Good evening, {name} 👋",
+    "dashboard.goodMorning": "Good morning, {name}",
+    "dashboard.goodAfternoon": "Good afternoon, {name}",
+    "dashboard.goodEvening": "Good evening, {name}",
     "dashboard.driver": "Driver",
     "dashboard.quickLook": "Here's a quick look at your fleet, upcoming services, and spending this month.",
     "dashboard.totalExpenses": "Total expenses",
@@ -460,7 +460,7 @@ export const translations = {
     "assistant.confirm.save": "Confirm and Add",
     // Onboarding Tour / Tutorial
     "tutorial.forceCreate.title": "Add your first vehicle",
-    "tutorial.forceCreate.desc": "Welcome to GarageOS! 🚗 To start tracking your expenses and maintenance, please create your first vehicle profile. We will show you around the application right after!",
+    "tutorial.forceCreate.desc": "Welcome to GarageOS! To start tracking your expenses and maintenance, please create your first vehicle profile. We will show you around the application right after!",
     "tutorial.tour.title": "Quick Tour",
     "tutorial.tour.skip": "Skip",
     "tutorial.tour.next": "Next",
@@ -577,9 +577,9 @@ export const translations = {
 
     // Dashboard
     "dashboard.welcomeBack": "Witamy z powrotem",
-    "dashboard.goodMorning": "Dzień dobry, {name} 👋",
-    "dashboard.goodAfternoon": "Dzień dobry, {name} 👋",
-    "dashboard.goodEvening": "Dobry wieczór, {name} 👋",
+    "dashboard.goodMorning": "Dzień dobry, {name}",
+    "dashboard.goodAfternoon": "Dzień dobry, {name}",
+    "dashboard.goodEvening": "Dobry wieczór, {name}",
     "dashboard.driver": "Kierowca",
     "dashboard.quickLook": "Oto szybki rzut oka na Twoją flotę, nadchodzące usługi i wydatki w tym miesiącu.",
     "dashboard.totalExpenses": "Łączne wydatki",
@@ -983,7 +983,7 @@ export const translations = {
     "assistant.confirm.save": "Zatwierdź i dodaj",
     // Onboarding Tour / Tutorial
     "tutorial.forceCreate.title": "Dodaj swój pierwszy pojazd",
-    "tutorial.forceCreate.desc": "Witaj w GarageOS! 🚗 Aby rozpocząć śledzenie kosztów i napraw, musisz najpierw utworzyć profil pojazdu. Zaraz po tym oprowadzimy Cię po całej aplikacji!",
+    "tutorial.forceCreate.desc": "Witaj w GarageOS! Aby rozpocząć śledzenie kosztów i napraw, musisz najpierw utworzyć profil pojazdu. Zaraz po tym oprowadzimy Cię po całej aplikacji!",
     "tutorial.tour.title": "Szybki przewodnik",
     "tutorial.tour.skip": "Pomiń",
     "tutorial.tour.next": "Dalej",
