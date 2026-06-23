@@ -259,40 +259,40 @@ export default function ProTips() {
 
         <TabsContent value="tips" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <OwnerTipCard
-            title="Cykle serwisowe (Maintenance Cycles)"
-            desc="Regularna wymiana oleju silnikowego i filtrów co 10-15 tys. km (lub raz w roku) drastycznie wydłuża żywotność silnika, nawet jeśli producent zaleca rzadszą wymianę typu LongLife."
+            title={t("proTips.tip.1.title")}
+            desc={t("proTips.tip.1.desc")}
             icon={Wrench}
-            tag="Silnik"
+            tag={t("proTips.tip.1.tag")}
           />
           <OwnerTipCard
-            title="Kontrola poziomu płynów (Fluid Check)"
-            desc="Przynajmniej raz w miesiącu sprawdzaj poziom oleju silnikowego, płynu chłodniczego oraz hamulcowego. Zbyt niski poziom któregoś z nich może doprowadzić do nagłej awarii w trasie."
+            title={t("proTips.tip.2.title")}
+            desc={t("proTips.tip.2.desc")}
             icon={Lightbulb}
-            tag="Bezpieczeństwo"
+            tag={t("proTips.tip.2.tag")}
           />
           <OwnerTipCard
-            title="Sygnały ostrzegawcze (Warning Signs)"
-            desc="Nigdy nie ignoruj kontrolek na desce rozdzielczej. Migająca kontrolka 'Check Engine' oznacza konieczność natychmiastowego zgaszenia silnika, aby nie uszkodzić katalizatora lub tłoków."
+            title={t("proTips.tip.3.title")}
+            desc={t("proTips.tip.3.desc")}
             icon={ShieldAlert}
-            tag="Diagnostyka"
+            tag={t("proTips.tip.3.tag")}
           />
           <OwnerTipCard
-            title="Ciśnienie w oponach (Tire Pressure)"
-            desc="Zbyt niskie ciśnienie zwiększa zużycie paliwa nawet o 5%, powoduje nierównomierne zużywanie się bieżnika oraz znacznie wydłuża drogę hamowania."
+            title={t("proTips.tip.4.title")}
+            desc={t("proTips.tip.4.desc")}
             icon={Compass}
-            tag="Opony"
+            tag={t("proTips.tip.4.tag")}
           />
           <OwnerTipCard
-            title="Chłodzenie turbiny (Turbo Care)"
-            desc="Po dynamicznej jeździe autostradowej nie gaś silnika od razu. Pozwól mu popracować na biegu jałowym przez 1-2 minuty, aby olej schłodził rozgrzaną turbosprężarkę."
+            title={t("proTips.tip.5.title")}
+            desc={t("proTips.tip.5.desc")}
             icon={Flame}
-            tag="Eksploatacja"
+            tag={t("proTips.tip.5.tag")}
           />
           <OwnerTipCard
-            title="Przygotowanie do zimy (Winter Prep)"
-            desc="Zanim przyjdą mrozy, sprawdź stan akumulatora. Niska temperatura obniża pojemność rozruchową baterii nawet o 30%, co może uniemożliwić odpalenie o poranku."
+            title={t("proTips.tip.6.title")}
+            desc={t("proTips.tip.6.desc")}
             icon={Sparkles}
-            tag="Sezon"
+            tag={t("proTips.tip.6.tag")}
           />
         </TabsContent>
       </Tabs>

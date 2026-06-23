@@ -525,7 +525,25 @@ export const translations = {
     "tutorial.step.proTips.title": "Pro Tips & Checklist",
     "tutorial.step.proTips.desc": "Your buyer's guide. Access interactive checklists for car inspections and expert advice.",
     "tutorial.step.profile.title": "Profile & Settings",
-    "tutorial.step.profile.desc": "Customize your experience. Change the app theme, metrics, currency, language, and manage your account details here."
+    "tutorial.step.profile.desc": "Customize your experience. Change the app theme, metrics, currency, language, and manage your account details here.",
+    "proTips.tip.1.title": "Maintenance Cycles",
+    "proTips.tip.1.desc": "Regular engine oil and filter changes every 10-15k km (or once a year) drastically extend engine life, even if the manufacturer recommends longer 'LongLife' intervals.",
+    "proTips.tip.1.tag": "Engine",
+    "proTips.tip.2.title": "Fluid Check",
+    "proTips.tip.2.desc": "Check your engine oil, coolant, and brake fluid levels at least once a month. Low fluid levels can lead to sudden breakdowns on the road.",
+    "proTips.tip.2.tag": "Safety",
+    "proTips.tip.3.title": "Warning Signs",
+    "proTips.tip.3.desc": "Never ignore dashboard warning lights. A flashing 'Check Engine' light means you must immediately turn off the engine to prevent catastrophic damage.",
+    "proTips.tip.3.tag": "Diagnostics",
+    "proTips.tip.4.title": "Tire Pressure",
+    "proTips.tip.4.desc": "Under-inflated tires increase fuel consumption by up to 5%, cause uneven tread wear, and significantly extend braking distances.",
+    "proTips.tip.4.tag": "Tires",
+    "proTips.tip.5.title": "Turbo Care",
+    "proTips.tip.5.desc": "After dynamic highway driving, don't turn off the engine immediately. Let it idle for 1-2 minutes to allow the oil to cool the hot turbocharger.",
+    "proTips.tip.5.tag": "Maintenance",
+    "proTips.tip.6.title": "Winter Prep",
+    "proTips.tip.6.desc": "Before freezing temperatures arrive, check your battery health. Low temperatures reduce battery starting capacity by up to 30%, which may prevent morning starts.",
+    "proTips.tip.6.tag": "Seasonal"
   },
   pl: {
     // Navigation
@@ -1053,7 +1071,25 @@ export const translations = {
     "tutorial.step.proTips.title": "Pro tipy i poradniki",
     "tutorial.step.proTips.desc": "Twój poradnik kupującego. Zyskaj dostęp do interaktywnej checklisty kontroli auta oraz eksperckich porad.",
     "tutorial.step.profile.title": "Profil i Ustawienia",
-    "tutorial.step.profile.desc": "Dostosuj aplikację do siebie. W tym miejscu możesz zmienić motyw, jednostki, walutę, język oraz zarządzać swoim kontem."
+    "tutorial.step.profile.desc": "Dostosuj aplikację do siebie. W tym miejscu możesz zmienić motyw, jednostki, walutę, język oraz zarządzać swoim kontem.",
+    "proTips.tip.1.title": "Cykle serwisowe",
+    "proTips.tip.1.desc": "Regularna wymiana oleju silnikowego i filtrów co 10-15 tys. km (lub raz w roku) drastycznie wydłuża żywotność silnika, nawet jeśli producent zaleca rzadszą wymianę typu LongLife.",
+    "proTips.tip.1.tag": "Silnik",
+    "proTips.tip.2.title": "Kontrola poziomu płynów",
+    "proTips.tip.2.desc": "Przynajmniej raz w miesiącu sprawdzaj poziom oleju silnikowego, płynu chłodniczego oraz hamulcowego. Zbyt niski poziom któregoś z nich może doprowadzić do nagłej awarii w trasie.",
+    "proTips.tip.2.tag": "Bezpieczeństwo",
+    "proTips.tip.3.title": "Sygnały ostrzegawcze",
+    "proTips.tip.3.desc": "Nigdy nie ignoruj kontrolek na desce rozdzielczej. Migająca kontrolka 'Check Engine' oznacza konieczność natychmiastowego zgaszenia silnika, aby nie uszkodzić katalizatora lub tłoków.",
+    "proTips.tip.3.tag": "Diagnostyka",
+    "proTips.tip.4.title": "Ciśnienie w oponach",
+    "proTips.tip.4.desc": "Zbyt niskie ciśnienie zwiększa zużycie paliwa nawet o 5%, powoduje nierównomierne zużywanie się bieżnika oraz znacznie wydłuża drogę hamowania.",
+    "proTips.tip.4.tag": "Opony",
+    "proTips.tip.5.title": "Chłodzenie turbiny",
+    "proTips.tip.5.desc": "Po dynamicznej jeździe autostradowej nie gaś silnika od razu. Pozwól mu popracować na biegu jałowym przez 1-2 minuty, aby olej schłodził rozgrzaną turbosprężarkę.",
+    "proTips.tip.5.tag": "Eksploatacja",
+    "proTips.tip.6.title": "Przygotowanie do zimy",
+    "proTips.tip.6.desc": "Zanim przyjdą mrozy, sprawdź stan akumulatora. Niska temperatura obniża pojemność rozruchową baterii nawet o 30%, co może uniemożliwić odpalenie o poranku.",
+    "proTips.tip.6.tag": "Sezon"
   }
 } as const;
 
