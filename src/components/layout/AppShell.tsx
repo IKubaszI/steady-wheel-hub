@@ -25,6 +25,7 @@ import { AssistantConfirmDialog } from "./AssistantConfirmDialog";
 import { type ParsedAssistantCommand } from "@/services/assistantService";
 import { type TranslationKey } from "@/lib/translations";
 import { TutorialTour } from "./TutorialTour";
+import { usePwaAnimationStore } from "@/stores/pwa-animation-store";
 
 export function AppShell({ children, onQuickAdd }: { children: React.ReactNode; onQuickAdd?: () => void }) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -396,6 +397,23 @@ function PWAInstallCard() {
   const [showIOSInstructions, setShowIOSInstructions] = useState(false);
   const [showGenericInstructions, setShowGenericInstructions] = useState(false);
 
+  // Globalny stan (zustand, w pamięci RAM) — animacja "scale-in" odpala się
+  // tylko raz na załadowanie strony. Nawigacja SPA remontuje AppShell (każda
+  // strona renderuje własny <AppShell>), ale stan w RAM przetrwa remont, więc
+  // animacja NIE odtwarza się przy zmianie strony. Dopiero F5/odświeżenie
+  // resetuje stan i animacja gra ponownie.
+  const { hasAnimated, markAnimated } = usePwaAnimationStore();
+  const shouldAnimate = !hasAnimated;
+
+  // Oznacz animację jako odtworzoną dopiero PO jej zakończeniu (250ms z
+  // animate-scale-in), aby flip flagi nie ucinał trwającej animacji.
+  useEffect(() => {
+    if (shouldAnimate) {
+      const timer = setTimeout(() => markAnimated(), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [shouldAnimate, markAnimated]);
+
   const isDemo = user?.email?.toLowerCase().includes("testowy") || user?.email?.toLowerCase().includes("demo") || user?.uid === "demo-user";
 
   useEffect(() => {
@@ -453,7 +471,7 @@ function PWAInstallCard() {
 
   return (
     <>
-      <div className="relative m-3 p-4 rounded-xl bg-sidebar-accent/60 border border-sidebar-border/80 shadow-md flex flex-col gap-3 animate-scale-in">
+      <div className={`relative m-3 p-4 rounded-xl bg-sidebar-accent/60 border border-sidebar-border/80 shadow-md flex flex-col gap-3${shouldAnimate ? ' animate-scale-in' : ''}`}>
         <button 
           onClick={handleDismiss} 
           className="absolute top-3 right-3 text-sidebar-foreground/40 hover:text-sidebar-foreground transition-colors p-0.5 rounded-md hover:bg-sidebar-accent"

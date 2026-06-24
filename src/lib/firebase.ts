@@ -1,14 +1,7 @@
-import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import {
-  initializeFirestore,
-  persistentLocalCache,
-  persistentMultipleTabManager,
-} from "firebase/firestore";
+import type { FirebaseApp } from "firebase/app";
+import type { Auth } from "firebase/auth";
+import type { Firestore } from "firebase/firestore";
 
-// Fallback placeholder values prevent Firebase from throwing at module init
-// when env vars are not configured (e.g. preview/demo). Real auth calls will
-// still fail at runtime, but the app will render instead of showing a blank page.
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "demo-api-key",
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "demo.firebaseapp.com",
@@ -19,11 +12,40 @@ const firebaseConfig = {
 
 export const isFirebaseConfigured = Boolean(import.meta.env.VITE_FIREBASE_API_KEY);
 
-const app = initializeApp(firebaseConfig);
+let appPromise: Promise<FirebaseApp> | null = null;
+function ensureApp() {
+  if (!appPromise) {
+    appPromise = import("firebase/app").then(({ initializeApp }) => initializeApp(firebaseConfig));
+  }
+  return appPromise;
+}
 
-export const auth = getAuth(app);
-export const db = initializeFirestore(app, {
-  localCache: persistentLocalCache({
-    tabManager: persistentMultipleTabManager(),
-  }),
-});
+let authInstance: Auth | null = null;
+export async function getFirebaseAuth() {
+  const authMod = await import("firebase/auth");
+  if (!authInstance) {
+    const app = await ensureApp();
+    authInstance = authMod.getAuth(app);
+  }
+  return {
+    auth: authInstance,
+    authMod,
+  };
+}
+
+let dbInstance: Firestore | null = null;
+export async function getFirebaseDb() {
+  const dbMod = await import("firebase/firestore");
+  if (!dbInstance) {
+    const app = await ensureApp();
+    dbInstance = dbMod.initializeFirestore(app, {
+      localCache: dbMod.persistentLocalCache({
+        tabManager: dbMod.persistentMultipleTabManager(),
+      }),
+    });
+  }
+  return {
+    db: dbInstance,
+    dbMod,
+  };
+}

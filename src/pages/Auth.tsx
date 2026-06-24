@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { formatAppError } from "@/lib/errors";
 import { userDisplayNameSchema } from "@/lib/schemas";
 import { DEMO_USER, seedDemoDataIfEmpty } from "@/lib/demo";
-import { auth } from "@/lib/firebase";
+import { getFirebaseAuth, isFirebaseConfigured } from "@/lib/firebase";
 import { AccessibilityWidget } from "@/components/layout/AccessibilityWidget";
 import { useSettings } from "@/context/settings";
 
@@ -83,7 +83,14 @@ export default function AuthPage() {
         await register(DEMO_USER.name, DEMO_USER.email, DEMO_USER.password);
       }
 
-      const uid = auth.currentUser?.uid;
+      // Seedowanie danych demo dotyczy WYŁĄCZNIE trybu skonfigurowanego (zapis do
+      // Firestore). W trybie demo dane pochodzą z localStorage, więc nie dotykamy
+      // Firebase — dzięki temu kliknięcie „Try Demo" nie pobiera chunku firebase.
+      let uid: string | undefined;
+      if (isFirebaseConfigured) {
+        const { auth } = await getFirebaseAuth();
+        uid = auth.currentUser?.uid;
+      }
       if (uid) {
         const seeded = await seedDemoDataIfEmpty(uid);
         toast({

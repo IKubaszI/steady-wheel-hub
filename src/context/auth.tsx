@@ -6,16 +6,8 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import {
-  createUserWithEmailAndPassword,
-  onAuthStateChanged,
-  sendPasswordResetEmail,
-  signInWithEmailAndPassword,
-  signOut,
-  updateProfile,
-  type User,
-} from "firebase/auth";
-import { auth, isFirebaseConfigured } from "@/lib/firebase";
+import type { User } from "firebase/auth";
+import { getFirebaseAuth, isFirebaseConfigured } from "@/lib/firebase";
 import { userDisplayNameSchema } from "@/lib/schemas";
 
 type AppUser = Pick<User, "uid" | "email" | "displayName" | "photoURL" | "getIdToken">;
@@ -62,11 +54,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const unsub = onAuthStateChanged(auth, (nextUser) => {
-      setUser(nextUser);
+    let unsub: (() => void) | undefined;
+    getFirebaseAuth().then(({ auth, authMod }) => {
+      unsub = authMod.onAuthStateChanged(auth, (nextUser) => {
+        setUser(nextUser);
+        setLoading(false);
+      });
+    }).catch(err => {
+      console.error("Failed to load Firebase auth on initialization:", err);
       setLoading(false);
     });
-    return () => unsub();
+
+    return () => unsub?.();
   }, []);
 
   const value = useMemo<AuthValue>(
@@ -83,7 +82,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(demoUser);
           return;
         }
-        await signInWithEmailAndPassword(auth, email, password);
+        const { auth, authMod } = await getFirebaseAuth();
+        await authMod.signInWithEmailAndPassword(auth, email, password);
       },
       register: async (name, email, password) => {
         const parsedName = userDisplayNameSchema.safeParse(name);
@@ -99,14 +99,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(demoUser);
           return;
         }
-        const creds = await createUserWithEmailAndPassword(auth, email, password);
-        await updateProfile(creds.user, { displayName: parsedName.data });
+        const { auth, authMod } = await getFirebaseAuth();
+        const creds = await authMod.createUserWithEmailAndPassword(auth, email, password);
+        await authMod.updateProfile(creds.user, { displayName: parsedName.data });
       },
       resetPassword: async (email) => {
         if (!isFirebaseConfigured) {
           throw new Error("Password reset is available after Firebase is configured.");
         }
-        await sendPasswordResetEmail(auth, email);
+        const { auth, authMod } = await getFirebaseAuth();
+        await authMod.sendPasswordResetEmail(auth, email);
       },
       logout: async () => {
         if (!isFirebaseConfigured) {
@@ -114,7 +116,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(null);
           return;
         }
-        await signOut(auth);
+        const { auth, authMod } = await getFirebaseAuth();
+        await authMod.signOut(auth);
       },
       updateUserProfile: async ({ displayName, photoURL }) => {
         if (!isFirebaseConfigured) {
@@ -123,6 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(nextUser);
           return;
         }
+        const { auth, authMod } = await getFirebaseAuth();
         if (!auth.currentUser) {
           throw new Error("You must be logged in to update profile.");
         }
@@ -134,7 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
           validatedDisplayName = parsedName.data;
         }
-        await updateProfile(auth.currentUser, { displayName: validatedDisplayName, photoURL });
+        await authMod.updateProfile(auth.currentUser, { displayName: validatedDisplayName, photoURL });
         await auth.currentUser.reload();
         setUser(auth.currentUser);
       },

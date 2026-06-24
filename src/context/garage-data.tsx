@@ -1,15 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
-  addDoc,
-  collection,
-  deleteDoc,
-  doc,
-  onSnapshot,
-  orderBy,
-  query,
-  updateDoc,
-} from "firebase/firestore";
-import {
   maintenance as initialMaintenance,
   receipts as initialReceipts,
   vehicles as initialVehicles,
@@ -20,7 +10,7 @@ import {
   type ChecklistItem,
 } from "@/data/mockData";
 import { useAuth } from "@/context/auth";
-import { db, isFirebaseConfigured } from "@/lib/firebase";
+import { getFirebaseDb, isFirebaseConfigured } from "@/lib/firebase";
 import {
   MAX_RECEIPT_FILE_SIZE_BYTES,
   MAX_RECEIPT_FILES,
@@ -170,25 +160,30 @@ export function GarageDataProvider({ children }: { children: ReactNode }) {
           return;
         }
 
-        const vehiclesQuery = query(
-          collection(db, "users", user.uid, "vehicles"),
-          orderBy("createdAt", "desc")
+        const { db, dbMod } = await getFirebaseDb();
+        if (cancelled) {
+          return;
+        }
+
+        const vehiclesQuery = dbMod.query(
+          dbMod.collection(db, "users", user.uid, "vehicles"),
+          dbMod.orderBy("createdAt", "desc")
         );
-        const receiptsQuery = query(
-          collection(db, "users", user.uid, "receipts"),
-          orderBy("date", "desc")
+        const receiptsQuery = dbMod.query(
+          dbMod.collection(db, "users", user.uid, "receipts"),
+          dbMod.orderBy("date", "desc")
         );
-        const maintenanceQuery = query(
-          collection(db, "users", user.uid, "maintenance"),
-          orderBy("date", "desc")
+        const maintenanceQuery = dbMod.query(
+          dbMod.collection(db, "users", user.uid, "maintenance"),
+          dbMod.orderBy("date", "desc")
         );
 
-        const checklistQuery = query(
-          collection(db, "users", user.uid, "checklist"),
-          orderBy("createdAt", "asc")
+        const checklistQuery = dbMod.query(
+          dbMod.collection(db, "users", user.uid, "checklist"),
+          dbMod.orderBy("createdAt", "asc")
         );
 
-        const unsubChecklist = onSnapshot(
+        const unsubChecklist = dbMod.onSnapshot(
           checklistQuery,
           async (snapshot) => {
             const items = snapshot.docs.map((docItem) => ({
@@ -198,9 +193,9 @@ export function GarageDataProvider({ children }: { children: ReactNode }) {
             if (items.length === 0 && !checklistSeeding) {
               checklistSeeding = true;
               try {
-                const collRef = collection(db, "users", user.uid, "checklist");
+                const collRef = dbMod.collection(db, "users", user.uid, "checklist");
                 for (const item of defaultChecklist) {
-                  await addDoc(collRef, item);
+                  await dbMod.addDoc(collRef, item);
                 }
               } catch (err) {
                 console.error("Error seeding checklist:", err);
@@ -221,46 +216,46 @@ export function GarageDataProvider({ children }: { children: ReactNode }) {
         );
 
         const unsubs = [
-          onSnapshot(
+          dbMod.onSnapshot(
             vehiclesQuery,
             (snapshot) => {
-          setVehicles(
-            snapshot.docs.map((docItem) => ({
-              id: docItem.id,
-              ...(docItem.data() as Omit<Vehicle, "id">),
-            }))
-          );
+              setVehicles(
+                snapshot.docs.map((docItem) => ({
+                  id: docItem.id,
+                  ...(docItem.data() as Omit<Vehicle, "id">),
+                }))
+              );
             },
             (error) => {
-          console.error("Vehicles listener error:", error);
+              console.error("Vehicles listener error:", error);
             }
           ),
-          onSnapshot(
+          dbMod.onSnapshot(
             receiptsQuery,
             (snapshot) => {
-          setReceipts(
-            snapshot.docs.map((docItem) => ({
-              id: docItem.id,
-              ...(docItem.data() as Omit<Receipt, "id">),
-            }))
-          );
+              setReceipts(
+                snapshot.docs.map((docItem) => ({
+                  id: docItem.id,
+                  ...(docItem.data() as Omit<Receipt, "id">),
+                }))
+              );
             },
             (error) => {
-          console.error("Receipts listener error:", error);
+              console.error("Receipts listener error:", error);
             }
           ),
-          onSnapshot(
+          dbMod.onSnapshot(
             maintenanceQuery,
             (snapshot) => {
-          setMaintenance(
-            snapshot.docs.map((docItem) => ({
-              id: docItem.id,
-              ...(docItem.data() as Omit<Maintenance, "id">),
-            }))
-          );
+              setMaintenance(
+                snapshot.docs.map((docItem) => ({
+                  id: docItem.id,
+                  ...(docItem.data() as Omit<Maintenance, "id">),
+                }))
+              );
             },
             (error) => {
-          console.error("Maintenance listener error:", error);
+              console.error("Maintenance listener error:", error);
             }
           ),
           unsubChecklist,
@@ -299,7 +294,8 @@ export function GarageDataProvider({ children }: { children: ReactNode }) {
         throw new Error("You must be logged in to add a vehicle.");
       }
       const safeVehicle = vehicleInputSchema.parse(vehicle);
-      await addDoc(collection(db, "users", user.uid, "vehicles"), {
+      const { db, dbMod } = await getFirebaseDb();
+      await dbMod.addDoc(dbMod.collection(db, "users", user.uid, "vehicles"), {
         ...safeVehicle,
         createdAt: Date.now(),
       });
@@ -320,7 +316,8 @@ export function GarageDataProvider({ children }: { children: ReactNode }) {
         return;
       }
       const safeUpdates = vehicleInputSchema.partial().parse(updates);
-      await updateDoc(doc(db, "users", user.uid, "vehicles", id), safeUpdates);
+      const { db, dbMod } = await getFirebaseDb();
+      await dbMod.updateDoc(dbMod.doc(db, "users", user.uid, "vehicles", id), safeUpdates);
     },
     deleteVehicle: async (id) => {
       if (!isFirebaseConfigured) {
@@ -336,12 +333,13 @@ export function GarageDataProvider({ children }: { children: ReactNode }) {
       if (!user) {
         throw new Error("You must be logged in to delete a vehicle.");
       }
-      await deleteDoc(doc(db, "users", user.uid, "vehicles", id));
+      const { db, dbMod } = await getFirebaseDb();
+      await dbMod.deleteDoc(dbMod.doc(db, "users", user.uid, "vehicles", id));
       const linkedReceipts = receipts.filter((item) => item.vehicleId === id);
       const linkedMaintenance = maintenance.filter((item) => item.vehicleId === id);
       await Promise.all([
-        ...linkedReceipts.map((item) => deleteDoc(doc(db, "users", user.uid, "receipts", item.id))),
-        ...linkedMaintenance.map((item) => deleteDoc(doc(db, "users", user.uid, "maintenance", item.id))),
+        ...linkedReceipts.map((item) => dbMod.deleteDoc(dbMod.doc(db, "users", user.uid, "receipts", item.id))),
+        ...linkedMaintenance.map((item) => dbMod.deleteDoc(dbMod.doc(db, "users", user.uid, "maintenance", item.id))),
       ]);
     },
     addReceipt: async (receipt, files = []) => {
@@ -377,7 +375,8 @@ export function GarageDataProvider({ children }: { children: ReactNode }) {
         photos: [...receipt.photos, ...uploadedUrls],
       });
 
-      await addDoc(collection(db, "users", user.uid, "receipts"), {
+      const { db, dbMod } = await getFirebaseDb();
+      await dbMod.addDoc(dbMod.collection(db, "users", user.uid, "receipts"), {
         ...removeUndefinedFields(safeReceipt),
         createdAt: Date.now(),
       });
@@ -438,7 +437,8 @@ export function GarageDataProvider({ children }: { children: ReactNode }) {
         fuelLiters: merged.fuelLiters,
         photos: merged.photos,
       });
-      await updateDoc(doc(db, "users", user.uid, "receipts", id), removeUndefinedFields(safeReceipt));
+      const { db, dbMod } = await getFirebaseDb();
+      await dbMod.updateDoc(dbMod.doc(db, "users", user.uid, "receipts", id), removeUndefinedFields(safeReceipt));
     },
     addMaintenance: async (entry) => {
       if (!isFirebaseConfigured) {
@@ -453,7 +453,8 @@ export function GarageDataProvider({ children }: { children: ReactNode }) {
         throw new Error("You must be logged in to add maintenance.");
       }
       const safeEntry = maintenanceInputSchema.parse(entry);
-      await addDoc(collection(db, "users", user.uid, "maintenance"), {
+      const { db, dbMod } = await getFirebaseDb();
+      await dbMod.addDoc(dbMod.collection(db, "users", user.uid, "maintenance"), {
         ...safeEntry,
         createdAt: Date.now(),
       });
@@ -468,7 +469,8 @@ export function GarageDataProvider({ children }: { children: ReactNode }) {
       if (!user) {
         throw new Error("You must be logged in to delete a receipt.");
       }
-      await deleteDoc(doc(db, "users", user.uid, "receipts", id));
+      const { db, dbMod } = await getFirebaseDb();
+      await dbMod.deleteDoc(dbMod.doc(db, "users", user.uid, "receipts", id));
     },
     updateMaintenance: async (id, updates) => {
       if (!isFirebaseConfigured) {
@@ -482,7 +484,8 @@ export function GarageDataProvider({ children }: { children: ReactNode }) {
         throw new Error("You must be logged in to update maintenance.");
       }
       const safeUpdates = maintenanceInputSchema.partial().parse(updates);
-      await updateDoc(doc(db, "users", user.uid, "maintenance", id), safeUpdates);
+      const { db, dbMod } = await getFirebaseDb();
+      await dbMod.updateDoc(dbMod.doc(db, "users", user.uid, "maintenance", id), safeUpdates);
     },
     deleteMaintenance: async (id) => {
       if (!isFirebaseConfigured) {
@@ -494,7 +497,8 @@ export function GarageDataProvider({ children }: { children: ReactNode }) {
       if (!user) {
         throw new Error("You must be logged in to delete maintenance.");
       }
-      await deleteDoc(doc(db, "users", user.uid, "maintenance", id));
+      const { db, dbMod } = await getFirebaseDb();
+      await dbMod.deleteDoc(dbMod.doc(db, "users", user.uid, "maintenance", id));
     },
     checklist,
     toggleChecklistItem: async (id, checked) => {
@@ -505,7 +509,8 @@ export function GarageDataProvider({ children }: { children: ReactNode }) {
         if (!user) {
           throw new Error("You must be logged in to update checklist.");
         }
-        await updateDoc(doc(db, "users", user.uid, "checklist", id), { checked });
+        const { db, dbMod } = await getFirebaseDb();
+        await dbMod.updateDoc(dbMod.doc(db, "users", user.uid, "checklist", id), { checked });
       } catch (err) {
         const nextList = checklist.map((item) => item.id === id ? { ...item, checked } : item);
         setChecklist(nextList);
@@ -520,7 +525,8 @@ export function GarageDataProvider({ children }: { children: ReactNode }) {
         if (!user) {
           throw new Error("You must be logged in to add checklist item.");
         }
-        await addDoc(collection(db, "users", user.uid, "checklist"), {
+        const { db, dbMod } = await getFirebaseDb();
+        await dbMod.addDoc(dbMod.collection(db, "users", user.uid, "checklist"), {
           text,
           category,
           checked: 0,
@@ -547,7 +553,8 @@ export function GarageDataProvider({ children }: { children: ReactNode }) {
         if (!user) {
           throw new Error("You must be logged in to delete checklist item.");
         }
-        await deleteDoc(doc(db, "users", user.uid, "checklist", id));
+        const { db, dbMod } = await getFirebaseDb();
+        await dbMod.deleteDoc(dbMod.doc(db, "users", user.uid, "checklist", id));
       } catch (err) {
         const nextList = checklist.filter((item) => item.id !== id);
         setChecklist(nextList);
@@ -562,9 +569,10 @@ export function GarageDataProvider({ children }: { children: ReactNode }) {
         if (!user) {
           throw new Error("You must be logged in to reset checklist.");
         }
+        const { db, dbMod } = await getFirebaseDb();
         const promises = checklist.map((item) => {
           if (item.id.startsWith("local-")) return Promise.resolve();
-          return updateDoc(doc(db, "users", user.uid, "checklist", item.id), { checked: 0 });
+          return dbMod.updateDoc(dbMod.doc(db, "users", user.uid, "checklist", item.id), { checked: 0 });
         });
         await Promise.all(promises);
         const nextList = checklist.map((item) => ({ ...item, checked: 0 }));

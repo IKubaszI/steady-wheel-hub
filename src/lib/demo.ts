@@ -1,5 +1,4 @@
-import { collection, doc, getDocs, limit, query, setDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { getFirebaseDb } from "@/lib/firebase";
 import type { Category, ServiceStatus } from "@/data/mockData";
 
 export const DEMO_USER = {
@@ -116,27 +115,31 @@ const demoMaintenance: DemoMaintenance[] = [
 ];
 
 export async function seedDemoDataIfEmpty(userId: string) {
-  const vehiclesRef = collection(db, "users", userId, "vehicles");
-  const vehiclesSnapshot = await getDocs(query(vehiclesRef, limit(1)));
+  // Funkcje Firestore pochodzą z `dbMod` (leniwy chunk firebase), więc demo.ts
+  // nie ma statycznego importu z "firebase/firestore" — Firebase ładuje się
+  // dopiero, gdy faktycznie seedujemy dane w trybie skonfigurowanym.
+  const { db, dbMod } = await getFirebaseDb();
+  const vehiclesRef = dbMod.collection(db, "users", userId, "vehicles");
+  const vehiclesSnapshot = await dbMod.getDocs(dbMod.query(vehiclesRef, dbMod.limit(1)));
   if (!vehiclesSnapshot.empty) {
     return false;
   }
 
   await Promise.all([
     ...demoVehicles.map((vehicle) =>
-      setDoc(doc(db, "users", userId, "vehicles", vehicle.id), {
+      dbMod.setDoc(dbMod.doc(db, "users", userId, "vehicles", vehicle.id), {
         ...vehicle,
         createdAt: Date.now(),
       })
     ),
     ...demoReceipts.map((receipt) =>
-      setDoc(doc(db, "users", userId, "receipts", receipt.id), {
+      dbMod.setDoc(dbMod.doc(db, "users", userId, "receipts", receipt.id), {
         ...receipt,
         createdAt: Date.now(),
       })
     ),
     ...demoMaintenance.map((entry) =>
-      setDoc(doc(db, "users", userId, "maintenance", entry.id), {
+      dbMod.setDoc(dbMod.doc(db, "users", userId, "maintenance", entry.id), {
         ...entry,
         createdAt: Date.now(),
       })

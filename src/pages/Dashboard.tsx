@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { RecentActivity } from "@/components/dashboard/RecentActivity";
 import { UpcomingServices } from "@/components/dashboard/UpcomingServices";
-import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
+
 import { DollarSign, CalendarClock, Plus, Receipt as ReceiptIcon, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -19,11 +19,6 @@ import { useNavigate } from "react-router-dom";
 export default function Dashboard() {
   const navigate = useNavigate();
   const [open, setOpen] = useState<null | "service" | "receipt">(null);
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    const t = setTimeout(() => setLoading(false), 600);
-    return () => clearTimeout(t);
-  }, []);
   const { receipts, maintenance } = useGarageData();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -81,7 +76,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {loading ? <DashboardSkeleton /> : (<>
+      <>
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-5">
         <div className="animate-fade-in" style={{ animationFillMode: "backwards" }}>
           <StatCard label={t("dashboard.totalExpenses")} value={totalExpenses} prefix={moneyPrefix} suffix={moneySuffix} delta={{ value: t("dashboard.totalExpensesTime"), positive: true }} deltaLabel={t("dashboard.totalExpensesDelta")} icon={DollarSign} tone="primary" hint={t("dashboard.totalExpensesHint")} />
@@ -123,7 +118,7 @@ export default function Dashboard() {
           <UpcomingServices />
         </div>
       </div>
-      </>)}
+      </>
 
       <Dialog open={open !== null} onOpenChange={(o) => !o && setOpen(null)}>
         <DialogContent className="sm:max-w-lg">
