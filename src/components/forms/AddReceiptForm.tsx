@@ -1,6 +1,7 @@
 import { useState, type ChangeEvent, type ReactNode, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import Tesseract from "tesseract.js";
+// Tesseract.js is imported dynamically inside triggerAutoOCR to avoid
+// loading the ~2 MB WASM binary on page load (only needed on user action)
 import { recognizeReceiptGemini } from "@/services/visionService";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -141,6 +142,7 @@ export function AddReceiptForm({ onClose, defaultCategory = "fuel", defaultVehic
         });
       } else {
         console.log("No VITE_GEMINI_API_KEY configured. Falling back to local Tesseract.js");
+        const { default: Tesseract } = await import("tesseract.js");
         const result = await Tesseract.recognize(file, "pol+eng");
         const text = result.data.text;
         console.log("OCR Result Text:\n", text);

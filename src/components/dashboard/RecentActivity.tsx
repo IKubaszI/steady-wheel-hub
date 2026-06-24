@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { categoryMeta } from "@/data/mockData";
 import { useGarageData } from "@/context/garage-data";
 import { format, parseISO } from "date-fns";
@@ -6,7 +6,8 @@ import { Wrench, Trash2, Pencil } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { AddReceiptForm } from "@/components/forms/AddReceiptForm";
+// Lazy-load AddReceiptForm — removes react-hook-form + zod from the Dashboard initial bundle
+const AddReceiptForm = lazy(() => import("@/components/forms/AddReceiptForm").then(m => ({ default: m.AddReceiptForm })));
 import { useToast } from "@/hooks/use-toast";
 import { formatAppError } from "@/lib/errors";
 import { useSettings } from "@/context/settings";
@@ -225,7 +226,11 @@ export function RecentActivity() {
             <DialogTitle>{t("form.receipt.editTitle")}</DialogTitle>
             <DialogDescription>{t("form.receipt.editDesc")}</DialogDescription>
           </DialogHeader>
-          {editingReceipt && <AddReceiptForm onClose={() => setEditingReceiptId(null)} initialReceipt={editingReceipt} />}
+          {editingReceipt && (
+            <Suspense fallback={<div className="h-40 flex items-center justify-center"><div className="h-6 w-6 rounded-full border-2 border-primary/30 border-t-primary animate-spin" /></div>}>
+              <AddReceiptForm onClose={() => setEditingReceiptId(null)} initialReceipt={editingReceipt} />
+            </Suspense>
+          )}
         </DialogContent>
       </Dialog>
 

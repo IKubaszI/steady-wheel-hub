@@ -3,7 +3,7 @@ import { PageHeader } from "./Vehicles";
 import { CategoryPie, MonthlyBars } from "@/components/analytics/Charts";
 import { categoryMeta, type Category, type Receipt } from "@/data/mockData";
 import { Wallet, Award, Plus } from "lucide-react";
-import { useMemo, useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
 import { useGarageData } from "@/context/garage-data";
 import { useSettings } from "@/context/settings";
 import { CountUp } from "@/components/ui/count-up";
@@ -11,7 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { AddReceiptForm } from "@/components/forms/AddReceiptForm";
+
+// Lazy-load AddReceiptForm so that react-hook-form + tesseract.js are NOT
+// bundled into the Analytics chunk — they are fetched only when the dialog opens.
+const AddReceiptForm = lazy(() => import("@/components/forms/AddReceiptForm").then(m => ({ default: m.AddReceiptForm })));
 
 export default function Analytics() {
   const { receipts, vehicles } = useGarageData();
@@ -94,7 +97,11 @@ export default function Analytics() {
             <DialogTitle className="font-display text-xl">{t("form.receipt.addTitle")}</DialogTitle>
             <DialogDescription>{t("form.receipt.addDesc")}</DialogDescription>
           </DialogHeader>
-          <AddReceiptForm onClose={() => setOpen(false)} />
+          {open && (
+            <Suspense fallback={<div className="h-40 flex items-center justify-center"><div className="h-6 w-6 rounded-full border-2 border-primary/30 border-t-primary animate-spin" /></div>}>
+              <AddReceiptForm onClose={() => setOpen(false)} />
+            </Suspense>
+          )}
         </DialogContent>
       </Dialog>
     </AppShell>

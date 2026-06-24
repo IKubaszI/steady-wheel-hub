@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { PageHeader } from "./Vehicles";
 import { Button } from "@/components/ui/button";
 import { Plus, Camera } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { AddReceiptForm } from "@/components/forms/AddReceiptForm";
+// AddReceiptForm is lazy-loaded — react-hook-form + zod are only fetched when
+// the dialog actually opens, keeping the Receipts chunk small.
+const AddReceiptForm = lazy(() => import("@/components/forms/AddReceiptForm").then(m => ({ default: m.AddReceiptForm })));
 import { ReceiptList } from "@/components/receipts/ReceiptList";
 import { Link } from "react-router-dom";
 import { type Category } from "@/data/mockData";
@@ -53,11 +55,15 @@ export default function Receipts() {
                 : t("form.receipt.addDesc")}
             </DialogDescription>
           </DialogHeader>
-          <AddReceiptForm
-            onClose={() => setOpen(null)}
-            defaultCategory={open?.mode === "add" ? open.category : undefined}
-            initialReceipt={receiptToEdit ?? undefined}
-          />
+          {open !== null && (
+            <Suspense fallback={<div className="h-40 flex items-center justify-center"><div className="h-6 w-6 rounded-full border-2 border-primary/30 border-t-primary animate-spin" /></div>}>
+              <AddReceiptForm
+                onClose={() => setOpen(null)}
+                defaultCategory={open?.mode === "add" ? open.category : undefined}
+                initialReceipt={receiptToEdit ?? undefined}
+              />
+            </Suspense>
+          )}
         </DialogContent>
       </Dialog>
     </AppShell>

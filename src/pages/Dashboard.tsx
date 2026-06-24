@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { RecentActivity } from "@/components/dashboard/RecentActivity";
@@ -8,7 +8,8 @@ import { DollarSign, CalendarClock, Plus, Receipt as ReceiptIcon, Wallet } from 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AddMaintenanceForm } from "@/components/forms/AddMaintenanceForm";
-import { AddReceiptForm } from "@/components/forms/AddReceiptForm";
+// Lazy-load AddReceiptForm — react-hook-form + zod are only needed when user opens the dialog
+const AddReceiptForm = lazy(() => import("@/components/forms/AddReceiptForm").then(m => ({ default: m.AddReceiptForm })));
 import { useGarageData } from "@/context/garage-data";
 import { useSettings } from "@/context/settings";
 import { useAuth } from "@/context/auth";
@@ -127,7 +128,11 @@ export default function Dashboard() {
             <DialogDescription>{open === "service" ? t("form.service.logDesc") : t("form.receipt.addDesc")}</DialogDescription>
           </DialogHeader>
           {open === "service" && <AddMaintenanceForm onClose={() => setOpen(null)} />}
-          {open === "receipt" && <AddReceiptForm onClose={() => setOpen(null)} />}
+          {open === "receipt" && (
+            <Suspense fallback={<div className="h-40 flex items-center justify-center"><div className="h-6 w-6 rounded-full border-2 border-primary/30 border-t-primary animate-spin" /></div>}>
+              <AddReceiptForm onClose={() => setOpen(null)} />
+            </Suspense>
+          )}
         </DialogContent>
       </Dialog>
     </AppShell>
